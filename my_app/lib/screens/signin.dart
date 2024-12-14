@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'signup.dart';
-import 'dashboards/user_dashboard.dart';
-import 'dashboards/counsellor_dashboard.dart';
-import 'dashboards/admin_dashboard.dart';
+import 'dashboards/userDashboard/user_dashboard.dart';
+import 'dashboards/counsellorDashboard/counsellor_dashboard.dart';
+import 'dashboards/adminDashboard/admin_dashboard.dart';
 import '../services/auth_service.dart';
 
 final storage = FlutterSecureStorage();
@@ -25,8 +25,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _checkLoggedInStatus() async {
     final role = await storage.read(key: 'role');
-    if (role != null) {
-      _navigateToDashboard(role);
+    final username = await storage.read(key: 'username');
+    if (role != null && username != null) {
+      _navigateToDashboard(role, username);
     }
   }
 
@@ -37,16 +38,17 @@ class _SignInScreenState extends State<SignInScreen> {
     final role = await AuthService.signIn(username, password);
     if (role == 'user' || role == 'counsellor' || role == 'admin') {
       await storage.write(key: 'role', value: role);
-      _navigateToDashboard(role);
+      await storage.write(key: 'username', value: username);
+      _navigateToDashboard(role, username);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(role)));
     }
   }
 
-  void _navigateToDashboard(String role) {
+  void _navigateToDashboard(String role, String username) {
     Widget dashboard;
     if (role == 'user') {
-      dashboard = UserDashboard(onSignOut: _signOut);
+      dashboard = UserDashboard(onSignOut: _signOut, username: username);
     } else if (role == 'counsellor') {
       dashboard = CounsellorDashboard(onSignOut: _signOut);
     } else if (role == 'admin') {
@@ -64,19 +66,15 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _signOut() async {
-    await storage.delete(key: 'role'); // Clear role from secure storage
+    await storage.deleteAll(); // Clear all data from secure storage
 
     if (!mounted) return; // Check if widget is still mounted
 
-    // Force a refresh of the SignInScreen by calling setState
-    setState(() {
-      // No action required inside the setState, just triggering rebuild
-    });
-
     // Navigate to SignInScreen and clear the stack
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => SignInScreen()),
+      (route) => false,
     );
   }
 
