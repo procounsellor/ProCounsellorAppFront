@@ -5,6 +5,7 @@ import 'dashboards/userDashboard/user_dashboard.dart';
 import 'dashboards/counsellorDashboard/counsellor_dashboard.dart';
 import 'dashboards/adminDashboard/admin_dashboard.dart';
 import '../services/auth_service.dart';
+import 'dashboards/userDashboard/base_page.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -48,20 +49,24 @@ class _SignInScreenState extends State<SignInScreen> {
   void _navigateToDashboard(String role, String username) {
     Widget dashboard;
     if (role == 'user') {
-      dashboard = UserDashboard(onSignOut: _signOut, username: username);
+      dashboard = BasePage(
+          onSignOut: _signOut,
+          username: username); // Use BasePage for all roles
     } else if (role == 'counsellor') {
-      dashboard = CounsellorDashboard(onSignOut: _signOut);
+      dashboard =
+          BasePage(onSignOut: _signOut, username: username); // For counsellors
     } else if (role == 'admin') {
-      dashboard = AdminDashboard(onSignOut: _signOut);
+      dashboard =
+          BasePage(onSignOut: _signOut, username: username); // For admin
     } else {
       return;
     }
 
-    // Use pushAndRemoveUntil to clear the stack and prevent users from navigating back to SignInScreen
+    // Navigate and remove previous routes
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => dashboard),
-      (route) => false, // Removes all previous routes
+      (route) => false, // Remove all previous routes to prevent back navigation
     );
   }
 
@@ -85,6 +90,7 @@ class _SignInScreenState extends State<SignInScreen> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
+          // Using 'children' here
           children: [
             TextField(
               controller: _usernameController,

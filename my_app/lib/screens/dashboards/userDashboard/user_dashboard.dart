@@ -4,17 +4,12 @@ import 'chat_page.dart';
 import 'details_page.dart';
 import 'call_page.dart'; // Import CallPage
 
-class UserDashboard extends StatefulWidget {
+class UserDashboard extends StatelessWidget {
   final VoidCallback onSignOut;
   final String username;
 
   UserDashboard({required this.onSignOut, required this.username});
 
-  @override
-  _UserDashboardState createState() => _UserDashboardState();
-}
-
-class _UserDashboardState extends State<UserDashboard> {
   // Sample data for the three lists
   final List<String> _list1 = [
     "Apple",
@@ -30,13 +25,13 @@ class _UserDashboardState extends State<UserDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, ${widget.username}!"),
+        title: Text("Welcome, $username!"),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.logout, size: 20), // Smaller sign-out button
             tooltip: "Sign Out",
-            onPressed: widget.onSignOut,
+            onPressed: onSignOut,
           ),
         ],
       ),
@@ -76,7 +71,6 @@ class _UserDashboardState extends State<UserDashboard> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -120,46 +114,6 @@ class _UserDashboardState extends State<UserDashboard> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Chat"),
-        BottomNavigationBarItem(icon: Icon(Icons.list), label: "My Activities"),
-        BottomNavigationBarItem(icon: Icon(Icons.call), label: "Call"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
-      selectedItemColor: Colors.blue,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) {
-        if (index == 1) {
-          // Navigate to Chat Page when Chat button is tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatPage(
-                liveCounsellors: _list1,
-                topRatedCounsellors: _list2,
-              ),
-            ),
-          );
-        } else if (index == 3) {
-          // Navigate to Call Page when Call button is tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CallPage(
-                liveCounsellors: _list1,
-                topRatedCounsellors: _list2,
-              ),
-            ),
-          );
-        }
-      },
     );
   }
 }
