@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'chatting_page.dart'; // Import the ChattingPage
 
 class DetailsPage extends StatelessWidget {
   final String itemName;
+  final String userId;
+  final String counsellorId; // Add counsellorId
 
-  DetailsPage({required this.itemName});
+  DetailsPage(
+      {required this.itemName,
+      required this.userId,
+      required this.counsellorId});
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +41,16 @@ class DetailsPage extends StatelessWidget {
             ),
             ElevatedButton.icon(
               onPressed: () {
-                // Chat functionality here
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Chatting with $itemName...")),
+                // Chat functionality here, pass the counsellorId to ChattingPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChattingPage(
+                      itemName: itemName,
+                      userId: userId,
+                      counsellorId: counsellorId, // Pass the counsellorId
+                    ),
+                  ),
                 );
               },
               icon: Icon(Icons.chat),
