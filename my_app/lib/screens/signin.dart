@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'signup.dart';
-import 'dashboards/userDashboard/user_dashboard.dart';
-import 'dashboards/counsellorDashboard/counsellor_dashboard.dart';
-import 'dashboards/adminDashboard/admin_dashboard.dart';
 import '../services/auth_service.dart';
 import 'dashboards/userDashboard/base_page.dart';
 

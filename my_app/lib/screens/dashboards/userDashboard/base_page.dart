@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'user_dashboard.dart';
-import 'call_page.dart';
-import 'chat_page.dart';
-import 'details_page.dart';
-import 'search_page.dart'; // Import SearchPage
+import 'my_activities_page.dart'; // Import My Activities Page
+import 'learn_with_us_page.dart'; // Import Learn with Us Page
+import 'community_page.dart'; // Import Community Page
+import 'profile_page.dart'; // Import Profile Page
 
 class BasePage extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -20,15 +20,6 @@ class _BasePageState extends State<BasePage> {
 
   // Define the pages that can be navigated to
   final List<Widget> _pages = [];
-  final List<String> _list1 = [
-    "Apple",
-    "Banana",
-    "Cherry",
-    "Date",
-    "Elderberry"
-  ];
-  final List<String> _list2 = ["Fish", "Goat", "Horse", "Iguana", "Jaguar"];
-  final List<String> _list3 = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
 
   @override
   void initState() {
@@ -38,37 +29,11 @@ class _BasePageState extends State<BasePage> {
     _pages.add(UserDashboard(
         onSignOut: widget.onSignOut,
         username: widget.username)); // User Dashboard
-    _pages.add(ChatPage(liveCounsellors: [
-      "Apple",
-      "Banana",
-      "Cherry",
-      "Date",
-      "Elderberry"
-    ], topRatedCounsellors: [
-      "Fish",
-      "Goat",
-      "Horse",
-      "Iguana",
-      "Jaguar"
-    ])); // Chat Page
-    _pages.add(CallPage(liveCounsellors: [
-      "Fish",
-      "Goat",
-      "Horse",
-      "Iguana",
-      "Jaguar"
-    ], topRatedCounsellors: [
-      "Fish",
-      "Goat",
-      "Horse",
-      "Iguana",
-      "Jaguar"
-    ])); // Call Page
-    _pages.add(SearchPage(
-        list1: ["Fish", "Goat", "Horse", "Iguana", "Jaguar"],
-        list2: ["Fish", "Goat", "Horse", "Iguana", "Jaguar"],
-        list3: ["Fish", "Goat", "Horse", "Iguana", "Jaguar"])); // Search Page
-    _pages.add(DetailsPage(itemName: 'Item')); // Details Page
+    _pages.add(LearnWithUsPage()); // Learn with Us Page
+    _pages.add(CommunityPage()); // Community Page
+    _pages
+        .add(MyActivitiesPage(username: widget.username)); // My Activities Page
+    _pages.add(ProfilePage(username: widget.username)); // Profile Page
   }
 
   @override
@@ -96,9 +61,11 @@ class _BasePageState extends State<BasePage> {
         unselectedItemColor: Colors.grey, // Color for unselected icons
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Chat"),
-          BottomNavigationBarItem(icon: Icon(Icons.call), label: "Call"),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.lightbulb), label: "Learn with Us"),
+          BottomNavigationBarItem(icon: Icon(Icons.groups), label: "Community"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt), label: "My Activities"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
