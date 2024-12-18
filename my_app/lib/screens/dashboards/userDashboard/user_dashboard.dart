@@ -71,11 +71,9 @@ class _UserDashboardState extends State<UserDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => SearchPage(
-                      liveCounsellors:
-                          _liveCounsellors, // Pass the entire live counsellors list
-                      topRatedCounsellors:
-                          _topRatedCounsellors, // Pass the entire top rated counsellors list
-                      topNews: _topNews, // Pass the news list
+                      liveCounsellors: _liveCounsellors,
+                      topRatedCounsellors: _topRatedCounsellors,
+                      topNews: _topNews,
                       userId: widget.username,
                     ),
                   ),
@@ -104,13 +102,6 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
-  List<String> _extractNames(List<dynamic> counsellors) {
-    return counsellors
-        .map((c) => c['firstName'] ?? c['userName'] ?? 'Unknown')
-        .toList()
-        .cast<String>();
-  }
-
   Widget _buildHorizontalList(String title, List<dynamic> items,
       {bool isNews = false}) {
     return Column(
@@ -130,6 +121,7 @@ class _UserDashboardState extends State<UserDashboard> {
               if (isNews) {
                 return GestureDetector(
                   onTap: () {
+                    // Navigate to the DetailsPage for News
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -157,15 +149,21 @@ class _UserDashboardState extends State<UserDashboard> {
                 final counsellor = items[index];
                 return GestureDetector(
                   onTap: () {
+                    // Navigate to the DetailsPage for Counsellor
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
-                          itemName:
-                              counsellor['firstName'] ?? counsellor['userName'],
+                          itemName: counsellor['firstName'] ??
+                              counsellor[
+                                  'userName'], // Pass the counsellor's name
                           userId: widget.username, // Pass the userId
-                          counsellorId:
-                              counsellor['userName'] ?? '', // Pass counsellorId
+                          counsellorId: counsellor['userName'] ??
+                              '', // Pass the counsellorId
+                          isNews:
+                              false, // This is a counsellor, so isNews is false
+                          counsellor:
+                              counsellor, // Pass the full counsellor object
                         ),
                       ),
                     );
