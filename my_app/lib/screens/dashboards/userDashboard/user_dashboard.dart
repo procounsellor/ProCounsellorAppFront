@@ -71,15 +71,19 @@ class _UserDashboardState extends State<UserDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => SearchPage(
-                      list1: _extractNames(_liveCounsellors),
-                      list2: _extractNames(_topRatedCounsellors),
-                      list3: _topNews,
+                      liveCounsellors:
+                          _liveCounsellors, // Pass the entire live counsellors list
+                      topRatedCounsellors:
+                          _topRatedCounsellors, // Pass the entire top rated counsellors list
+                      topNews: _topNews, // Pass the news list
+                      userId: widget.username,
                     ),
                   ),
                 );
               },
               child: Text("Search"),
             ),
+
             SizedBox(height: 20),
             // Horizontal Lists
             Expanded(
