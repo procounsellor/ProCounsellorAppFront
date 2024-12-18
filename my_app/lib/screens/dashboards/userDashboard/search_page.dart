@@ -19,11 +19,9 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  // Controllers to manage the search text field
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Function to filter items based on the search query
   List<dynamic> _filterItems(List<dynamic> items) {
     if (_searchQuery.isEmpty) {
       return items;
@@ -32,7 +30,6 @@ class _SearchPageState extends State<SearchPage> {
       if (item is String) {
         return item.toLowerCase().contains(_searchQuery.toLowerCase());
       } else if (item is Map) {
-        // Check the 'firstName' or 'userName' for counsellors
         return (item['firstName'] ?? item['userName'])
             .toLowerCase()
             .contains(_searchQuery.toLowerCase());
@@ -109,13 +106,12 @@ class _SearchPageState extends State<SearchPage> {
               if (isNews) {
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to the DetailsPage for News
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
                           itemName: items[index],
-                          userId: '', // No userId for news
+                          userId: widget.userId, // Pass the userId
                           counsellorId: '', // No counsellorId for news
                         ),
                       ),
@@ -137,16 +133,20 @@ class _SearchPageState extends State<SearchPage> {
                 final counsellor = items[index];
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to the DetailsPage for Counsellor
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
-                          itemName:
-                              counsellor['firstName'] ?? counsellor['userName'],
-                          userId: widget.userId, // Pass the userId if necessary
-                          counsellorId:
-                              counsellor['userName'] ?? '', // Pass counsellorId
+                          itemName: counsellor['firstName'] ??
+                              counsellor[
+                                  'userName'], // Pass the counsellor's name
+                          userId: widget.userId, // Pass the userId
+                          counsellorId: counsellor['userName'] ??
+                              '', // Pass the counsellorId
+                          isNews:
+                              false, // This is a counsellor, so isNews is false
+                          counsellor:
+                              counsellor, // Pass the full counsellor object
                         ),
                       ),
                     );
