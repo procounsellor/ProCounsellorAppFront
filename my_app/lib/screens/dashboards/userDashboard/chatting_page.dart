@@ -1,3 +1,4 @@
+import 'dart:async'; // For using Timer
 import 'package:flutter/material.dart';
 import 'chat_service.dart'; // Ensure MessageRequest class is available
 
@@ -21,13 +22,16 @@ class _ChattingPageState extends State<ChattingPage> {
   TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
+  Timer? _reloadTimer; // Timer for simulating real-time updates
 
   @override
   void initState() {
     super.initState();
     _startChat();
+    _startReloadTimer(); // Start the periodic message reload
   }
 
+  // Start a new chat and get chatId
   Future<void> _startChat() async {
     try {
       chatId = await ChatService().startChat(widget.userId, widget.counsellorId)
@@ -41,11 +45,11 @@ class _ChattingPageState extends State<ChattingPage> {
     }
   }
 
+  // Load initial messages from the database
   Future<void> _loadMessages() async {
     try {
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
-
       setState(() {
         messages = fetchedMessages;
       });
@@ -54,6 +58,14 @@ class _ChattingPageState extends State<ChattingPage> {
     }
   }
 
+  // Simulate real-time behavior by reloading messages every second
+  void _startReloadTimer() {
+    _reloadTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _loadMessages(); // Reload messages every second
+    });
+  }
+
+  // Send a message and add it to the local list of messages
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       try {
@@ -64,6 +76,7 @@ class _ChattingPageState extends State<ChattingPage> {
 
         await ChatService().sendMessage(chatId, messageRequest);
 
+        // Add the sent message to the local list
         setState(() {
           messages.add({
             'senderId': widget.userId,
@@ -76,6 +89,14 @@ class _ChattingPageState extends State<ChattingPage> {
         print('Error sending message: $e');
       }
     }
+  }
+
+  @override
+  void dispose() {
+    if (_reloadTimer != null) {
+      _reloadTimer!.cancel(); // Cancel the timer when the widget is disposed
+    }
+    super.dispose();
   }
 
   @override
