@@ -159,7 +159,7 @@ class _SearchPageState extends State<SearchPage> {
                         CircleAvatar(
                           backgroundImage: NetworkImage(
                             counsellor['photoUrl'] ??
-                                'https://via.placeholder.com/100',
+                                'https://via.placeholder.com/150/0000FF/808080 ?Text=PAKAINFO.com',
                           ),
                           radius: 40,
                         ),

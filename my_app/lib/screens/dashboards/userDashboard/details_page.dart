@@ -25,11 +25,44 @@ class DetailsPage extends StatefulWidget {
 class _DetailsPageState extends State<DetailsPage> {
   bool isSubscribed = false; // Track subscription status
   bool isLoading = true; // Track loading status for API calls
+  Map<String, dynamic>? counsellorDetails; // Store fetched counsellor details
 
   @override
   void initState() {
     super.initState();
+    fetchCounsellorDetails(); // Fetch counsellor details on page load
     checkSubscriptionStatus(); // Check subscription status on page load
+  }
+
+  // Function to fetch counsellor details
+  Future<void> fetchCounsellorDetails() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/counsellor/${widget.counsellorId}');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          counsellorDetails = json.decode(response.body);
+          isLoading = false; // Stop loading after fetching details
+        });
+      } else {
+        setState(() {
+          isLoading = false; // Stop loading even if there's an error
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to fetch counsellor details")),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false; // Stop loading if there's an error
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
 
   // Function to check if the user is already subscribed to the counsellor
@@ -91,6 +124,33 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  // Function to call the unsubscribe API
+  Future<void> unsubscribe() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/user/${widget.userId}/unsubscribe/${widget.counsellorId}');
+
+    try {
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isSubscribed = false; // Update subscription status
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Unsubscribed from ${widget.itemName}!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to unsubscribe")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,116 +158,141 @@ class _DetailsPageState extends State<DetailsPage> {
         title: Text(widget.itemName),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? Center(
-                child:
-                    CircularProgressIndicator()) // Show loader while fetching status
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Details about ${widget.itemName}",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 20),
+      body: SingleChildScrollView(
+        // Wrap content in a scrollable view
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: isLoading
+              ? Center(
+                  child: CircularProgressIndicator(),
+                ) // Show loader while fetching status
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Details about ${widget.itemName}",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
 
-                  if (!widget.isNews) ...[
                     CircleAvatar(
                       radius: 50,
                       backgroundImage: NetworkImage(
-                        widget.counsellor?['photoUrl'] ??
-                            'https://via.placeholder.com/100',
+                        counsellorDetails?['photoUrl'] ??
+                            'https://via.placeholder.com/150/0000FF/808080 ?Text=PAKAINFO.com',
                       ),
                     ),
                     SizedBox(height: 10),
                     Text(
-                      "Rating: ${widget.counsellor?['rating'] ?? 'No rating'}",
+                      "Name: ${counsellorDetails?['firstName'] ?? 'N/A'} ${counsellorDetails?['lastName'] ?? ''}",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Organisation: ${counsellorDetails?['organisationName'] ?? 'N/A'}",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Specialization: ${counsellorDetails?['specialization'] ?? 'N/A'}",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Rate per Minute (Call): \$${counsellorDetails?['ratePerMinuteCall'] ?? 'N/A'}",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      "Rate per Minute (Video Call): \$${counsellorDetails?['ratePerMinuteVideoCall'] ?? 'N/A'}",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      "Rate per Minute (Chat): \$${counsellorDetails?['ratePerMinuteChat'] ?? 'N/A'}",
                       style: TextStyle(fontSize: 16),
                     ),
                     SizedBox(height: 20),
-                  ] else ...[
-                    Icon(Icons.new_releases, size: 50, color: Colors.blue),
-                    SizedBox(height: 10),
-                    Text("Top News Item", style: TextStyle(fontSize: 16)),
-                    SizedBox(height: 20),
-                  ],
 
-                  // Disable other buttons if not subscribed
-                  ElevatedButton.icon(
-                    onPressed: isSubscribed
-                        ? () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      "Calling ${widget.counsellor?['firstName']}...")),
-                            );
-                          }
-                        : null, // Disable button if not subscribed
-                    icon: Icon(Icons.call),
-                    label: Text("Call"),
-                  ),
-                  SizedBox(height: 10),
-
-                  ElevatedButton.icon(
-                    onPressed: isSubscribed
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChattingPage(
-                                  itemName: widget.itemName,
-                                  userId: widget.userId,
-                                  counsellorId: widget.counsellorId,
-                                ),
-                              ),
-                            );
-                          }
-                        : null, // Disable button if not subscribed
-                    icon: Icon(Icons.chat),
-                    label: Text("Chat"),
-                  ),
-                  SizedBox(height: 10),
-
-                  ElevatedButton.icon(
-                    onPressed: isSubscribed
-                        ? () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      "Video calling ${widget.counsellor?['firstName']}...")),
-                            );
-                          }
-                        : null, // Disable button if not subscribed
-                    icon: Icon(Icons.video_call),
-                    label: Text("Video Call"),
-                  ),
-                  SizedBox(height: 20),
-
-                  // Subscribe Button
-                  ElevatedButton.icon(
-                    onPressed: isSubscribed
-                        ? null // Disable button if already subscribed
-                        : subscribe,
-                    icon:
-                        Icon(isSubscribed ? Icons.check : Icons.subscriptions),
-                    label: Text(isSubscribed ? "Subscribed" : "Subscribe"),
-                  ),
-                  SizedBox(height: 20),
-
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Add a note...',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.note_add),
+                    // Call button
+                    ElevatedButton.icon(
+                      onPressed: isSubscribed
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        "Calling ${counsellorDetails?['firstName']}...")),
+                              );
+                            }
+                          : null, // Disable button if not subscribed
+                      icon: Icon(Icons.call),
+                      label: Text("Call"),
                     ),
-                    maxLines: 3,
-                    minLines: 1,
-                  ),
-                ],
-              ),
+                    SizedBox(height: 10),
+
+                    // Chat button
+                    ElevatedButton.icon(
+                      onPressed: isSubscribed
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChattingPage(
+                                    itemName: widget.itemName,
+                                    userId: widget.userId,
+                                    counsellorId: widget.counsellorId,
+                                  ),
+                                ),
+                              );
+                            }
+                          : null, // Disable button if not subscribed
+                      icon: Icon(Icons.chat),
+                      label: Text("Chat"),
+                    ),
+                    SizedBox(height: 10),
+
+                    // Video call button
+                    ElevatedButton.icon(
+                      onPressed: isSubscribed
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        "Video calling ${counsellorDetails?['firstName']}...")),
+                              );
+                            }
+                          : null, // Disable button if not subscribed
+                      icon: Icon(Icons.video_call),
+                      label: Text("Video Call"),
+                    ),
+                    SizedBox(height: 20),
+
+                    // Subscribe/Unsubscribe Button
+                    ElevatedButton.icon(
+                      onPressed: isSubscribed ? unsubscribe : subscribe,
+                      icon: Icon(
+                          isSubscribed ? Icons.cancel : Icons.subscriptions),
+                      label: Text(isSubscribed ? "Unsubscribe" : "Subscribe"),
+                    ),
+                    SizedBox(height: 20),
+
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Add a note...',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.note_add),
+                      ),
+                      maxLines: 3,
+                      minLines: 1,
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
