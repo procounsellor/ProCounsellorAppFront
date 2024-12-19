@@ -176,7 +176,7 @@ class _UserDashboardState extends State<UserDashboard> {
                         CircleAvatar(
                           backgroundImage: NetworkImage(
                             counsellor['photoUrl'] ??
-                                'https://via.placeholder.com/100',
+                                'https://images.app.goo.gl/TXSqSkYAWDGLnJ337',
                           ),
                           radius: 40,
                         ),
