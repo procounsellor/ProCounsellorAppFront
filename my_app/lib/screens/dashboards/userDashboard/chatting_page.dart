@@ -1,6 +1,6 @@
-import 'dart:async'; // For using Timer
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'chat_service.dart'; // Ensure MessageRequest class is available
+import 'chat_service.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -18,34 +18,32 @@ class ChattingPage extends StatefulWidget {
 }
 
 class _ChattingPageState extends State<ChattingPage> {
-  List<Map<String, dynamic>> messages = []; // Store full message objects
+  List<Map<String, dynamic>> messages = [];
   TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
-  Timer? _reloadTimer; // Timer for simulating real-time updates
+  Timer? _reloadTimer;
 
   @override
   void initState() {
     super.initState();
     _startChat();
-    _startReloadTimer(); // Start the periodic message reload
+    _reloadTimer = Timer.periodic(Duration(seconds: 5), (_) => _loadMessages());
   }
 
-  // Start a new chat and get chatId
   Future<void> _startChat() async {
     try {
-      chatId = await ChatService().startChat(widget.userId, widget.counsellorId)
-          as String;
+      chatId = await ChatService().startChat(widget.userId, widget.counsellorId);
       setState(() {
         isLoading = false;
       });
       _loadMessages();
     } catch (e) {
       print('Error starting chat: $e');
+      _showErrorSnackbar('Failed to start chat. Please try again.');
     }
   }
 
-  // Load initial messages from the database
   Future<void> _loadMessages() async {
     try {
       List<Map<String, dynamic>> fetchedMessages =
@@ -58,14 +56,6 @@ class _ChattingPageState extends State<ChattingPage> {
     }
   }
 
-  // Simulate real-time behavior by reloading messages every second
-  void _startReloadTimer() {
-    _reloadTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      _loadMessages(); // Reload messages every second
-    });
-  }
-
-  // Send a message and add it to the local list of messages
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       try {
@@ -76,7 +66,6 @@ class _ChattingPageState extends State<ChattingPage> {
 
         await ChatService().sendMessage(chatId, messageRequest);
 
-        // Add the sent message to the local list
         setState(() {
           messages.add({
             'senderId': widget.userId,
@@ -87,15 +76,23 @@ class _ChattingPageState extends State<ChattingPage> {
         _controller.clear();
       } catch (e) {
         print('Error sending message: $e');
+        _showErrorSnackbar('Failed to send message. Please try again.');
       }
     }
   }
 
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   @override
   void dispose() {
-    if (_reloadTimer != null) {
-      _reloadTimer!.cancel(); // Cancel the timer when the widget is disposed
-    }
+    _reloadTimer?.cancel();
     super.dispose();
   }
 
