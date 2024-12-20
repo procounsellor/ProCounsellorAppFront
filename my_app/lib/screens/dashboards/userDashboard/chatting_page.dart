@@ -12,7 +12,7 @@ class ChattingPage extends StatefulWidget {
     required this.userId,
     required this.counsellorId,
   });
-
+  
   @override
   _ChattingPageState createState() => _ChattingPageState();
 }
@@ -22,13 +22,19 @@ class _ChattingPageState extends State<ChattingPage> {
   TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
-  Timer? _reloadTimer; // Timer for simulating real-time updates
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _startChat();
-    _startReloadTimer(); // Start the periodic message reload
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    await _startChat();
+    if (!isLoading) {
+      _listenForNewMessages();
+    }
   }
 
   // Start a new chat and get chatId
@@ -53,17 +59,28 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         messages = fetchedMessages;
       });
+      _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
     }
   }
 
-  // Simulate real-time behavior by reloading messages every second
-  void _startReloadTimer() {
-    _reloadTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      _loadMessages(); // Reload messages every second
-    });
-  }
+  // Listen for real-time updates to messages
+void _listenForNewMessages() {
+  ChatService().listenForNewMessages(chatId, (newMessages) {
+    if (mounted) {
+      setState(() {
+        // Avoid duplicate messages using their 'id'
+        for (var message in newMessages) {
+          if (!messages.any((existingMessage) => existingMessage['id'] == message['id'])) {
+            messages.add(message);
+          }
+        }
+        _scrollToBottom();
+      });
+    }
+  });
+}
 
   // Send a message and add it to the local list of messages
   Future<void> _sendMessage() async {
@@ -76,28 +93,30 @@ class _ChattingPageState extends State<ChattingPage> {
 
         await ChatService().sendMessage(chatId, messageRequest);
 
-        // Add the sent message to the local list
-        setState(() {
-          messages.add({
-            'senderId': widget.userId,
-            'text': _controller.text,
-          });
-        });
-
         _controller.clear();
+        _scrollToBottom();
       } catch (e) {
         print('Error sending message: $e');
       }
     }
   }
 
-  @override
-  void dispose() {
-    if (_reloadTimer != null) {
-      _reloadTimer!.cancel(); // Cancel the timer when the widget is disposed
-    }
-    super.dispose();
+  // Scroll to the bottom of the chat
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
+
+@override
+void dispose() {
+  // Cancel listeners or timers to prevent memory leaks
+  ChatService().cancelListeners(chatId);
+  _controller.dispose();
+  super.dispose();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +131,7 @@ class _ChattingPageState extends State<ChattingPage> {
               children: [
                 Expanded(
                   child: ListView.builder(
+                    controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
@@ -157,6 +177,7 @@ class _ChattingPageState extends State<ChattingPage> {
                             hintText: "Type a message...",
                             border: OutlineInputBorder(),
                           ),
+                          onSubmitted: (_) => _sendMessage(), // Handle Enter key
                         ),
                       ),
                       IconButton(
