@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'subscribed_counsellors_page.dart';
+import 'chat_page.dart';
 
 class MyActivitiesPage extends StatelessWidget {
   final String username; // Added userId
@@ -38,8 +39,12 @@ class MyActivitiesPage extends StatelessWidget {
               icon: Icons.chat,
               title: "Chats",
               onTap: () {
-                // Navigate to Chats Page
-                Navigator.pushNamed(context, '/chats');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatPage(userId: username),
+                  ),
+                );
               },
             ),
             ActivityBox(
