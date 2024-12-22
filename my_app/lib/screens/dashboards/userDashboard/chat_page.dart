@@ -79,7 +79,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat with Counsellors"),
+        title: Text("My Chats"),
         centerTitle: true,
       ),
       body: isLoading
