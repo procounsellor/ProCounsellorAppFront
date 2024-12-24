@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'signup.dart';
 import '../services/auth_service.dart';
 import 'dashboards/userDashboard/base_page.dart';
@@ -50,8 +51,8 @@ class _SignInScreenState extends State<SignInScreen> {
           onSignOut: _signOut,
           username: username); // Use BasePage for all roles
     } else if (role == 'counsellor') {
-      dashboard =
-          BasePage(onSignOut: _signOut, username: username); // For counsellors
+      dashboard = CounsellorBasePage(
+          onSignOut: _signOut, counsellorId: username); // For counsellors
     } else if (role == 'admin') {
       dashboard =
           BasePage(onSignOut: _signOut, username: username); // For admin
