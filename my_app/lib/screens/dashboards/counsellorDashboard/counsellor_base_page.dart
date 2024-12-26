@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_community_page.dart';
 import 'counsellor_dashboard.dart';
 import 'counsellor_my_activities_page.dart'; // Import My Activities Page
-import 'counsellor_learn_with_use_page.dart'; // Import Learn with Us Page
+import 'counsellor_transactions_page.dart'; // Import Learn with Us Page
 import 'counsellor_profile_page.dart';
 
 class CounsellorBasePage extends StatefulWidget {
@@ -29,7 +29,7 @@ class _BasePageState extends State<CounsellorBasePage> {
     _pages.add(CounsellorDashboard(
         onSignOut: widget.onSignOut,
         counsellorId: widget.counsellorId)); // User Dashboard
-    _pages.add(CounsellorLearnWithUsPage()); // Learn with Us Page
+    _pages.add(CounsellorTransactionsPage()); //
     _pages.add(CounsellorCommunityPage()); // Community Page
     _pages.add(CounsellorMyActivitiesPage(
         username: widget.counsellorId)); // My Activities Page
@@ -63,7 +63,7 @@ class _BasePageState extends State<CounsellorBasePage> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb), label: "Learn with Us"),
+              icon: Icon(Icons.currency_rupee), label: "Transactions"),
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: "Community"),
           BottomNavigationBarItem(
               icon: Icon(Icons.list_alt), label: "My Activities"),

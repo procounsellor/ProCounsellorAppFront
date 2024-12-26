@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
+import 'counsellor_chat_page.dart';
 
 class CounsellorMyActivitiesPage extends StatelessWidget {
-  final String username; // Added userId
+  final String username; // User ID passed to this page
 
   CounsellorMyActivitiesPage({required this.username});
 
@@ -21,28 +23,28 @@ class CounsellorMyActivitiesPage extends StatelessWidget {
           children: [
             ActivityBox(
               icon: Icons.person,
-              title: "Subscribed Counsellors",
+              title: "Subscribers",
               onTap: () {
-                // Pass userId to SubscribedCounsellorsPage
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (_) =>
-                //         SubscribedCounsellorsPage(username: username),
-                //   ),
-                // );
+                // Navigate to SubscribersPage with counsellor ID
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SubscribersPage(counsellorId: username),
+                  ),
+                );
               },
             ),
             ActivityBox(
               icon: Icons.chat,
               title: "Chats",
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (_) => ChatPage(userId: username),
-                //   ),
-                // );
+                // Navigate to ChatsPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatsPage(counsellorId: username),
+                  ),
+                );
               },
             ),
             ActivityBox(

@@ -21,7 +21,7 @@ class ClientDetailsPage extends StatelessWidget {
             CircleAvatar(
               radius: 50,
               backgroundImage: NetworkImage(
-                client['photoUrl'] ?? 'https://via.placeholder.com/150',
+                client['photo'] ?? 'https://via.placeholder.com/150',
               ),
             ),
             SizedBox(height: 20),
