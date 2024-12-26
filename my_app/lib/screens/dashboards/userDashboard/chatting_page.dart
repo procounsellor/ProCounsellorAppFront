@@ -16,7 +16,6 @@ class ChattingPage extends StatefulWidget {
   @override
   _ChattingPageState createState() => _ChattingPageState();
 }
-
 class _ChattingPageState extends State<ChattingPage> {
   List<Map<String, dynamic>> messages = []; // Store full message objects
   TextEditingController _controller = TextEditingController();
@@ -59,6 +58,7 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         messages = fetchedMessages;
       });
+      _markUnseenMessagesAsSeen();
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -66,21 +66,40 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   // Listen for real-time updates to messages
-void _listenForNewMessages() {
-  ChatService().listenForNewMessages(chatId, (newMessages) {
-    if (mounted) {
-      setState(() {
-        // Avoid duplicate messages using their 'id'
-        for (var message in newMessages) {
-          if (!messages.any((existingMessage) => existingMessage['id'] == message['id'])) {
-            messages.add(message);
+  void _listenForNewMessages() {
+    ChatService().listenForNewMessages(chatId, (newMessages) {
+      if (mounted) {
+        setState(() {
+          // Avoid duplicate messages using their 'id'
+          for (var message in newMessages) {
+            if (!messages.any((existingMessage) =>
+                existingMessage['id'] == message['id'])) {
+              messages.add(message);
+            }
           }
+          _markUnseenMessagesAsSeen();
+          _scrollToBottom();
+        });
+      }
+    });
+  }
+
+  // Mark unseen messages as seen
+  Future<void> _markUnseenMessagesAsSeen() async {
+    try {
+      for (var message in messages) {
+        if (message['senderId'] != widget.userId && !(message['seen'] ?? false)) {
+          await ChatService().markMessageAsSeen(chatId, message['id'], widget.userId);
+          // Optionally update the local state if the API returns updated message data
+          setState(() {
+            message['seen'] = true;
+          });
         }
-        _scrollToBottom();
-      });
+      }
+    } catch (e) {
+      print('Error marking messages as seen: $e');
     }
-  });
-}
+  }
 
   // Send a message and add it to the local list of messages
   Future<void> _sendMessage() async {
@@ -110,13 +129,13 @@ void _listenForNewMessages() {
     });
   }
 
-@override
-void dispose() {
-  // Cancel listeners or timers to prevent memory leaks
-  ChatService().cancelListeners(chatId);
-  _controller.dispose();
-  super.dispose();
-}
+  @override
+  void dispose() {
+    // Cancel listeners or timers to prevent memory leaks
+    ChatService().cancelListeners(chatId);
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,12 +173,27 @@ void dispose() {
                                 : Colors.grey[300],
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          child: Text(
-                            message['text'] ?? 'No message',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16.0,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message['text'] ?? 'No message',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              if (isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the user
+                                Text(
+                                  'Seen',
+                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                                ),
+                              if (!isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the counselor
+                                Text(
+                                  'Seen',
+                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                                ),
+                            ],
                           ),
                         ),
                       );

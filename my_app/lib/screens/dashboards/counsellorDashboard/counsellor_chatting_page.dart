@@ -59,6 +59,7 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         messages = fetchedMessages;
       });
+      _markUnseenMessagesAsSeen();
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -77,10 +78,28 @@ class _ChattingPageState extends State<ChattingPage> {
               messages.add(message);
             }
           }
+          _markUnseenMessagesAsSeen();
           _scrollToBottom();
         });
       }
     });
+  }
+
+  // Mark unseen messages as seen (specific to counselor)
+  Future<void> _markUnseenMessagesAsSeen() async {
+    try {
+      for (var message in messages) {
+        if (message['senderId'] != widget.counsellorId &&
+            !(message['seen'] ?? false)) {
+          await ChatService().markMessageAsSeen(chatId, message['id'], widget.counsellorId);
+          setState(() {
+            message['seen'] = true; // Update local state for the current view
+          });
+        }
+      }
+    } catch (e) {
+      print('Error marking messages as seen: $e');
+    }
   }
 
   // Send a message and add it to the local list of messages
@@ -137,12 +156,12 @@ class _ChattingPageState extends State<ChattingPage> {
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       final isUserMessage =
-                          message['senderId'] == widget.counsellorId;
+                          message['senderId'] == widget.userId;
 
                       return Align(
                         alignment: isUserMessage
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
                         child: Container(
                           margin: EdgeInsets.symmetric(
                             vertical: 5.0,
@@ -151,16 +170,31 @@ class _ChattingPageState extends State<ChattingPage> {
                           padding: EdgeInsets.all(10.0),
                           decoration: BoxDecoration(
                             color: isUserMessage
-                                ? Colors.blue[100]
-                                : Colors.grey[300],
+                                ? Colors.grey[300]
+                                : Colors.blue[100],
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          child: Text(
-                            message['text'] ?? 'No message',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16.0,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message['text'] ?? 'No message',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                             if (isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the user
+                                Text(
+                                  'Seen',
+                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                                ),
+                              if (!isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the counselor
+                                Text(
+                                  'Seen',
+                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                                ),
+                            ],
                           ),
                         ),
                       );
