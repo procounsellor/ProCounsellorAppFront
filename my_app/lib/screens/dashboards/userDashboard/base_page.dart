@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'user_dashboard.dart';
-import 'my_activities_page.dart'; // Import My Activities Page
-import 'learn_with_us_page.dart'; // Import Learn with Us Page
-import 'community_page.dart'; // Import Community Page
-import 'profile_page.dart'; // Import Profile Page
+import 'my_activities_page.dart';
+import 'learn_with_us_page.dart';
+import 'community_page.dart';
+import 'profile_page.dart';
+import 'user_state_notifier.dart'; // Import UserStateNotifier
 
 class BasePage extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -15,25 +16,53 @@ class BasePage extends StatefulWidget {
   _BasePageState createState() => _BasePageState();
 }
 
-class _BasePageState extends State<BasePage> {
+class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  late UserStateNotifier _userStateNotifier;
 
-  // Define the pages that can be navigated to
   final List<Widget> _pages = [];
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize the pages with dynamic data
-    _pages.add(UserDashboard(
-        onSignOut: widget.onSignOut,
-        username: widget.username)); // User Dashboard
-    _pages.add(LearnWithUsPage()); // Learn with Us Page
-    _pages.add(CommunityPage()); // Community Page
-    _pages
-        .add(MyActivitiesPage(username: widget.username)); // My Activities Page
-    _pages.add(ProfilePage(username: widget.username)); // Profile Page
+    // Add WidgetsBindingObserver to listen for app lifecycle events
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initialize UserStateNotifier
+    _userStateNotifier = UserStateNotifier(widget.username);
+
+    // Set user state to "online" when BasePage is created
+    _userStateNotifier.setOnline();
+
+    // Initialize pages
+    _pages.add(
+        UserDashboard(onSignOut: widget.onSignOut, username: widget.username));
+    _pages.add(LearnWithUsPage());
+    _pages.add(CommunityPage());
+    _pages.add(MyActivitiesPage(username: widget.username));
+    _pages.add(ProfilePage(username: widget.username));
+  }
+
+  @override
+  void dispose() {
+    // Remove observer when BasePage is disposed
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Set user state to "offline" when BasePage is destroyed
+    _userStateNotifier.setOffline();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _userStateNotifier.setOffline();
+    } else if (state == AppLifecycleState.resumed) {
+      _userStateNotifier.setOnline();
+    }
   }
 
   @override
@@ -42,23 +71,26 @@ class _BasePageState extends State<BasePage> {
       appBar: AppBar(
         title: Text(
           "Pro Counsellor",
-          style: TextStyle(
-              color: Color(0xFFF0BB78)), // Set the title color to #F0BB78
+          style: TextStyle(color: Color(0xFFF0BB78)),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: widget.onSignOut, // Call sign-out function
+            onPressed: () {
+              _userStateNotifier
+                  .setOffline(); // Explicitly set state to offline on logout
+              widget.onSignOut();
+            },
           ),
         ],
       ),
-      body: _pages[_selectedIndex], // Display the selected page
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Color(0xFFF0BB78), // Color for selected icon
-        unselectedItemColor: Colors.grey, // Color for unselected icons
+        selectedItemColor: Color(0xFFF0BB78),
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(

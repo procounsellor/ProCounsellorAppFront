@@ -29,7 +29,7 @@ class _UserDashboardState extends State<UserDashboard> {
   Future<void> _fetchCounsellors() async {
     try {
       final response = await http.get(
-          Uri.parse('http://localhost:8080/api/counsellor/all-counsellors'));
+          Uri.parse('http://localhost:8080/api/counsellor/counsellors-online'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List<dynamic>;

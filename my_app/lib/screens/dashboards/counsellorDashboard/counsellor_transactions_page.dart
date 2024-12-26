@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 
-class CounsellorLearnWithUsPage extends StatelessWidget {
+class CounsellorTransactionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<String> learningTopics = [
-      "Stress Management",
-      "Time Management",
-      "Mental Wellness",
-      "Personal Growth",
-      "Form Filling"
+      "Credit Details",
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Learn with Us"),
+        title: Text("My Transactions"),
         centerTitle: true,
       ),
       body: ListView.builder(
