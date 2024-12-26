@@ -22,6 +22,23 @@ class ChatService {
   static const String baseUrl = 'http://localhost:8080/api/chats';
   final Map<String, StreamSubscription> _activeListeners = {};
 
+  // Mark a message as seen
+  Future<void> markMessageAsSeen(String chatId, String messageId, String viewerId) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/$chatId/messages/$messageId/mark-seen'),
+      body: jsonEncode({'viewerId': viewerId}), // Include viewerId
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark message as seen: ${response.body}');
+    }
+  } catch (e) {
+    print('Error marking message as seen: $e');
+  }
+}
+
   // Start a new chat
   Future<String?> startChat(String userId, String counsellorId) async {
     final response = await http.post(
