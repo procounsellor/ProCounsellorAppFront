@@ -1,3 +1,4 @@
+import 'dart:async'; // Import Timer
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_community_page.dart';
 import 'counsellor_dashboard.dart';
@@ -20,6 +21,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     with WidgetsBindingObserver {
   int _selectedIndex = 0;
   late CounsellorStateNotifier _counsellorStateNotifier;
+  Timer? _stateChangeTimer; // Timer for debouncing state changes
 
   // Define the pages that can be navigated to
   final List<Widget> _pages = [];
@@ -31,17 +33,17 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     // Add WidgetsBindingObserver to listen for app lifecycle events
     WidgetsBinding.instance.addObserver(this);
 
-    // Initialize UserStateNotifier
+    // Initialize CounsellorStateNotifier
     _counsellorStateNotifier = CounsellorStateNotifier(widget.counsellorId);
 
-    // Set user state to "online" when BasePage is created
-    _counsellorStateNotifier.setOnline();
+    // Set counsellor state to "online" when BasePage is created
+    _setOnlineWithDebounce();
 
     // Initialize the pages with dynamic data
     _pages.add(CounsellorDashboard(
         onSignOut: widget.onSignOut,
         counsellorId: widget.counsellorId)); // User Dashboard
-    _pages.add(CounsellorTransactionsPage()); //
+    _pages.add(CounsellorTransactionsPage()); // Transactions Page
     _pages.add(CounsellorCommunityPage()); // Community Page
     _pages.add(CounsellorMyActivitiesPage(
         username: widget.counsellorId)); // My Activities Page
@@ -62,7 +64,12 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: widget.onSignOut, // Call sign-out function
+            onPressed: () {
+              _stateChangeTimer?.cancel(); // Cancel any pending timer
+              _counsellorStateNotifier
+                  .setOffline(); // Explicitly set state to offline on logout
+              widget.onSignOut(); // Call sign-out function
+            },
           ),
         ],
       ),
@@ -90,20 +97,37 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     // Remove observer when BasePage is disposed
     WidgetsBinding.instance.removeObserver(this);
 
-    // Set user state to "offline" when BasePage is destroyed
+    // Cancel any pending state change timer
+    _stateChangeTimer?.cancel();
+
+    // Set counsellor state to "offline" when BasePage is destroyed
     _counsellorStateNotifier.setOffline();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Handle app lifecycle changes
+    // Handle app lifecycle changes with debounce
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      _counsellorStateNotifier.setOffline();
+      _setOfflineWithDebounce();
     } else if (state == AppLifecycleState.resumed) {
-      _counsellorStateNotifier.setOnline();
+      _setOnlineWithDebounce();
     }
+  }
+
+  void _setOnlineWithDebounce() {
+    _stateChangeTimer?.cancel(); // Cancel any pending offline timer
+    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+      _counsellorStateNotifier.setOnline();
+    });
+  }
+
+  void _setOfflineWithDebounce() {
+    _stateChangeTimer?.cancel(); // Cancel any pending online timer
+    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+      _counsellorStateNotifier.setOffline();
+    });
   }
 
   void _onItemTapped(int index) {

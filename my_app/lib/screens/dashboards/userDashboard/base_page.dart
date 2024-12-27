@@ -1,3 +1,5 @@
+import 'dart:async'; // Import Timer
+
 import 'package:flutter/material.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
@@ -21,6 +23,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   late UserStateNotifier _userStateNotifier;
 
   final List<Widget> _pages = [];
+  Timer? _stateChangeTimer; // Timer for debouncing state changes
 
   @override
   void initState() {
@@ -33,7 +36,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     _userStateNotifier = UserStateNotifier(widget.username);
 
     // Set user state to "online" when BasePage is created
-    _userStateNotifier.setOnline();
+    _setOnlineWithDebounce();
 
     // Initialize pages
     _pages.add(
@@ -49,6 +52,9 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     // Remove observer when BasePage is disposed
     WidgetsBinding.instance.removeObserver(this);
 
+    // Cancel any pending state change timer
+    _stateChangeTimer?.cancel();
+
     // Set user state to "offline" when BasePage is destroyed
     _userStateNotifier.setOffline();
     super.dispose();
@@ -56,13 +62,27 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Handle app lifecycle changes
+    // Handle app lifecycle changes with debounce
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      _userStateNotifier.setOffline();
+      _setOfflineWithDebounce();
     } else if (state == AppLifecycleState.resumed) {
-      _userStateNotifier.setOnline();
+      _setOnlineWithDebounce();
     }
+  }
+
+  void _setOnlineWithDebounce() {
+    _stateChangeTimer?.cancel(); // Cancel any pending offline timer
+    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+      _userStateNotifier.setOnline();
+    });
+  }
+
+  void _setOfflineWithDebounce() {
+    _stateChangeTimer?.cancel(); // Cancel any pending online timer
+    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+      _userStateNotifier.setOffline();
+    });
   }
 
   @override
@@ -78,6 +98,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () {
+              _stateChangeTimer?.cancel(); // Cancel any pending timer
               _userStateNotifier
                   .setOffline(); // Explicitly set state to offline on logout
               widget.onSignOut();
