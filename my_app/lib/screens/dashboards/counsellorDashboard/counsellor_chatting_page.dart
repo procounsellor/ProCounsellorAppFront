@@ -1,16 +1,19 @@
-import 'dart:async'; // For using Timer
 import 'package:flutter/material.dart';
-import '../userDashboard/chat_service.dart'; // Ensure MessageRequest class is available
+import 'package:firebase_database/firebase_database.dart'; // For Firebase Realtime Database
+import 'package:http/http.dart' as http; // For API calls
+import '../userDashboard/chat_service.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
+  final String photo;
 
   ChattingPage({
     required this.itemName,
     required this.userId,
     required this.counsellorId,
+    required this.photo,
   });
 
   @override
@@ -31,13 +34,20 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   Future<void> _initializeChat() async {
+    print('Initializing chat...');
     await _startChat();
     if (!isLoading) {
-      _listenForNewMessages();
+      print('Chat initialized, loading messages...');
+      await _loadMessages(); // Ensure messages are loaded
+      _markUnreadMessagesAsSeen(); // Mark unread messages as seen when the page is opened
+      _listenForNewMessages(); // Set up listener for new messages
+      _listenForSeenStatusUpdates();
+      _listenForIsSeenChanges(); // Listen for changes in the 'isSeen' flag
+    } else {
+      print('Chat is still loading.');
     }
   }
 
-  // Start a new chat and get chatId
   Future<void> _startChat() async {
     try {
       chatId = await ChatService().startChat(widget.userId, widget.counsellorId)
@@ -45,64 +55,103 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         isLoading = false;
       });
-      _loadMessages();
+      print('Chat started successfully with chatId: $chatId');
     } catch (e) {
       print('Error starting chat: $e');
     }
   }
 
-  // Load initial messages from the database
   Future<void> _loadMessages() async {
     try {
+      print('Loading messages...');
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
       setState(() {
         messages = fetchedMessages;
       });
-      _markUnseenMessagesAsSeen();
+      print('Loaded ${messages.length} messages.');
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
     }
   }
 
-  // Listen for real-time updates to messages
+  Future<void> _markMessageAsSeen(String messageId) async {
+    try {
+      String url =
+          'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
+      print('Marking $chatId and message $messageId as seen...');
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode == 200) {
+        print('Message $messageId marked as seen.');
+      } else {
+        print('Failed to mark message $messageId as seen: ${response.body}');
+      }
+    } catch (e) {
+      print('Error marking message $messageId as seen: $e');
+    }
+  }
+
+  // Real-time listener for new messages
   void _listenForNewMessages() {
     ChatService().listenForNewMessages(chatId, (newMessages) {
       if (mounted) {
         setState(() {
-          // Avoid duplicate messages using their 'id'
           for (var message in newMessages) {
             if (!messages.any(
                 (existingMessage) => existingMessage['id'] == message['id'])) {
               messages.add(message);
+              // Mark the newly received message as seen
+              if (message['senderId'] == widget.userId) {
+                _markMessageAsSeen(message['id']);
+              }
             }
           }
-          _markUnseenMessagesAsSeen();
           _scrollToBottom();
         });
       }
     });
   }
 
-  // Mark unseen messages as seen (specific to counselor)
-  Future<void> _markUnseenMessagesAsSeen() async {
-    try {
-      for (var message in messages) {
-        if (message['senderId'] != widget.counsellorId &&
-            !(message['seen'] ?? false)) {
-          await ChatService().markMessageAsSeen(chatId, message['id'], widget.counsellorId);
-          setState(() {
-            message['seen'] = true; // Update local state for the current view
-          });
-        }
+  void _listenForSeenStatusUpdates() {
+    ChatService().listenForSeenStatusUpdates(chatId, (updatedMessages) {
+      if (mounted) {
+        setState(() {
+          // Update the 'isSeen' status of the messages
+          for (var updatedMessage in updatedMessages) {
+            for (var message in messages) {
+              if (message['id'] == updatedMessage['id']) {
+                message['isSeen'] = updatedMessage['isSeen'];
+              }
+            }
+          }
+        });
       }
-    } catch (e) {
-      print('Error marking messages as seen: $e');
-    }
+    });
   }
 
-  // Send a message and add it to the local list of messages
+  // Listen for real-time changes in the 'isSeen' flag of counsellor's messages
+  void _listenForIsSeenChanges() {
+    final databaseReference =
+        FirebaseDatabase.instance.ref('chats/$chatId/messages');
+
+    databaseReference.onChildChanged.listen((event) {
+      final updatedMessage = event.snapshot.value as Map<String, dynamic>;
+      final messageId = updatedMessage['id'];
+      final isSeen = updatedMessage['isSeen'];
+
+      // Update the UI if the isSeen flag changes for a counsellor's message
+      setState(() {
+        for (var message in messages) {
+          if (message['id'] == messageId &&
+              message['senderId'] == widget.counsellorId) {
+            message['isSeen'] = isSeen;
+          }
+        }
+      });
+    });
+  }
+
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       try {
@@ -121,7 +170,6 @@ class _ChattingPageState extends State<ChattingPage> {
     }
   }
 
-  // Scroll to the bottom of the chat
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -130,9 +178,31 @@ class _ChattingPageState extends State<ChattingPage> {
     });
   }
 
+  // Method to fetch user online/offline status from Firebase
+  Stream<String> getUserState(String userId) {
+    final databaseReference =
+        FirebaseDatabase.instance.ref('userStates/$userId/state');
+    return databaseReference.onValue
+        .map((event) => event.snapshot.value as String);
+  }
+
+  // Mark all unread messages as seen when the page is opened
+  Future<void> _markUnreadMessagesAsSeen() async {
+    try {
+      for (var message in messages) {
+        if (message['state'] != 'seen' &&
+            message['senderId'] == widget.userId) {
+          String messageId = message['id'];
+          await _markMessageAsSeen(messageId);
+        }
+      }
+    } catch (e) {
+      print('Error marking unread messages as seen: $e');
+    }
+  }
+
   @override
   void dispose() {
-    // Cancel listeners or timers to prevent memory leaks
     ChatService().cancelListeners(chatId);
     _controller.dispose();
     super.dispose();
@@ -149,6 +219,40 @@ class _ChattingPageState extends State<ChattingPage> {
           ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // Client's Profile Photo and Online/Offline Indicator
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          widget.photo, // Replace with actual photo URL
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(widget.itemName),
+                      SizedBox(width: 10),
+                      StreamBuilder<String>(
+                        // User state (online/offline)
+                        stream: getUserState(widget.userId),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            final state = snapshot.data;
+                            return CircleAvatar(
+                              radius: 6,
+                              backgroundColor:
+                                  state == 'online' ? Colors.green : Colors.red,
+                            );
+                          }
+                          return CircleAvatar(
+                            radius: 6,
+                            backgroundColor: Colors.grey,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
@@ -157,6 +261,8 @@ class _ChattingPageState extends State<ChattingPage> {
                       final message = messages[index];
                       final isUserMessage =
                           message['senderId'] == widget.userId;
+                      final isCounsellorMessage =
+                          message['senderId'] == widget.counsellorId;
 
                       return Align(
                         alignment: isUserMessage
@@ -184,15 +290,18 @@ class _ChattingPageState extends State<ChattingPage> {
                                   fontSize: 16.0,
                                 ),
                               ),
-                             if (isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the user
-                                Text(
-                                  'Seen',
-                                  style: TextStyle(fontSize: 12, color: Colors.green),
-                                ),
-                              if (!isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the counselor
-                                Text(
-                                  'Seen',
-                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                              // Show 'Seen' indicator for counsellor's messages
+                              if (isCounsellorMessage &&
+                                  message['isSeen'] == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5.0),
+                                  child: Text(
+                                    'Seen',
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      color: Colors.green,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),

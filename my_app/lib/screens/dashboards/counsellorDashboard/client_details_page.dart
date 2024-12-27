@@ -41,6 +41,7 @@ class ClientDetailsPage extends StatelessWidget {
                       userId:
                           client['userName'], // Assuming 'id' is the user's ID
                       counsellorId: counsellorId,
+                      photo: client['photo'],
                     ),
                   ),
                 );
