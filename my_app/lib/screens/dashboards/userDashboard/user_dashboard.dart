@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 
 import 'search_page.dart';
@@ -19,38 +20,52 @@ class _UserDashboardState extends State<UserDashboard> {
   List<dynamic> _liveCounsellors = [];
   List<dynamic> _topRatedCounsellors = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchCounsellors();
+    _fetchTopCounsellors();
+    _listenToCounsellorStates();
   }
 
-  Future<void> _fetchCounsellors() async {
+  Future<void> _fetchTopCounsellors() async {
     try {
       final response = await http.get(
-          Uri.parse('http://localhost:8080/api/counsellor/counsellors-online'));
+          Uri.parse('http://localhost:8080/api/counsellor/sorted-by-rating'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List<dynamic>;
-
         setState(() {
-          // Filter for online counsellors
-          _liveCounsellors = data.where((c) => c['state'] == 'ONLINE').toList();
-
-          // Filter for top-rated counsellors
-          _topRatedCounsellors = data.where((c) {
-            final rating = c['rating'];
-            return rating != null && rating >= 4.0;
-          }).toList();
+          _topRatedCounsellors = data;
         });
       } else {
         print(
             'Failed to load counsellors. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching counsellors: $e');
+      print('Error fetching top-rated counsellors: $e');
     }
+  }
+
+  void _listenToCounsellorStates() {
+    final databaseReference = FirebaseDatabase.instance.ref('counsellorStates');
+    databaseReference.onValue.listen((event) {
+      final snapshotValue = event.snapshot.value;
+
+      if (snapshotValue is Map<dynamic, dynamic>) {
+        final states = Map<String, dynamic>.from(snapshotValue);
+        setState(() {
+          _liveCounsellors = _topRatedCounsellors.where((counsellor) {
+            final counsellorId = counsellor['userName'];
+            final state = states[counsellorId]?['state'];
+            return state == 'online'; // Include only online counsellors
+          }).toList();
+        });
+      } else {
+        print("Unexpected data type for snapshot value: $snapshotValue");
+      }
+    });
   }
 
   @override
@@ -81,7 +96,6 @@ class _UserDashboardState extends State<UserDashboard> {
               },
               child: Text("Search"),
             ),
-
             SizedBox(height: 20),
             // Horizontal Lists
             Expanded(
@@ -121,14 +135,13 @@ class _UserDashboardState extends State<UserDashboard> {
               if (isNews) {
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to the DetailsPage for News
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
                           itemName: items[index],
-                          userId: widget.username, // Pass the userId
-                          counsellorId: '', // For news, no counsellorId
+                          userId: widget.username,
+                          counsellorId: '',
                         ),
                       ),
                     );
@@ -149,21 +162,16 @@ class _UserDashboardState extends State<UserDashboard> {
                 final counsellor = items[index];
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to the DetailsPage for Counsellor
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
-                          itemName: counsellor['firstName'] ??
-                              counsellor[
-                                  'userName'], // Pass the counsellor's name
-                          userId: widget.username, // Pass the userId
-                          counsellorId: counsellor['userName'] ??
-                              '', // Pass the counsellorId
-                          isNews:
-                              false, // This is a counsellor, so isNews is false
-                          counsellor:
-                              counsellor, // Pass the full counsellor object
+                          itemName:
+                              counsellor['firstName'] ?? counsellor['userName'],
+                          userId: widget.username,
+                          counsellorId: counsellor['userName'] ?? '',
+                          isNews: false,
+                          counsellor: counsellor,
                         ),
                       ),
                     );
@@ -176,7 +184,7 @@ class _UserDashboardState extends State<UserDashboard> {
                         CircleAvatar(
                           backgroundImage: NetworkImage(
                             counsellor['photoUrl'] ??
-                                'https://images.app.goo.gl/TXSqSkYAWDGLnJ337',
+                                'https://via.placeholder.com/150',
                           ),
                           radius: 40,
                         ),
