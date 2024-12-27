@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart'; // Import for Firebase Realtime Database
 import 'dart:convert';
 import 'counsellor_chatting_page.dart';
 
@@ -79,6 +80,13 @@ class _ChatsPageState extends State<ChatsPage> {
     });
   }
 
+  Stream<String> getUserState(String userId) {
+    final databaseReference =
+        FirebaseDatabase.instance.ref('userStates/$userId/state');
+    return databaseReference.onValue
+        .map((event) => event.snapshot.value as String);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,11 +114,38 @@ class _ChatsPageState extends State<ChatsPage> {
                     itemBuilder: (context, index) {
                       final client = filteredClients[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                            client['photo'] ??
-                                'https://via.placeholder.com/150',
-                          ),
+                        leading: Stack(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                client['photo'] ??
+                                    'https://via.placeholder.com/150',
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: StreamBuilder<String>(
+                                stream: getUserState(client['userName']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final state = snapshot.data;
+                                    return CircleAvatar(
+                                      radius: 6,
+                                      backgroundColor: state == 'online'
+                                          ? Colors.green
+                                          : const Color.fromARGB(
+                                              255, 12, 12, 12),
+                                    );
+                                  }
+                                  return CircleAvatar(
+                                    radius: 6,
+                                    backgroundColor: Colors.grey,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         title: Text(
                             "${client['firstName']} ${client['lastName']}"),
@@ -125,6 +160,7 @@ class _ChatsPageState extends State<ChatsPage> {
                                     "${client['firstName']} ${client['lastName']}",
                                 userId: client['userName'],
                                 counsellorId: widget.counsellorId,
+                                photo: client['photo'],
                               ),
                             ),
                           );

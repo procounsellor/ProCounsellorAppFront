@@ -14,6 +14,7 @@ class MessageRequest {
     return {
       'senderId': senderId,
       'text': text,
+      'isSeen': false, // Default value for new messages
     };
   }
 }
@@ -23,21 +24,29 @@ class ChatService {
   final Map<String, StreamSubscription> _activeListeners = {};
 
   // Mark a message as seen
-  Future<void> markMessageAsSeen(String chatId, String messageId, String viewerId) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/$chatId/messages/$messageId/mark-seen'),
-      body: jsonEncode({'viewerId': viewerId}), // Include viewerId
-      headers: {'Content-Type': 'application/json'},
-    );
+  Future<void> markMessageAsSeen(
+      String chatId, String messageId, String viewerId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/$chatId/messages/$messageId/mark-seen'),
+        body: jsonEncode({'viewerId': viewerId}), // Include viewerId
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to mark message as seen: ${response.body}');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to mark message as seen: ${response.body}');
+      }
+
+      // Update the 'isSeen' field in the Firebase Realtime Database
+      FirebaseDatabase database = FirebaseDatabase.instance;
+      DatabaseReference messageRef =
+          database.ref('chats/$chatId/messages/$messageId');
+      await messageRef
+          .update({'isSeen': true}); // Mark message as seen in the database
+    } catch (e) {
+      print('Error marking message as seen: $e');
     }
-  } catch (e) {
-    print('Error marking message as seen: $e');
   }
-}
 
   // Start a new chat
   Future<String?> startChat(String userId, String counsellorId) async {
@@ -84,15 +93,17 @@ class ChatService {
           'id': msg['id'] ?? '',
           'senderId': msg['senderId'] ?? 'Unknown',
           'text': msg['text'] ?? 'No message',
+          'isSeen': msg['isSeen'] ?? false, // Add the 'isSeen' field here
         };
       }).toList();
     } else {
       throw Exception('Failed to fetch messages: ${response.body}');
     }
-}
+  }
 
-// Listen for real-time updates to messages
-  void listenForNewMessages(String chatId, Function(List<Map<String, dynamic>>) onNewMessages) {
+  // Listen for real-time updates to messages
+  void listenForNewMessages(
+      String chatId, Function(List<Map<String, dynamic>>) onNewMessages) {
     FirebaseDatabase database = FirebaseDatabase.instance;
     DatabaseReference messagesRef = database.ref('chats/$chatId/messages');
 
@@ -101,15 +112,71 @@ class ChatService {
       List<Map<String, dynamic>> newMessages = [];
 
       if (event.snapshot.value is Map) {
-        var messageData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        var messageData =
+            Map<String, dynamic>.from(event.snapshot.value as Map);
         newMessages.add({
           'id': event.snapshot.key ?? '',
           'senderId': messageData['senderId'] ?? 'Unknown',
           'text': messageData['text'] ?? 'No message',
+          'isSeen':
+              messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
         });
       }
 
       onNewMessages(newMessages);
+    });
+
+    // Listen for updates to existing messages
+    messagesRef.onChildChanged.listen((event) {
+      List<Map<String, dynamic>> updatedMessages = [];
+
+      if (event.snapshot.value is Map) {
+        var messageData =
+            Map<String, dynamic>.from(event.snapshot.value as Map);
+        updatedMessages.add({
+          'id': event.snapshot.key ?? '',
+          'senderId': messageData['senderId'] ?? 'Unknown',
+          'text': messageData['text'] ?? 'No message',
+          'isSeen':
+              messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+        });
+      }
+
+      onNewMessages(updatedMessages); // Notify the listener of updates
+    });
+
+    // Save the subscription for later cleanup
+    _activeListeners[chatId] = subscription;
+  }
+
+  // Listen for updates to the 'isSeen' field in real-time
+  void listenForSeenStatusUpdates(
+      String chatId, Function(List<Map<String, dynamic>>) onSeenStatusUpdates) {
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    DatabaseReference messagesRef = database.ref('chats/$chatId/messages');
+
+    // Listen for changes to the 'isSeen' field of existing messages
+    StreamSubscription subscription =
+        messagesRef.onChildChanged.listen((event) {
+      List<Map<String, dynamic>> updatedMessages = [];
+
+      if (event.snapshot.value is Map) {
+        var messageData =
+            Map<String, dynamic>.from(event.snapshot.value as Map);
+        if (messageData.containsKey('isSeen')) {
+          updatedMessages.add({
+            'id': event.snapshot.key ?? '',
+            'senderId': messageData['senderId'] ?? 'Unknown',
+            'text': messageData['text'] ?? 'No message',
+            'isSeen':
+                messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+          });
+        }
+      }
+
+      if (updatedMessages.isNotEmpty) {
+        onSeenStatusUpdates(updatedMessages);
+      }
     });
 
     // Save the subscription for later cleanup
@@ -130,4 +197,3 @@ class ChatService {
     _activeListeners.clear();
   }
 }
-

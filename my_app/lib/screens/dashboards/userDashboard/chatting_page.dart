@@ -1,5 +1,6 @@
 import 'dart:async'; // For using Timer
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // For API calls
 import 'chat_service.dart'; // Ensure MessageRequest class is available
 
 class ChattingPage extends StatefulWidget {
@@ -12,10 +13,11 @@ class ChattingPage extends StatefulWidget {
     required this.userId,
     required this.counsellorId,
   });
-  
+
   @override
   _ChattingPageState createState() => _ChattingPageState();
 }
+
 class _ChattingPageState extends State<ChattingPage> {
   List<Map<String, dynamic>> messages = []; // Store full message objects
   TextEditingController _controller = TextEditingController();
@@ -33,6 +35,7 @@ class _ChattingPageState extends State<ChattingPage> {
     await _startChat();
     if (!isLoading) {
       _listenForNewMessages();
+      _listenForSeenStatusUpdates();
     }
   }
 
@@ -58,7 +61,6 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         messages = fetchedMessages;
       });
-      _markUnseenMessagesAsSeen();
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -72,33 +74,37 @@ class _ChattingPageState extends State<ChattingPage> {
         setState(() {
           // Avoid duplicate messages using their 'id'
           for (var message in newMessages) {
-            if (!messages.any((existingMessage) =>
-                existingMessage['id'] == message['id'])) {
+            if (!messages.any(
+                (existingMessage) => existingMessage['id'] == message['id'])) {
               messages.add(message);
+              // If the message is from the counsellor, mark it as seen
+              if (message['senderId'] == widget.counsellorId) {
+                _markMessageAsSeen(message['id']);
+              }
             }
           }
-          _markUnseenMessagesAsSeen();
           _scrollToBottom();
         });
       }
     });
   }
 
-  // Mark unseen messages as seen
-  Future<void> _markUnseenMessagesAsSeen() async {
-    try {
-      for (var message in messages) {
-        if (message['senderId'] != widget.userId && !(message['seen'] ?? false)) {
-          await ChatService().markMessageAsSeen(chatId, message['id'], widget.userId);
-          // Optionally update the local state if the API returns updated message data
-          setState(() {
-            message['seen'] = true;
-          });
-        }
+  // Listen for updates to the 'isSeen' field in real-time
+  void _listenForSeenStatusUpdates() {
+    ChatService().listenForSeenStatusUpdates(chatId, (updatedMessages) {
+      if (mounted) {
+        setState(() {
+          // Update the 'isSeen' status of the messages
+          for (var updatedMessage in updatedMessages) {
+            for (var message in messages) {
+              if (message['id'] == updatedMessage['id']) {
+                message['isSeen'] = updatedMessage['isSeen'];
+              }
+            }
+          }
+        });
       }
-    } catch (e) {
-      print('Error marking messages as seen: $e');
-    }
+    });
   }
 
   // Send a message and add it to the local list of messages
@@ -127,6 +133,23 @@ class _ChattingPageState extends State<ChattingPage> {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
+  }
+
+  // Mark the message as 'seen' when it's from the counsellor
+  Future<void> _markMessageAsSeen(String messageId) async {
+    try {
+      String url =
+          'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
+      print('Marking $chatId and message $messageId as seen...');
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode == 200) {
+        print('Message $messageId marked as seen.');
+      } else {
+        print('Failed to mark message $messageId as seen: ${response.body}');
+      }
+    } catch (e) {
+      print('Error marking message $messageId as seen: $e');
+    }
   }
 
   @override
@@ -183,15 +206,17 @@ class _ChattingPageState extends State<ChattingPage> {
                                   fontSize: 16.0,
                                 ),
                               ),
-                              if (isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the user
-                                Text(
-                                  'Seen',
-                                  style: TextStyle(fontSize: 12, color: Colors.green),
-                                ),
-                              if (!isUserMessage && (message['seen'] ?? false)) // "Seen" label for messages sent by the counselor
-                                Text(
-                                  'Seen',
-                                  style: TextStyle(fontSize: 12, color: Colors.green),
+                              // Display blue ticks if message is seen
+                              if (message['isSeen'] == true && isUserMessage)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5.0),
+                                  child: Text(
+                                    'Seen',
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      color: Colors.green,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -211,7 +236,8 @@ class _ChattingPageState extends State<ChattingPage> {
                             hintText: "Type a message...",
                             border: OutlineInputBorder(),
                           ),
-                          onSubmitted: (_) => _sendMessage(), // Handle Enter key
+                          onSubmitted: (_) =>
+                              _sendMessage(), // Handle Enter key
                         ),
                       ),
                       IconButton(
