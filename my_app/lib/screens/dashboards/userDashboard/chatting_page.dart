@@ -140,10 +140,8 @@ class _ChattingPageState extends State<ChattingPage> {
     try {
       String url =
           'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
-      print('Marking $chatId and message $messageId as seen...');
       final response = await http.post(Uri.parse(url));
       if (response.statusCode == 200) {
-        print('Message $messageId marked as seen.');
       } else {
         print('Failed to mark message $messageId as seen: ${response.body}');
       }
