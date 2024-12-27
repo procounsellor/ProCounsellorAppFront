@@ -4,6 +4,7 @@ import 'counsellor_dashboard.dart';
 import 'counsellor_my_activities_page.dart'; // Import My Activities Page
 import 'counsellor_transactions_page.dart'; // Import Learn with Us Page
 import 'counsellor_profile_page.dart';
+import 'counsellor_state_notifier.dart';
 
 class CounsellorBasePage extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -12,11 +13,13 @@ class CounsellorBasePage extends StatefulWidget {
   CounsellorBasePage({required this.onSignOut, required this.counsellorId});
 
   @override
-  _BasePageState createState() => _BasePageState();
+  _CounsellorBasePageState createState() => _CounsellorBasePageState();
 }
 
-class _BasePageState extends State<CounsellorBasePage> {
+class _CounsellorBasePageState extends State<CounsellorBasePage>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  late CounsellorStateNotifier _counsellorStateNotifier;
 
   // Define the pages that can be navigated to
   final List<Widget> _pages = [];
@@ -24,6 +27,15 @@ class _BasePageState extends State<CounsellorBasePage> {
   @override
   void initState() {
     super.initState();
+
+    // Add WidgetsBindingObserver to listen for app lifecycle events
+    WidgetsBinding.instance.addObserver(this);
+
+    // Initialize UserStateNotifier
+    _counsellorStateNotifier = CounsellorStateNotifier(widget.counsellorId);
+
+    // Set user state to "online" when BasePage is created
+    _counsellorStateNotifier.setOnline();
 
     // Initialize the pages with dynamic data
     _pages.add(CounsellorDashboard(
@@ -71,6 +83,27 @@ class _BasePageState extends State<CounsellorBasePage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Remove observer when BasePage is disposed
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Set user state to "offline" when BasePage is destroyed
+    _counsellorStateNotifier.setOffline();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _counsellorStateNotifier.setOffline();
+    } else if (state == AppLifecycleState.resumed) {
+      _counsellorStateNotifier.setOnline();
+    }
   }
 
   void _onItemTapped(int index) {
