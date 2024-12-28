@@ -67,20 +67,6 @@ class ClientDetailsPage extends StatelessWidget {
                 );
               },
             ),
-            ElevatedButton.icon(
-              icon: Icon(Icons.remove_circle),
-              label: Text("Remove Subscriber"),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text("${client['firstName']} removed as subscriber")),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-            ),
           ],
         ),
       ),

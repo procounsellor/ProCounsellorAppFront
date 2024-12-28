@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/followers_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
 import 'counsellor_chat_page.dart';
 
@@ -30,6 +31,19 @@ class CounsellorMyActivitiesPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => SubscribersPage(counsellorId: username),
+                  ),
+                );
+              },
+            ),
+            ActivityBox(
+              icon: Icons.person_add_alt_1,
+              title: "Followers",
+              onTap: () {
+                // Navigate to SubscribersPage with counsellor ID
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FollowersPage(counsellorId: username),
                   ),
                 );
               },

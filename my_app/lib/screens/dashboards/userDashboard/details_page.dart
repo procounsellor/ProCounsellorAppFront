@@ -26,6 +26,7 @@ class DetailsPage extends StatefulWidget {
 
 class _DetailsPageState extends State<DetailsPage> {
   bool isSubscribed = false; // Track subscription status
+  bool isFollowed = false; // Track following status
   bool isLoading = true; // Track loading status for API calls
   Map<String, dynamic>? counsellorDetails; // Store fetched counsellor details
    List<dynamic> reviews = [];
@@ -36,6 +37,7 @@ class _DetailsPageState extends State<DetailsPage> {
     super.initState();
     fetchCounsellorDetails(); // Fetch counsellor details on page load
     checkSubscriptionStatus(); // Check subscription status on page load
+    checkFollowingStatus(); // Check following status on page load
     fetchReviews();
   }
 
@@ -125,6 +127,39 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+
+  // Function to check if the user is already following the counsellor
+  Future<void> checkFollowingStatus() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/user/${widget.userId}/has-followed/${widget.counsellorId}');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final bool status = json.decode(response.body);
+        setState(() {
+          isFollowed = status;
+          isLoading = false; // Stop loading once the status is fetched
+        });
+      } else {
+        setState(() {
+          isLoading = false; // Stop loading even if there's an error
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to fetch subscription status")),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false; // Stop loading if there's an error
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
   // Function to call the subscribe API
   Future<void> subscribe() async {
     final url = Uri.parse(
@@ -170,6 +205,60 @@ class _DetailsPageState extends State<DetailsPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to unsubscribe")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  // Function to call the follow API
+  Future<void> follow() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/user/${widget.userId}/follow/${widget.counsellorId}');
+
+    try {
+      final response = await http.post(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isFollowed = true; // Update following status
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Followed to ${widget.itemName}!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to follow")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  // Function to call the unfollow API
+  Future<void> unfollow() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/user/${widget.userId}/unfollow/${widget.counsellorId}');
+
+    try {
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isFollowed = false; // Update following status
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Unfollow from ${widget.itemName}!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to unfollow")),
         );
       }
     } catch (e) {
@@ -307,6 +396,15 @@ Widget build(BuildContext context) {
                       icon: Icon(
                           isSubscribed ? Icons.cancel : Icons.subscriptions),
                       label: Text(isSubscribed ? "Unsubscribe" : "Subscribe"),
+                    ),
+                    SizedBox(height: 20),
+
+                    //Follow/Unfollow button
+                    ElevatedButton.icon(
+                      onPressed: isFollowed ? unfollow : follow,
+                      icon: Icon(
+                          isFollowed ? Icons.cancel : Icons.subscriptions),
+                      label: Text(isFollowed ? "Unfollow" : "Follow"),
                     ),
                     SizedBox(height: 20),
 
