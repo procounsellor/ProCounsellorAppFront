@@ -20,11 +20,14 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   List<dynamic> reviews = []; // To store reviews
   String counsellorName = "";
   double earnings = 150.0; // Placeholder earnings value
+  String  counsellorFullName = "";
+
 
   @override
   void initState() {
     super.initState();
-    fetchDashboardData(); // Fetch data when the page loads
+    fetchDashboardData(); 
+    fetchCounsellorFullName(widget.counsellorId);
   }
 
   // Fetch clients and counsellor details
@@ -67,6 +70,22 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
     }
   }
 
+  void fetchCounsellorFullName(String counsellorName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/reviews/counsellor/fullname/$counsellorName'),
+      );
+
+      if (response.statusCode == 200) {
+        counsellorFullName = response.body;
+      } else {
+        print('Error fetching counsellor full name: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
 @override
 Widget build(BuildContext context) {
   return Scaffold(
@@ -85,7 +104,7 @@ Widget build(BuildContext context) {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    "Welcome, $counsellorName!",
+                    "Welcome, $counsellorFullName !",
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
