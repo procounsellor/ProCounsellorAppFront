@@ -125,7 +125,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
 
   void _setOfflineWithDebounce() {
     _stateChangeTimer?.cancel(); // Cancel any pending online timer
-    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+    _stateChangeTimer = Timer(const Duration(seconds: 15), () {
       _counsellorStateNotifier.setOffline();
     });
   }

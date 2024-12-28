@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
 import 'dart:convert';
 import 'client_details_page.dart';
-import 'all_reviews_page.dart'; // New page for all reviews
 
 class CounsellorDashboard extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -67,220 +67,178 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Counsellor Dashboard"),
-        // actions: [
-        //   // IconButton(
-        //   //   icon: Icon(Icons.logout),
-        //   //   onPressed: widget.onSignOut, // Call the onSignOut method
-        //   // ),
-        // ],
-      ),
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(), // Show loader while loading
-            )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Welcome Message
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      "Welcome, $counsellorName!",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text("Counsellor Dashboard"),
+    ),
+    body: isLoading
+        ? Center(
+            child: CircularProgressIndicator(), // Show loader while loading
+          )
+        : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome Message
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    "Welcome, $counsellorName!",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
 
-                  // Horizontal Scrollable Client List
-                  clients.isEmpty
-                      ? Center(
-                          child: Text("No subscribed clients found."),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: SizedBox(
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: clients.length,
-                              itemBuilder: (context, index) {
-                                final client = clients[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ClientDetailsPage(
-                                          client: client,
-                                          counsellorId: widget.counsellorId,
+                // Horizontal Scrollable Client List
+                clients.isEmpty
+                    ? Center(
+                        child: Text("No subscribed clients found."),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
+                          height: 120,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: clients.length,
+                            itemBuilder: (context, index) {
+                              final client = clients[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ClientDetailsPage(
+                                        client: client,
+                                        counsellorId: widget.counsellorId,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 100,
+                                  margin: EdgeInsets.symmetric(horizontal: 8),
+                                  child: Column(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: NetworkImage(
+                                          client['photo'] ??
+                                              'https://via.placeholder.com/150',
                                         ),
                                       ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 100,
-                                    margin: EdgeInsets.symmetric(horizontal: 8),
-                                    child: Column(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundImage: NetworkImage(
-                                            client['photo'] ??
-                                                'https://via.placeholder.com/150',
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          client['firstName'] ?? "Unknown",
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        client['firstName'] ?? "Unknown",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-
-                  // Earnings Section
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Card(
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Earnings",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "\$${earnings.toStringAsFixed(2)}",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ],
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Withdrawal initiated."),
-                                  ),
-                                );
-                              },
-                              child: Text("Withdraw"),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  ),
 
-                  // Reviews Section
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      "Reviews",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  reviews.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text("No reviews available."),
-                        )
-                      : Container(
-                          height: 150,
-                          child: Column(
+                // Earnings Section
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (reviews.length > 4)
-                                TextButton(
+                              Text(
+                                "Earnings",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "\$${earnings.toStringAsFixed(2)}",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Withdrawal initiated."),
+                                ),
+                              );
+                            },
+                            child: Text("Withdraw"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Reviews Section
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Reviews",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Manage your reviews here.",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          SizedBox(height: 16),
+                          // Wrap the ElevatedButton in a Row with flexibility
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: ElevatedButton(
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => AllReviewsPage(
-                                          reviews: reviews,
-                                        ),
+                                        builder: (context) => MyReviewPage(username: widget.counsellorId),
                                       ),
                                     );
                                   },
-                                  child: Text("See All Reviews"),
-                                ),
-                              Expanded(
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount:
-                                      reviews.length > 4 ? 4 : reviews.length,
-                                  itemBuilder: (context, index) {
-                                    final review = reviews[index];
-                                    return Container(
-                                      width: 150,
-                                      margin:
-                                          EdgeInsets.symmetric(horizontal: 8),
-                                      padding: EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            review['userName'] ?? "Anonymous",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Row(
-                                            children: [
-                                              Icon(Icons.star,
-                                                  color: Colors.amber,
-                                                  size: 16),
-                                              Text("${review['rating'] ?? 0}"),
-                                            ],
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            review['reviewText'] ?? "",
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
+                                  child: Text("Go to My Reviews"),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                ],
-              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-    );
-  }
+          ),
+  );
+}
 }

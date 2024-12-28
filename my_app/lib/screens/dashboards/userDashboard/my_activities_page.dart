@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'subscribed_counsellors_page.dart';
 import 'chat_page.dart';
 
@@ -53,6 +54,19 @@ class MyActivitiesPage extends StatelessWidget {
               onTap: () {
                 // Navigate to Calls Page
                 Navigator.pushNamed(context, '/calls');
+              },
+            ),
+            ActivityBox(
+              icon: Icons.reviews,
+              title: "My Reviews",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MyReviewPage(username: username),
+                  ),
+                );
               },
             ),
             ActivityBox(

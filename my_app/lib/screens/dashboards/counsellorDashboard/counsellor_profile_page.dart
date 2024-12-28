@@ -126,38 +126,6 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
     );
   }
 
-  Widget _buildUserReviews(List<dynamic> reviews) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: reviews.map((review) {
-        return Container(
-          margin: EdgeInsets.symmetric(vertical: 8.0),
-          padding: EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildListItem("Counsellor Name", review["counsellorName"]),
-              _buildListItem("Review", review["reviewText"]),
-              _buildListItem("Rating", review["rating"]),
-              _buildListItem(
-                "Timestamp",
-                review["timestamp"] != null
-                    ? DateTime.fromMillisecondsSinceEpoch(
-                        review["timestamp"]["seconds"] * 1000,
-                      ).toString()
-                    : "Not provided",
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,11 +150,11 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                           backgroundColor: Colors.grey[300],
                           backgroundImage: _profileImageBytes != null
                               ? MemoryImage(_profileImageBytes!)
-                              : (profileData!["photo"] != null
-                                  ? NetworkImage(profileData!["photo"])
+                              : (profileData!["photoUrl"] != null
+                                  ? NetworkImage(profileData!["photoUrl"])
                                   : null) as ImageProvider?,
                           child: _profileImageBytes == null &&
-                                  profileData!["photo"] == null
+                                  profileData!["photoUrl"] == null
                               ? Icon(Icons.person,
                                   size: 50, color: Colors.white)
                               : null,
@@ -218,19 +186,6 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                       _buildListItem("Converted", profileData!["converted"]),
 
                       SizedBox(height: 16),
-
-                      // User Reviews
-                      Text(
-                        "User Reviews:",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      profileData!["userReview"] != null &&
-                              profileData!["userReview"].isNotEmpty
-                          ? _buildUserReviews(profileData!["userReview"])
-                          : Text("No reviews available."),
                     ],
                   ),
                 ),
