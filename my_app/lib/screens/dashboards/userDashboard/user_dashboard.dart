@@ -21,12 +21,14 @@ class _UserDashboardState extends State<UserDashboard> {
   List<dynamic> _topRatedCounsellors = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
   bool isLoading = true;
+  String  userFullName = "";
 
   @override
   void initState() {
     super.initState();
     _fetchTopCounsellors();
     _listenToCounsellorStates();
+    fetchUserFullName(widget.username);
   }
 
   Future<void> _fetchTopCounsellors() async {
@@ -68,11 +70,27 @@ class _UserDashboardState extends State<UserDashboard> {
     });
   }
 
+  void fetchUserFullName(String userName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/reviews/user/fullname/$userName'),
+      );
+
+      if (response.statusCode == 200) {
+        userFullName = response.body;
+      } else {
+        print('Error fetching counsellor full name: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, ${widget.username}!"),
+        title: Text("Welcome, $userFullName !"),
         centerTitle: true,
       ),
       body: Padding(

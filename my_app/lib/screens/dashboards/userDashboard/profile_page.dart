@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse(
-            'http://localhost:8080/api/counsellor/${widget.username}/photo'),
+            'http://localhost:8080/api/user/${widget.username}/photo'),
       );
 
       request.files.add(
