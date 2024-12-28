@@ -1,6 +1,7 @@
 import 'dart:async'; // Import Timer
 
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
 import 'learn_with_us_page.dart';
@@ -80,7 +81,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
   void _setOfflineWithDebounce() {
     _stateChangeTimer?.cancel(); // Cancel any pending online timer
-    _stateChangeTimer = Timer(const Duration(seconds: 2), () {
+    _stateChangeTimer = Timer(const Duration(seconds: 15), () {
       _userStateNotifier.setOffline();
     });
   }
