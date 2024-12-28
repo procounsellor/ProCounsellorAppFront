@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/userDashboard/following_counsellors_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'subscribed_counsellors_page.dart';
 import 'chat_page.dart';
@@ -24,7 +25,7 @@ class MyActivitiesPage extends StatelessWidget {
           children: [
             ActivityBox(
               icon: Icons.person,
-              title: "Subscribed Counsellors",
+              title: "Counsellors Subscribed",
               onTap: () {
                 // Pass userId to SubscribedCounsellorsPage
                 Navigator.push(
@@ -32,6 +33,32 @@ class MyActivitiesPage extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (_) =>
                         SubscribedCounsellorsPage(username: username),
+                  ),
+                );
+              },
+            ),
+            ActivityBox(
+              icon: Icons.person_2_rounded,
+              title: "Counsellors Following",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        FollowingCounsellorsPage(username: username),
+                  ),
+                );
+              },
+            ),
+             ActivityBox(
+              icon: Icons.reviews,
+              title: "My Reviews",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MyReviewPage(username: username),
                   ),
                 );
               },
@@ -54,19 +81,6 @@ class MyActivitiesPage extends StatelessWidget {
               onTap: () {
                 // Navigate to Calls Page
                 Navigator.pushNamed(context, '/calls');
-              },
-            ),
-            ActivityBox(
-              icon: Icons.reviews,
-              title: "My Reviews",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MyReviewPage(username: username),
-                  ),
-                );
               },
             ),
             ActivityBox(
