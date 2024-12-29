@@ -34,17 +34,13 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   Future<void> _initializeChat() async {
-    print('Initializing chat...');
     await _startChat();
     if (!isLoading) {
-      print('Chat initialized, loading messages...');
-      await _loadMessages(); // Ensure messages are loaded
-      _markUnreadMessagesAsSeen(); // Mark unread messages as seen when the page is opened
-      _listenForNewMessages(); // Set up listener for new messages
+      await _loadMessages();
+      _markUnreadMessagesAsSeen();
+      _listenForNewMessages();
       _listenForSeenStatusUpdates();
-      _listenForIsSeenChanges(); // Listen for changes in the 'isSeen' flag
-    } else {
-      print('Chat is still loading.');
+      _listenForIsSeenChanges();
     }
   }
 
@@ -55,7 +51,6 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         isLoading = false;
       });
-      print('Chat started successfully with chatId: $chatId');
     } catch (e) {
       print('Error starting chat: $e');
     }
@@ -68,7 +63,6 @@ class _ChattingPageState extends State<ChattingPage> {
       setState(() {
         messages = fetchedMessages;
       });
-
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -79,10 +73,8 @@ class _ChattingPageState extends State<ChattingPage> {
     try {
       String url =
           'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
-
       final response = await http.post(Uri.parse(url));
-      if (response.statusCode == 200) {
-      } else {
+      if (response.statusCode != 200) {
         print('Failed to mark message $messageId as seen: ${response.body}');
       }
     } catch (e) {
@@ -90,7 +82,6 @@ class _ChattingPageState extends State<ChattingPage> {
     }
   }
 
-  // Real-time listener for new messages
   void _listenForNewMessages() {
     ChatService().listenForNewMessages(chatId, (newMessages) {
       if (mounted) {
@@ -99,7 +90,6 @@ class _ChattingPageState extends State<ChattingPage> {
             if (!messages.any(
                 (existingMessage) => existingMessage['id'] == message['id'])) {
               messages.add(message);
-              // Mark the newly received message as seen
               if (message['senderId'] == widget.userId) {
                 _markMessageAsSeen(message['id']);
               }
@@ -115,7 +105,6 @@ class _ChattingPageState extends State<ChattingPage> {
     ChatService().listenForSeenStatusUpdates(chatId, (updatedMessages) {
       if (mounted) {
         setState(() {
-          // Update the 'isSeen' status of the messages
           for (var updatedMessage in updatedMessages) {
             for (var message in messages) {
               if (message['id'] == updatedMessage['id']) {
@@ -128,17 +117,14 @@ class _ChattingPageState extends State<ChattingPage> {
     });
   }
 
-  // Listen for real-time changes in the 'isSeen' flag of counsellor's messages
   void _listenForIsSeenChanges() {
     final databaseReference =
         FirebaseDatabase.instance.ref('chats/$chatId/messages');
-
     databaseReference.onChildChanged.listen((event) {
       final updatedMessage = event.snapshot.value as Map<String, dynamic>;
       final messageId = updatedMessage['id'];
       final isSeen = updatedMessage['isSeen'];
 
-      // Update the UI if the isSeen flag changes for a counsellor's message
       setState(() {
         for (var message in messages) {
           if (message['id'] == messageId &&
@@ -176,7 +162,6 @@ class _ChattingPageState extends State<ChattingPage> {
     });
   }
 
-  // Method to fetch user online/offline status from Firebase
   Stream<String> getUserState(String userId) {
     final databaseReference =
         FirebaseDatabase.instance.ref('userStates/$userId/state');
@@ -184,7 +169,6 @@ class _ChattingPageState extends State<ChattingPage> {
         .map((event) => event.snapshot.value as String);
   }
 
-  // Mark all unread messages as seen when the page is opened
   Future<void> _markUnreadMessagesAsSeen() async {
     try {
       for (var message in messages) {
@@ -210,47 +194,68 @@ class _ChattingPageState extends State<ChattingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat with ${widget.itemName}"),
-        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous screen
+          },
+        ),
+        title: Row(
+          children: [
+            Stack(
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(widget.photo),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: StreamBuilder<String>(
+                    stream: getUserState(widget.userId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final state = snapshot.data;
+                        return CircleAvatar(
+                          radius: 6,
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: 5,
+                            backgroundColor:
+                                state == 'online' ? Colors.green : Colors.red,
+                          ),
+                        );
+                      }
+                      return CircleAvatar(
+                        radius: 6,
+                        backgroundColor: Colors.white,
+                        child: CircleAvatar(
+                          radius: 5,
+                          backgroundColor: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(width: 8), // Spacing between the photo and name
+            Expanded(
+              child: Text(
+                widget.itemName,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle long names gracefully
+              ),
+            ),
+          ],
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Client's Profile Photo and Online/Offline Indicator
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(
-                          widget.photo, // Replace with actual photo URL
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Text(widget.itemName),
-                      SizedBox(width: 10),
-                      StreamBuilder<String>(
-                        // User state (online/offline)
-                        stream: getUserState(widget.userId),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final state = snapshot.data;
-                            return CircleAvatar(
-                              radius: 6,
-                              backgroundColor:
-                                  state == 'online' ? Colors.green : Colors.red,
-                            );
-                          }
-                          return CircleAvatar(
-                            radius: 6,
-                            backgroundColor: Colors.grey,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
@@ -262,48 +267,46 @@ class _ChattingPageState extends State<ChattingPage> {
                       final isCounsellorMessage =
                           message['senderId'] == widget.counsellorId;
 
-                      return Align(
-                        alignment: isUserMessage
-                            ? Alignment.centerLeft
-                            : Alignment.centerRight,
-                        child: Container(
-                          margin: EdgeInsets.symmetric(
-                            vertical: 5.0,
-                            horizontal: 10.0,
+                      return Column(
+                        crossAxisAlignment: isUserMessage
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                              vertical: 5.0,
+                              horizontal: 10.0,
+                            ),
+                            padding: EdgeInsets.all(10.0),
+                            decoration: BoxDecoration(
+                              color: isUserMessage
+                                  ? Colors.grey[300]
+                                  : Colors.blue[100],
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            child: Text(
+                              message['text'] ?? 'No message',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16.0,
+                              ),
+                            ),
                           ),
-                          padding: EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                            color: isUserMessage
-                                ? Colors.grey[300]
-                                : Colors.blue[100],
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                message['text'] ?? 'No message',
+                          // Show 'Seen' indicator for the last message only
+                          if (index == messages.length - 1 &&
+                              isCounsellorMessage &&
+                              message['isSeen'] == true)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text(
+                                'Seen',
                                 style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16.0,
+                                  fontSize: 12.0,
+                                  color: Colors.grey,
                                 ),
                               ),
-                              // Show 'Seen' indicator for counsellor's messages
-                              if (isCounsellorMessage &&
-                                  message['isSeen'] == true)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5.0),
-                                  child: Text(
-                                    'Seen',
-                                    style: TextStyle(
-                                      fontSize: 12.0,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
+                            ),
+                        ],
                       );
                     },
                   ),
@@ -319,8 +322,7 @@ class _ChattingPageState extends State<ChattingPage> {
                             hintText: "Type a message...",
                             border: OutlineInputBorder(),
                           ),
-                          onSubmitted: (_) =>
-                              _sendMessage(), // Handle Enter key
+                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       IconButton(
