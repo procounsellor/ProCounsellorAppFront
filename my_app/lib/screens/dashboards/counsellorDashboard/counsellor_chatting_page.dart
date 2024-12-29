@@ -61,7 +61,9 @@ class _ChattingPageState extends State<ChattingPage> {
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
       setState(() {
-        messages = fetchedMessages;
+        messages = fetchedMessages
+            .map((msg) => Map<String, dynamic>.from(msg))
+            .toList(); // Convert each message
       });
       _scrollToBottom();
     } catch (e) {
@@ -121,7 +123,8 @@ class _ChattingPageState extends State<ChattingPage> {
     final databaseReference =
         FirebaseDatabase.instance.ref('chats/$chatId/messages');
     databaseReference.onChildChanged.listen((event) {
-      final updatedMessage = event.snapshot.value as Map<String, dynamic>;
+      final updatedMessage = Map<String, dynamic>.from(
+          event.snapshot.value as Map); // Ensure conversion
       final messageId = updatedMessage['id'];
       final isSeen = updatedMessage['isSeen'];
 
@@ -165,8 +168,11 @@ class _ChattingPageState extends State<ChattingPage> {
   Stream<String> getUserState(String userId) {
     final databaseReference =
         FirebaseDatabase.instance.ref('userStates/$userId/state');
-    return databaseReference.onValue
-        .map((event) => event.snapshot.value as String);
+    return databaseReference.onValue.map((event) {
+      final state =
+          event.snapshot.value as String?; // Explicitly cast to String
+      return state ?? 'offline'; // Default to 'offline' if null
+    });
   }
 
   Future<void> _markUnreadMessagesAsSeen() async {
