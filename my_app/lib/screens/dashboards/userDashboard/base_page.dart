@@ -1,6 +1,7 @@
 import 'dart:async'; // Import Timer
-
+import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // Import http for API calls
 import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
@@ -20,11 +21,15 @@ class BasePage extends StatefulWidget {
 }
 
 class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
   late UserStateNotifier _userStateNotifier;
 
   final List<Widget> _pages = [];
   Timer? _stateChangeTimer; // Timer for debouncing state changes
+
+  String? _photoUrl; // To store the user's photo URL
+  bool _isLoadingPhoto = true; // To track photo loading state
 
   @override
   void initState() {
@@ -35,6 +40,9 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
     // Initialize UserStateNotifier
     _userStateNotifier = UserStateNotifier(widget.username);
+
+    // Fetch user details
+    _fetchUserDetails();
 
     // Set user state to "online" when BasePage is created
     _setOnlineWithDebounce();
@@ -48,13 +56,41 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     _pages.add(ProfilePage(username: widget.username));
   }
 
+  Future<void> _fetchUserDetails() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/user/${widget.username}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _photoUrl = data['photo']; // Assuming API returns 'photoUrl'
+          _isLoadingPhoto = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingPhoto = false;
+        });
+        // Handle error
+        print('Failed to load user details: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingPhoto = false;
+      });
+      // Handle exception
+      print('Error fetching user details: $e');
+    }
+  }
+
   @override
   void dispose() {
     // Remove observer when BasePage is disposed
     WidgetsBinding.instance.removeObserver(this);
 
     // Cancel any pending state change timer
-    _stateChangeTimer?.cancel();
+    //_stateChangeTimer?.cancel();
 
     // Set user state to "offline" when BasePage is destroyed
     _userStateNotifier.setOffline();
@@ -89,12 +125,19 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Use the GlobalKey for the Scaffold
       appBar: AppBar(
         title: Text(
           "Pro Counsellor",
           style: TextStyle(color: Color(0xFFF0BB78)),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer(); // Open the drawer
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -106,6 +149,95 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             },
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Color(0xFFF0BB78),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    backgroundImage:
+                        _photoUrl != null ? NetworkImage(_photoUrl!) : null,
+                    child: _isLoadingPhoto || _photoUrl == null
+                        ? Text(
+                            widget.username.substring(0, 1).toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF0BB78),
+                            ),
+                          )
+                        : null,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    widget.username,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                _navigateToPage(0);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.lightbulb),
+              title: Text('Learn with Us'),
+              onTap: () {
+                _navigateToPage(1);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.groups),
+              title: Text('Community'),
+              onTap: () {
+                _navigateToPage(2);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.list_alt),
+              title: Text('My Activities'),
+              onTap: () {
+                _navigateToPage(3);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Profile'),
+              onTap: () {
+                _navigateToPage(4);
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () {
+                _stateChangeTimer?.cancel(); // Cancel any pending timer
+                _userStateNotifier
+                    .setOffline(); // Explicitly set state to offline on logout
+                widget.onSignOut();
+              },
+            ),
+          ],
+        ),
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -124,6 +256,13 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         ],
       ),
     );
+  }
+
+  void _navigateToPage(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    Navigator.pop(context); // Close the drawer
   }
 
   void _onItemTapped(int index) {
