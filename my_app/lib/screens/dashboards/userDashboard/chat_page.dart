@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
-import 'chatting_page.dart'; // Import the ChattingPage
+import 'chatting_page.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -14,7 +15,9 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<Map<String, dynamic>> counsellorsWithChats = [];
+  List<Map<String, dynamic>> filteredCounsellors = [];
   bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -24,7 +27,6 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> fetchSubscribedCounsellorsWithChats() async {
     try {
-      // Fetch subscribed counsellors
       final subscribedUrl = Uri.parse(
           'http://localhost:8080/api/user/${widget.userId}/subscribed-counsellors');
       final subscribedResponse = await http.get(subscribedUrl);
@@ -33,8 +35,7 @@ class _ChatPageState extends State<ChatPage> {
         final subscribedCounsellors =
             json.decode(subscribedResponse.body) as List<dynamic>;
 
-        // Filter counsellors with existing chats
-        List<Map<String, dynamic>> filteredCounsellors = [];
+        List<Map<String, dynamic>> counsellors = [];
         for (var counsellor in subscribedCounsellors) {
           final counsellorId = counsellor['userName'];
           final counsellorName =
@@ -49,7 +50,7 @@ class _ChatPageState extends State<ChatPage> {
           if (chatExistsResponse.statusCode == 200) {
             final chatExists = json.decode(chatExistsResponse.body) as bool;
             if (chatExists) {
-              filteredCounsellors.add({
+              counsellors.add({
                 'id': counsellorId,
                 'name': counsellorName,
                 'photoUrl': counsellorPhotoUrl,
@@ -59,7 +60,8 @@ class _ChatPageState extends State<ChatPage> {
         }
 
         setState(() {
-          counsellorsWithChats = filteredCounsellors;
+          counsellorsWithChats = counsellors;
+          filteredCounsellors = counsellors; // Initially, show all counsellors
           isLoading = false;
         });
       } else {
@@ -75,6 +77,25 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  void filterCounsellors(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredCounsellors = counsellorsWithChats
+          .where((counsellor) => counsellor['name']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  Stream<String> getCounsellorState(String counsellorId) {
+    final databaseReference =
+        FirebaseDatabase.instance.ref('counsellorStates/$counsellorId/state');
+    return databaseReference.onValue
+        .map((event) => event.snapshot.value as String? ?? 'offline');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,46 +103,94 @@ class _ChatPageState extends State<ChatPage> {
         title: Text("My Chats"),
         centerTitle: true,
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : counsellorsWithChats.isEmpty
-              ? Center(child: Text("No chats available"))
-              : ListView.builder(
-                  itemCount: counsellorsWithChats.length,
-                  itemBuilder: (context, index) {
-                    final counsellor = counsellorsWithChats[index];
-                    final name = counsellor['name'] ?? 'Unknown Counsellor';
-                    final photoUrl = counsellor['photoUrl'] ??
-                        'https://via.placeholder.com/150';
-                    final counsellorId = counsellor['id'];
-
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(photoUrl),
-                        ),
-                        title: Text(name),
-                        trailing: IconButton(
-                          icon: Icon(Icons.chat),
-                          onPressed: () {
-                            // Navigate to ChattingPage with necessary parameters
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChattingPage(
-                                  itemName: name,
-                                  userId: widget.userId,
-                                  counsellorId: counsellorId,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: filterCounsellors,
+              decoration: InputDecoration(
+                hintText: "Search counsellors...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
+              ),
+            ),
+          ),
+          // Main Content
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : filteredCounsellors.isEmpty
+                    ? Center(child: Text("No chats available"))
+                    : ListView.builder(
+                        itemCount: filteredCounsellors.length,
+                        itemBuilder: (context, index) {
+                          final counsellor = filteredCounsellors[index];
+                          final name =
+                              counsellor['name'] ?? 'Unknown Counsellor';
+                          final photoUrl = counsellor['photoUrl'] ??
+                              'https://via.placeholder.com/150';
+                          final counsellorId = counsellor['id'];
+
+                          return Card(
+                            margin: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
+                            child: ListTile(
+                              leading: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: NetworkImage(photoUrl),
+                                  ),
+                                  // StreamBuilder to show real-time online status
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: StreamBuilder<String>(
+                                      stream: getCounsellorState(counsellorId),
+                                      builder: (context, snapshot) {
+                                        final state =
+                                            snapshot.data ?? 'offline';
+                                        return CircleAvatar(
+                                          radius: 6,
+                                          backgroundColor: Colors.white,
+                                          child: CircleAvatar(
+                                            radius: 5,
+                                            backgroundColor: state == 'online'
+                                                ? Colors.green
+                                                : Colors.grey,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              title: Text(name),
+                              trailing: IconButton(
+                                icon: Icon(Icons.chat),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChattingPage(
+                                        itemName: name,
+                                        userId: widget.userId,
+                                        counsellorId: counsellorId,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
     );
   }
 }
