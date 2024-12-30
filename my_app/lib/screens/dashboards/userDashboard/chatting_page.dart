@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'chat_service.dart';
 import 'dart:convert'; // For JSON decoding
+import 'details_page.dart'; // Import CounsellorDetailsPage
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -195,25 +196,39 @@ class _ChattingPageState extends State<ChattingPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(counsellorPhotoUrl),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: CircleAvatar(
-                    radius: 6,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 5,
-                      backgroundColor:
-                          isCounsellorOnline ? Colors.green : Colors.grey,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsPage(
+                      counsellorId: widget.counsellorId,
+                      userId: widget.userId,
+                      itemName: widget.counsellorId,
                     ),
                   ),
-                ),
-              ],
+                );
+              },
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(counsellorPhotoUrl),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 6,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 5,
+                        backgroundColor:
+                            isCounsellorOnline ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             SizedBox(width: 10),
             Text(widget.itemName),
