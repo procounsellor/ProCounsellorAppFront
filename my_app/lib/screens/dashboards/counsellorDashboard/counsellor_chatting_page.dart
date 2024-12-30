@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart'; // For Firebase Realtime Database
 import 'package:http/http.dart' as http; // For API calls
 import '../userDashboard/chat_service.dart';
+import 'client_details_page.dart'; // Import the Client Details Page
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -257,6 +258,32 @@ class _ChattingPageState extends State<ChattingPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ClientDetailsPage(
+                    client: {
+                      'firstName': widget.itemName.split(' ')[0],
+                      'lastName': widget.itemName.split(' ').length > 1
+                          ? widget.itemName.split(' ')[1]
+                          : '',
+                      'email': widget
+                          .itemName, // Add logic to fetch or pass the email
+                      'phone': '', // Add logic to fetch or pass the phone
+                      'photo': widget.photo,
+                      'userName': widget.userId,
+                    },
+                    counsellorId: widget.counsellorId,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
