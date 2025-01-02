@@ -3,8 +3,16 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   static const String _baseUrl = 'http://localhost:8080/api/auth';
+  // http://10.0.2.2:8080
 
-  static Future<String> signUp(String username, String firstName, String lastName, String phoneNumber, String email, String password, String role) async {
+  static Future<String> signUp(
+      String username,
+      String firstName,
+      String lastName,
+      String phoneNumber,
+      String email,
+      String password,
+      String role) async {
     final String endpoint = '$_baseUrl/${role}Signup';
     final response = await http.post(
       Uri.parse(endpoint),

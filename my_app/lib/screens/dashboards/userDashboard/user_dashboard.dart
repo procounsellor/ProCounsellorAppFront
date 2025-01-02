@@ -19,9 +19,15 @@ class UserDashboard extends StatefulWidget {
 class _UserDashboardState extends State<UserDashboard> {
   List<dynamic> _liveCounsellors = [];
   List<dynamic> _topRatedCounsellors = [];
+  Map<String, List<dynamic>> _stateCounsellors = {
+    'Karnataka': [],
+    'Maharashtra': [],
+    'Tamil Nadu': [],
+  };
+  List<String> _activeStates = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
   bool isLoading = true;
-  String  userFullName = "";
+  String userFullName = "";
 
   @override
   void initState() {
@@ -29,6 +35,7 @@ class _UserDashboardState extends State<UserDashboard> {
     _fetchTopCounsellors();
     _listenToCounsellorStates();
     fetchUserFullName(widget.username);
+    _fetchCounsellorsByState();
   }
 
   Future<void> _fetchTopCounsellors() async {
@@ -77,13 +84,48 @@ class _UserDashboardState extends State<UserDashboard> {
       );
 
       if (response.statusCode == 200) {
-        userFullName = response.body;
+        setState(() {
+          userFullName = response.body;
+        });
       } else {
-        print('Error fetching counsellor full name: ${response.body}');
+        print('Error fetching user full name: ${response.body}');
       }
     } catch (e) {
       print('Error: $e');
     }
+  }
+
+  Future<void> _fetchCounsellorsByState() async {
+    final states = ['Karnataka', 'Maharashtra', 'Tamil Nadu'];
+
+    for (String state in states) {
+      try {
+        final response = await http.get(Uri.parse(
+            'http://localhost:8080/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/${state.toLowerCase()}'));
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body) as List<dynamic>;
+          setState(() {
+            _stateCounsellors[state] = data;
+          });
+        } else {
+          print(
+              'Failed to load counsellors for $state: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error fetching counsellors for $state: $e');
+      }
+    }
+  }
+
+  void _toggleState(String state) {
+    setState(() {
+      if (_activeStates.contains(state)) {
+        _activeStates.remove(state);
+      } else {
+        _activeStates.add(state);
+      }
+    });
   }
 
   @override
@@ -115,10 +157,49 @@ class _UserDashboardState extends State<UserDashboard> {
               child: Text("Search"),
             ),
             SizedBox(height: 20),
+            // Heading for State Tags
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Which state are you looking for?",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 10),
+            // State Tags
+            Wrap(
+              spacing: 8.0,
+              children: _stateCounsellors.keys.map((state) {
+                final isActive = _activeStates.contains(state);
+                return FilterChip(
+                  label: Text(state),
+                  selected: isActive,
+                  onSelected: (_) => _toggleState(state),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 20),
             // Horizontal Lists
             Expanded(
               child: ListView(
                 children: [
+                  if (_activeStates.isNotEmpty)
+                    ..._activeStates.map((state) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Top Counsellors in $state",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 10),
+                            _buildHorizontalList(
+                              "",
+                              _stateCounsellors[state] ?? [],
+                            ),
+                            SizedBox(height: 20),
+                          ],
+                        )),
                   _buildHorizontalList("Live Counsellors", _liveCounsellors),
                   SizedBox(height: 20),
                   _buildHorizontalList(
@@ -139,11 +220,12 @@ class _UserDashboardState extends State<UserDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 10),
+        if (title.isNotEmpty)
+          Text(
+            title,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        if (title.isNotEmpty) SizedBox(height: 10),
         SizedBox(
           height: 120, // Fixed height for the list
           child: ListView.builder(
