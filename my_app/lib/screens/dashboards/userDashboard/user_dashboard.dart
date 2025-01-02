@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
+import 'dart:async';
 
 import 'search_page.dart';
 import 'details_page.dart';
@@ -16,7 +17,8 @@ class UserDashboard extends StatefulWidget {
   _UserDashboardState createState() => _UserDashboardState();
 }
 
-class _UserDashboardState extends State<UserDashboard> {
+class _UserDashboardState extends State<UserDashboard>
+    with SingleTickerProviderStateMixin {
   List<dynamic> _liveCounsellors = [];
   List<dynamic> _topRatedCounsellors = [];
   Map<String, List<dynamic>> _stateCounsellors = {
@@ -27,15 +29,40 @@ class _UserDashboardState extends State<UserDashboard> {
   List<String> _activeStates = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
   bool isLoading = true;
-  String userFullName = "";
+
+  List<String> _searchHints = [
+    "Search colleges",
+    "Search counsellors",
+    "Search courses"
+  ];
+  int _currentSearchHintIndex = 0;
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
 
   @override
   void initState() {
     super.initState();
     _fetchTopCounsellors();
     _listenToCounsellorStates();
-    fetchUserFullName(widget.username);
     _fetchCounsellorsByState();
+
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 300), // Faster transition
+      vsync: this,
+    );
+
+    _animation = Tween<Offset>(
+      begin: Offset(0, 0),
+      end: Offset(0, -1),
+    ).animate(_animationController);
+
+    _startSearchHintCycle();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchTopCounsellors() async {
@@ -77,24 +104,6 @@ class _UserDashboardState extends State<UserDashboard> {
     });
   }
 
-  void fetchUserFullName(String userName) async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/reviews/user/fullname/$userName'),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          userFullName = response.body;
-        });
-      } else {
-        print('Error fetching user full name: ${response.body}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
   Future<void> _fetchCounsellorsByState() async {
     final states = ['Karnataka', 'Maharashtra', 'Tamil Nadu'];
 
@@ -128,35 +137,82 @@ class _UserDashboardState extends State<UserDashboard> {
     });
   }
 
+  void _startSearchHintCycle() {
+    Timer.periodic(Duration(seconds: 3), (timer) {
+      _animationController.forward().then((_) {
+        setState(() {
+          _currentSearchHintIndex =
+              (_currentSearchHintIndex + 1) % _searchHints.length;
+        });
+        _animationController.reset();
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, $userFullName !"),
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  TextField(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SearchPage(
+                            liveCounsellors: _liveCounsellors,
+                            topRatedCounsellors: _topRatedCounsellors,
+                            topNews: _topNews,
+                            userId: widget.username,
+                          ),
+                        ),
+                      );
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: Colors.orange),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Color(0xFFFFF3E0), // Light orange hue
+                    ),
+                    readOnly: true,
+                  ),
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 40.0),
+                      child: ClipRect(
+                        child: SlideTransition(
+                          position: _animation,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _searchHints[_currentSearchHintIndex],
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Search Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => SearchPage(
-                      liveCounsellors: _liveCounsellors,
-                      topRatedCounsellors: _topRatedCounsellors,
-                      topNews: _topNews,
-                      userId: widget.username,
-                    ),
-                  ),
-                );
-              },
-              child: Text("Search"),
-            ),
-            SizedBox(height: 20),
             // Heading for State Tags
             Align(
               alignment: Alignment.centerLeft,
@@ -171,10 +227,22 @@ class _UserDashboardState extends State<UserDashboard> {
               spacing: 8.0,
               children: _stateCounsellors.keys.map((state) {
                 final isActive = _activeStates.contains(state);
-                return FilterChip(
-                  label: Text(state),
-                  selected: isActive,
-                  onSelected: (_) => _toggleState(state),
+                return GestureDetector(
+                  onTap: () => _toggleState(state),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: isActive ? Colors.orange : Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      state,
+                      style: TextStyle(
+                        color: isActive ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 );
               }).toList(),
             ),
