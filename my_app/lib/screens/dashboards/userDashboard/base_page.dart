@@ -129,7 +129,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: Text(
           "Pro Counsellor",
-          style: TextStyle(color: Color(0xFFF0BB78)),
+          style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -138,17 +138,17 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             _scaffoldKey.currentState?.openDrawer(); // Open the drawer
           },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              _stateChangeTimer?.cancel(); // Cancel any pending timer
-              _userStateNotifier
-                  .setOffline(); // Explicitly set state to offline on logout
-              widget.onSignOut();
-            },
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.logout),
+        //     onPressed: () {
+        //       _stateChangeTimer?.cancel(); // Cancel any pending timer
+        //       _userStateNotifier
+        //           .setOffline(); // Explicitly set state to offline on logout
+        //       widget.onSignOut();
+        //     },
+        //   ),
+        // ],
       ),
       drawer: Drawer(
         child: ListView(

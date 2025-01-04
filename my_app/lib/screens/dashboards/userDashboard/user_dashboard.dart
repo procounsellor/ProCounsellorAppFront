@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'search_page.dart';
 import 'details_page.dart';
+import 'concave_clipper.dart';
 
 class UserDashboard extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -18,7 +19,7 @@ class UserDashboard extends StatefulWidget {
 }
 
 class _UserDashboardState extends State<UserDashboard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   List<dynamic> _liveCounsellors = [];
   List<dynamic> _topRatedCounsellors = [];
   Map<String, List<dynamic>> _stateCounsellors = {
@@ -38,6 +39,8 @@ class _UserDashboardState extends State<UserDashboard>
   int _currentSearchHintIndex = 0;
   late AnimationController _animationController;
   late Animation<Offset> _animation;
+  late AnimationController _pageController;
+  late Animation<Offset> _pageAnimation;
 
   @override
   void initState() {
@@ -56,12 +59,27 @@ class _UserDashboardState extends State<UserDashboard>
       end: Offset(0, -1),
     ).animate(_animationController);
 
+    _pageController = AnimationController(
+      duration:
+          Duration(milliseconds: 300), // Duration for the slide transition
+      vsync: this,
+    );
+
+    _pageAnimation = Tween<Offset>(
+      begin: Offset(0, 0),
+      end: Offset(0, 0.05),
+    ).animate(CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeInOut,
+    ));
+
     _startSearchHintCycle();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -131,8 +149,10 @@ class _UserDashboardState extends State<UserDashboard>
     setState(() {
       if (_activeStates.contains(state)) {
         _activeStates.remove(state);
+        _pageController.reverse(); // Transition back to original position
       } else {
         _activeStates.add(state);
+        _pageController.forward(); // Move lists down with transition
       }
     });
   }
@@ -153,7 +173,7 @@ class _UserDashboardState extends State<UserDashboard>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         title: Row(
           children: [
@@ -223,58 +243,190 @@ class _UserDashboardState extends State<UserDashboard>
             ),
             SizedBox(height: 10),
             // State Tags
-            Wrap(
-              spacing: 8.0,
-              children: _stateCounsellors.keys.map((state) {
-                final isActive = _activeStates.contains(state);
-                return GestureDetector(
-                  onTap: () => _toggleState(state),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: isActive ? Colors.orange : Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      state,
-                      style: TextStyle(
-                        color: isActive ? Colors.white : Colors.black,
-                        fontWeight: FontWeight.bold,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _stateCounsellors.keys.map((state) {
+                  final isActive = _activeStates.contains(state);
+                  return GestureDetector(
+                    onTap: () => _toggleState(state),
+                    child: Container(
+                      margin: EdgeInsets.only(right: 8.0), // Space between tags
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent, // Transparent background
+                        border: Border.all(
+                          color: isActive
+                              ? Colors.orange
+                              : Color(
+                                  0xFFFFA726), // Active and inactive border colors
+                          width: 2, // Border width
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(16), // Rounded border
+                      ),
+                      child: Text(
+                        state,
+                        style: TextStyle(
+                          color: isActive
+                              ? Colors.orange
+                              : Colors
+                                  .black, // Text color for active/inactive state
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
+
             SizedBox(height: 20),
-            // Horizontal Lists
             Expanded(
-              child: ListView(
-                children: [
-                  if (_activeStates.isNotEmpty)
-                    ..._activeStates.map((state) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Top Counsellors in $state",
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+              child: SingleChildScrollView(
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_activeStates.isNotEmpty)
+                        SlideTransition(
+                          position: _pageAnimation,
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 16),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 10),
-                            _buildHorizontalList(
-                              "",
-                              _stateCounsellors[state] ?? [],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: _activeStates.map((state) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Top Counsellors in $state",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    _buildHorizontalList(
+                                        "", _stateCounsellors[state] ?? []),
+                                  ],
+                                );
+                              }).toList(),
                             ),
-                            SizedBox(height: 20),
-                          ],
-                        )),
-                  _buildHorizontalList("Live Counsellors", _liveCounsellors),
-                  SizedBox(height: 20),
-                  _buildHorizontalList(
-                      "Top Rated Counsellors", _topRatedCounsellors),
-                  SizedBox(height: 20),
-                  _buildHorizontalList("Top News", _topNews, isNews: true),
-                ],
+                          ),
+                        ),
+                      if (_liveCounsellors.isNotEmpty)
+                        SlideTransition(
+                          position: _pageAnimation,
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 16),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Live Counsellors",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 10),
+                                _buildHorizontalList("", _liveCounsellors),
+                              ],
+                            ),
+                          ),
+                        ),
+                      SlideTransition(
+                        position: _pageAnimation,
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 1,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Top Rated Counsellors",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 10),
+                              _buildHorizontalList("", _topRatedCounsellors),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SlideTransition(
+                        position: _pageAnimation,
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 1,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Top News",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 10),
+                              _buildHorizontalList("", _topNews, isNews: true),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -295,7 +447,7 @@ class _UserDashboardState extends State<UserDashboard>
           ),
         if (title.isNotEmpty) SizedBox(height: 10),
         SizedBox(
-          height: 120, // Fixed height for the list
+          height: 160, // Adjusted height for added content
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
@@ -314,15 +466,35 @@ class _UserDashboardState extends State<UserDashboard>
                       ),
                     );
                   },
-                  child: Card(
-                    margin: EdgeInsets.symmetric(horizontal: 8),
-                    child: Container(
-                      width: 100,
-                      alignment: Alignment.center,
-                      child: Text(
-                        items[index],
-                        textAlign: TextAlign.center,
-                      ),
+                  child: Container(
+                    width: 110, // Adjusted for rectangular dimensions
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 4), // Reduced spacing
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: Offset(0, 0), // Uniform shadow
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.newspaper, size: 40, color: Colors.orange),
+                        SizedBox(height: 8),
+                        Text(
+                          items[index],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -344,17 +516,42 @@ class _UserDashboardState extends State<UserDashboard>
                       ),
                     );
                   },
-                  child: Card(
-                    margin: EdgeInsets.symmetric(horizontal: 8),
+                  child: Container(
+                    width: 110, // Adjusted for rectangular dimensions
+                    margin:
+                        EdgeInsets.symmetric(horizontal: 4), // Reduced spacing
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: Offset(0, 0), // Uniform shadow
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          backgroundImage: NetworkImage(
-                            counsellor['photoUrl'] ??
-                                'https://via.placeholder.com/150',
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color:
+                                  Color(0xFFFFCC80), // Thin light orange border
+                              width: 1,
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                          radius: 40,
+                          child: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                              counsellor['photoUrl'] ??
+                                  'https://via.placeholder.com/150',
+                            ),
+                            radius: 31, // Increased radius
+                          ),
                         ),
                         SizedBox(height: 8),
                         Text(
@@ -362,7 +559,44 @@ class _UserDashboardState extends State<UserDashboard>
                               counsellor['userName'] ??
                               'Unknown',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          counsellor['ratePerYear'] != null
+                              ? "\$${counsellor['ratePerYear']}/year"
+                              : "Rate not available",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        // Button-like text for "Contact"
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.green
+                                .withOpacity(0.1), // Light green background
+                            border: Border.all(
+                              color: Colors.green, // Green border
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            "Contact",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
                         ),
                       ],
                     ),
