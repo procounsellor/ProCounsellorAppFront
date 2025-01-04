@@ -6,7 +6,7 @@ import 'dart:async';
 
 import 'search_page.dart';
 import 'details_page.dart';
-import 'concave_clipper.dart';
+import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
 
 class UserDashboard extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -396,14 +396,17 @@ class _UserDashboardState extends State<UserDashboard>
                       SlideTransition(
                         position: _pageAnimation,
                         child: Container(
-                          margin: EdgeInsets.only(bottom: 16),
+                          margin: EdgeInsets.only(
+                              bottom: 16), // Spacing between cards
                           padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(10), // Rounded corners
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
+                                color: Colors.grey
+                                    .withOpacity(0.3), // Subtle shadow
                                 spreadRadius: 1,
                                 blurRadius: 6,
                                 offset: Offset(0, 2),
@@ -419,7 +422,7 @@ class _UserDashboardState extends State<UserDashboard>
                                     fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                               SizedBox(height: 10),
-                              _buildHorizontalList("", _topNews, isNews: true),
+                              TopNewsCarousel(), // Use the external carousel widget
                             ],
                           ),
                         ),
