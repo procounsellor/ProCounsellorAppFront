@@ -1,6 +1,9 @@
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:indexed/indexed.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -30,6 +33,7 @@ class _UserDashboardState extends State<UserDashboard>
   List<String> _activeStates = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
   bool isLoading = true;
+  int currentIndex = 0;
 
   List<String> _searchHints = [
     "Search colleges",
@@ -82,6 +86,11 @@ class _UserDashboardState extends State<UserDashboard>
     _pageController.dispose();
     super.dispose();
   }
+
+  var carouselItems = [
+    ["assets/images/c1.png", "Don't worry about your\nfuture we're here"],
+    ["assets/images/u1.png", "Which career option\nshould I choose?"],
+  ];
 
   Future<void> _fetchTopCounsellors() async {
     try {
@@ -172,6 +181,7 @@ class _UserDashboardState extends State<UserDashboard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
@@ -255,24 +265,26 @@ class _UserDashboardState extends State<UserDashboard>
                       padding:
                           EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.transparent, // Transparent background
-                        border: Border.all(
-                          color: isActive
-                              ? Colors.orange
-                              : Color(
-                                  0xFFFFA726), // Active and inactive border colors
-                          width: 2, // Border width
-                        ),
+                        color: !isActive
+                            ? Color(0xffeeeeee)
+                            : Colors.orange[100], // Transparent background
+                        // border: Border.all(
+                        //   color: isActive
+                        //       ? Colors.orange
+                        //       : Color(
+                        //           0xFFFFA726), // Active and inactive border colors
+                        //   width: 2, // Border width
+                        // ),
                         borderRadius:
-                            BorderRadius.circular(16), // Rounded border
+                            BorderRadius.circular(5), // Rounded border
                       ),
                       child: Text(
                         state,
                         style: TextStyle(
-                          color: isActive
-                              ? Colors.orange
-                              : Colors
-                                  .black, // Text color for active/inactive state
+                          // color: isActive
+                          //     ? Colors.orange
+                          //     : Colors
+                          //         .black, // Text color for active/inactive state
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -362,6 +374,109 @@ class _UserDashboardState extends State<UserDashboard>
                             ),
                           ),
                         ),
+                      Indexer(children: [
+                        CarouselSlider(
+                          options: CarouselOptions(
+                            height: 120.0,
+                            viewportFraction: 1,
+                            autoPlay: true,
+                            onPageChanged: (index, reason) {
+                              setState(() {
+                                currentIndex = index;
+                              });
+                            },
+                          ),
+                          items: carouselItems.map((i) {
+                            return Builder(
+                              builder: (BuildContext context) {
+                                return Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: 100,
+                                    margin: EdgeInsets.symmetric(
+                                        horizontal: 5.0, vertical: 10),
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.3),
+                                            spreadRadius: 1,
+                                            blurRadius: 6,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                        borderRadius: BorderRadius.circular(5)),
+                                    child: Row(
+                                      children: [
+                                        Image.asset(
+                                          i[0],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              i[1],
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              "Ask Councellor",
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              height: 5,
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 10, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                  color: Colors.orange
+                                                      .withOpacity(0.4),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              child: Text(
+                                                "Chat Now",
+                                                style: TextStyle(fontSize: 8),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              height: 10,
+                                            )
+                                          ],
+                                        )
+                                      ],
+                                    ));
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        Indexed(
+                          index: 3,
+                          child: Positioned(
+                              bottom: 8,
+                              child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Center(
+                                      child: DotsIndicator(
+                                          dotsCount: carouselItems.length,
+                                          position: currentIndex,
+                                          decorator: DotsDecorator(
+                                              size: const Size.square(5.0),
+                                              spacing:
+                                                  const EdgeInsets.all(4.0),
+                                              activeSize:
+                                                  const Size.square(5.0)))))),
+                        ),
+                      ]),
                       SlideTransition(
                         position: _pageAnimation,
                         child: Container(
