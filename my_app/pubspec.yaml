@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/images/default-pic.jpg
     - assets/images/
+    - assets/images/no_results.png
     - assets/images/c1.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

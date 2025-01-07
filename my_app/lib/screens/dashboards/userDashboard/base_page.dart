@@ -125,8 +125,10 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       key: _scaffoldKey, // Use the GlobalKey for the Scaffold
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(
           "Pro Counsellor",
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
