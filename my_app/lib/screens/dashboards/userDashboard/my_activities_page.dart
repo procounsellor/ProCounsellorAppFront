@@ -14,6 +14,7 @@ class MyActivitiesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("My Activities"),
+        forceMaterialTransparency: true,
         centerTitle: true,
       ),
       body: Padding(
@@ -50,15 +51,14 @@ class MyActivitiesPage extends StatelessWidget {
                 );
               },
             ),
-             ActivityBox(
+            ActivityBox(
               icon: Icons.reviews,
               title: "My Reviews",
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        MyReviewPage(username: username),
+                    builder: (_) => MyReviewPage(username: username),
                   ),
                 );
               },

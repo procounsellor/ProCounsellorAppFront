@@ -335,6 +335,7 @@ class _UserDashboardState extends State<UserDashboard>
                                     SizedBox(height: 10),
                                     _buildHorizontalList(
                                         "", _stateCounsellors[state] ?? []),
+                                    SizedBox(height: 10)
                                   ],
                                 );
                               }).toList(),
