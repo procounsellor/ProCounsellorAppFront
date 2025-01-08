@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
-import 'screens/signin.dart';
+import 'package:my_app/screens/oldSignUpScreens/signin.dart';
 import 'screens/dashboards/userDashboard/call_page.dart'; // Import CallPage
 import 'screens/dashboards/userDashboard/liked_videos_page.dart'; // Import LikedVideosPage
 import 'screens/dashboards/userDashboard/liked_articles_page.dart'; // Import LikedArticlesPage
