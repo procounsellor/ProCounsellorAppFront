@@ -19,7 +19,7 @@ void main() async {
       apiKey: "AIzaSyCFKdFziXt7j7wsoCHZ1nWChoKsy6cCj8U",
       authDomain: "procounsellor-71824.firebaseapp.com",
       projectId: "procounsellor-71824",
-      storageBucket: "procounsellor-71824.appspot.com",
+      storageBucket: "procounsellor-71824.firebasestorage.app",
       messagingSenderId: "1000407154647",
       appId: "1:1000407154647:web:0cc6c26e11d212a233d592",
       databaseURL: "https://procounsellor-71824-default-rtdb.firebaseio.com",
