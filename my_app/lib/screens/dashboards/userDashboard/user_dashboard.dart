@@ -49,7 +49,7 @@ class _UserDashboardState extends State<UserDashboard>
   @override
   void initState() {
     super.initState();
-    _fetchTopCounsellors();
+    _fetchTopCounsellorsAccordingToInterest();
     _listenToCounsellorStates();
     _fetchCounsellorsByState();
 
@@ -92,24 +92,27 @@ class _UserDashboardState extends State<UserDashboard>
     ["assets/images/u1.png", "Which career option\nshould I choose?"],
   ];
 
-  Future<void> _fetchTopCounsellors() async {
+  Future<void> _fetchTopCounsellorsAccordingToInterest() async {
     try {
       final response = await http.get(
-          Uri.parse('http://localhost:8080/api/counsellor/sorted-by-rating'));
+        Uri.parse('http://localhost:8080/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/all'),
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as List<dynamic>;
+        final List<dynamic> data = json.decode(response.body);
         setState(() {
-          _topRatedCounsellors = data;
+          _topRatedCounsellors = data; // Map to your model if needed
         });
+      } else if (response.statusCode == 404) {
+        print('No counsellors found for the user.');
       } else {
-        print(
-            'Failed to load counsellors. Status code: ${response.statusCode}');
+        print('Failed to load counsellors. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching top-rated counsellors: $e');
     }
   }
+
 
   void _listenToCounsellorStates() {
     final databaseReference = FirebaseDatabase.instance.ref('counsellorStates');

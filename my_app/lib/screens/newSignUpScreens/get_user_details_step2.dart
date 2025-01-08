@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/user_signup_data.dart';
-import 'package:my_app/screens/signup_success.dart';
+import 'package:my_app/screens/newSignUpScreens/signup_complete.dart';
+import 'package:my_app/screens/newSignUpScreens/user_details.dart';
 import 'package:my_app/services/auth_service.dart';
 
-class UserSignUpStep3 extends StatefulWidget {
-  final UserSignUpData signUpData;
+class GetUserDetailsStep2 extends StatefulWidget {
+  final UserDetails userDetails;
+  final String phoneNumber;
 
-  UserSignUpStep3({required this.signUpData});
+  GetUserDetailsStep2({required this.userDetails, required this.phoneNumber});
 
   @override
-  _UserSignUpStep3State createState() => _UserSignUpStep3State();
+  _GetUserDetailsStep2State createState() => _GetUserDetailsStep2State();
 }
 
-class _UserSignUpStep3State extends State<UserSignUpStep3> {
+class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
   final List<Map<String, String>> allowedStates = [
     {'name': 'KARNATAKA', 'image': 'assets/images/karnataka.jpg'},
     {'name': 'MAHARASHTRA', 'image': 'assets/images/maharashtra.jpg'},
@@ -80,14 +81,14 @@ class _UserSignUpStep3State extends State<UserSignUpStep3> {
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     children: allowedStates.map((state) {
-                      final isSelected = widget.signUpData.userInterestedStates.contains(state['name']);
+                      final isSelected = widget.userDetails.userInterestedStates.contains(state['name']);
                       return GestureDetector(
                         onTap: () {
                           setState(() {
                             if (isSelected) {
-                              widget.signUpData.userInterestedStates.remove(state['name']);
+                              widget.userDetails.userInterestedStates.remove(state['name']);
                             } else {
-                              widget.signUpData.userInterestedStates.add(state['name']!);
+                              widget.userDetails.userInterestedStates.add(state['name']!);
                             }
                           });
                         },
@@ -140,21 +141,16 @@ class _UserSignUpStep3State extends State<UserSignUpStep3> {
                       ),
                       onPressed: () async {
                         try {
-                          await AuthService.userSignUp(
-                            widget.signUpData.username!,
-                            widget.signUpData.firstName!,
-                            widget.signUpData.lastName!,
-                            widget.signUpData.phoneNumber!,
-                            widget.signUpData.email!,
-                            widget.signUpData.password!,
-                            widget.signUpData.role!,
-                            widget.signUpData.userInterestedStates,
-                            widget.signUpData.interestedCourse!,
+                          await AuthService.updateUserDetails(
+                            widget.phoneNumber,
+                            widget.userDetails.userInterestedStates,
+                            widget.userDetails.interestedCourse!,
                           );
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpSuccessScreen(),
+                              builder: (context) => SignUpCompleteScreen(phoneNumber: widget.phoneNumber),
                             ),
                           );
                         } catch (e) {
@@ -163,8 +159,9 @@ class _UserSignUpStep3State extends State<UserSignUpStep3> {
                           );
                         }
                       },
+
                       child: Text(
-                        "Sign Up",
+                        "Submit",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

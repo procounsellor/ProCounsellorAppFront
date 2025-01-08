@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/user_signup_data.dart';
-import 'package:my_app/screens/user_signup_step3.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_step3.dart';
 
 class UserSignUpStep2 extends StatefulWidget {
   final UserSignUpData signUpData;

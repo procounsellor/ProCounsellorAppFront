@@ -5,8 +5,8 @@ import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:my_app/screens/oldSignUpScreens/user_signup_data.dart';
 import 'package:my_app/screens/oldSignUpScreens/user_signup_step1.dart';
-import '../services/auth_service.dart';
-import 'dashboards/userDashboard/base_page.dart';
+import '../../services/auth_service.dart';
+import '../dashboards/userDashboard/base_page.dart';
 
 final storage = FlutterSecureStorage();
 
