@@ -71,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  void _signOut() async {
+  Future<void>  _signOut() async {
     await storage.deleteAll(); // Clear all data from secure storage
 
     if (!mounted) return; // Check if widget is still mounted

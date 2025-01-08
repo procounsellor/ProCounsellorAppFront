@@ -10,7 +10,7 @@ import 'profile_page.dart';
 import 'user_state_notifier.dart'; // Import UserStateNotifier
 
 class BasePage extends StatefulWidget {
-  final VoidCallback onSignOut;
+  final Future<void> Function() onSignOut;
   final String username;
 
   BasePage({required this.onSignOut, required this.username});
@@ -230,11 +230,11 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             ListTile(
               leading: Icon(Icons.logout),
               title: Text('Logout'),
-              onTap: () {
+              onTap: () async {
                 _stateChangeTimer?.cancel(); // Cancel any pending timer
                 _userStateNotifier
                     .setOffline(); // Explicitly set state to offline on logout
-                widget.onSignOut();
+                await widget.onSignOut();
               },
             ),
           ],

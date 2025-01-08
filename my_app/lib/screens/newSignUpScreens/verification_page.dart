@@ -1,59 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/get_user_details_step1.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/newSignUpScreens/user_details.dart';
 import 'package:my_app/services/auth_service.dart';
+import 'dart:convert';
 
 final storage = FlutterSecureStorage();
-
-class SplashScreen extends StatefulWidget {
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    String? phoneNumber = await storage.read(key: "phoneNumber");
-
-    if (phoneNumber != null) {
-      // Redirect to BasePage if session exists
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BasePage(
-            onSignOut: _signOut,
-            username: phoneNumber,
-          ),
-        ),
-      );
-    } else {
-      // Redirect to the login page if no session exists
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => NewSignInPage()),
-      );
-    }
-  }
-
-  void _signOut() async {
-    await storage.deleteAll();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
 
 class VerificationPage extends StatefulWidget {
   final String phoneNumber;
@@ -71,17 +25,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Disable back button
-        return false;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: Container(), // Disable back button in the AppBar
-          backgroundColor: Colors.white,
-          elevation: 0,
-        ),
+    return Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -134,7 +78,9 @@ class _VerificationPageState extends State<VerificationPage> {
               ),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: isButtonEnabled ? () => _handleVerification() : null,
+                onPressed: isButtonEnabled
+                    ? () => _handleVerification()
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
                   shape: RoundedRectangleBorder(
@@ -152,8 +98,7 @@ class _VerificationPageState extends State<VerificationPage> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _handleVerification() async {
@@ -161,33 +106,40 @@ class _VerificationPageState extends State<VerificationPage> {
       String otp = otpDigits.join();
       final response = await _apiService.verifyAndSignup(widget.phoneNumber, otp);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        String jwtToken = body['jwtToken'];
+
+        // Save JWT and phone number in secure storage
+        await storage.write(key: "jwtToken", value: jwtToken);
         await storage.write(key: "phoneNumber", value: widget.phoneNumber);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BasePage(
-              onSignOut: _signOut,
-              username: widget.phoneNumber,
-            ),
-          ),
-        );
-      } else if (response.statusCode == 200) {
-        final detailsResponse = await _apiService.isUserDetailsNull(widget.phoneNumber);
+        if (response.statusCode == 200) {
+          final detailsResponse = await _apiService.isUserDetailsNull(widget.phoneNumber);
 
-        if (detailsResponse.statusCode == 200 && detailsResponse.body == 'false') {
-          await storage.write(key: "phoneNumber", value: widget.phoneNumber);
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BasePage(
-                onSignOut: _signOut,
-                username: widget.phoneNumber,
+          if (detailsResponse.statusCode == 200 && detailsResponse.body == 'false') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BasePage(
+                  onSignOut: _signOut,
+                  username: widget.phoneNumber,
+                ),
               ),
-            ),
-          );
+              (route) => false, // Remove all previous routes
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GetUserDetailsStep1(
+                  userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
+                  phoneNumber: widget.phoneNumber,
+                  onSignOut: _signOut,
+                ),
+              ),
+            );
+          }
         } else {
           Navigator.pushReplacement(
             context,
@@ -195,6 +147,7 @@ class _VerificationPageState extends State<VerificationPage> {
               builder: (context) => GetUserDetailsStep1(
                 userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
                 phoneNumber: widget.phoneNumber,
+                onSignOut: _signOut,
               ),
             ),
           );
@@ -224,7 +177,7 @@ class _VerificationPageState extends State<VerificationPage> {
     }
   }
 
-  void _signOut() async {
+  Future<void> _signOut() async {
     await storage.deleteAll();
 
     if (!mounted) return;
