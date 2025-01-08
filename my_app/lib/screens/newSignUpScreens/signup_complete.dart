@@ -1,55 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
-import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
-
-final storage = FlutterSecureStorage();
 
 class SignUpCompleteScreen extends StatelessWidget {
   final String phoneNumber;
+  final Future<void> Function() onSignOut;
 
-  SignUpCompleteScreen({required this.phoneNumber});
-
-  Future<void> _handleSignOut(BuildContext context) async {
-    await storage.deleteAll(); // Clear session data
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => NewSignInPage()),
-      (route) => false, // Remove all previous routes
-    );
-  }
-
-  Future<void> _navigateToBasePage(BuildContext context) async {
-    // Save session data
-    await storage.write(key: "phoneNumber", value: phoneNumber);
-
-    // Redirect to BasePage
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BasePage(
-          username: phoneNumber,
-          onSignOut: () => _handleSignOut(context),
-        ),
-      ),
-      (route) => false, // Prevent back navigation from BasePage
-    );
-  }
+  SignUpCompleteScreen({required this.phoneNumber, required this.onSignOut});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: true, // Allow back navigation for other cases
-        backgroundColor: Color(0xFFFFE4B5),
-        title: Text(
-          "Sign Up Successful",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +55,14 @@ class SignUpCompleteScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              onPressed: () => _navigateToBasePage(context), // Navigate to BasePage
+              onPressed: (){
+                  Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BasePage(username: phoneNumber, onSignOut: onSignOut),
+                            ),
+                          );
+              }, // Navigate to BasePage
               child: Text(
                 "Go to Dashboard",
                 style: TextStyle(

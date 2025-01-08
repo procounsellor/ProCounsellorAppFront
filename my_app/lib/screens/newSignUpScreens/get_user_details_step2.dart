@@ -6,8 +6,9 @@ import 'package:my_app/services/auth_service.dart';
 class GetUserDetailsStep2 extends StatefulWidget {
   final UserDetails userDetails;
   final String phoneNumber;
+  final Future<void> Function() onSignOut;
 
-  GetUserDetailsStep2({required this.userDetails, required this.phoneNumber});
+  GetUserDetailsStep2({required this.userDetails, required this.phoneNumber, required this.onSignOut});
 
   @override
   _GetUserDetailsStep2State createState() => _GetUserDetailsStep2State();
@@ -24,15 +25,6 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Color(0xFFFFE4B5),
-        title: Text(
-          "Sign Up - Step 3",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         child: Stack(
           children: [
@@ -150,7 +142,7 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpCompleteScreen(phoneNumber: widget.phoneNumber),
+                              builder: (context) => SignUpCompleteScreen(phoneNumber: widget.phoneNumber, onSignOut: widget.onSignOut),
                             ),
                           );
                         } catch (e) {
