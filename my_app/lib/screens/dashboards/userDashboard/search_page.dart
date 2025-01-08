@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'details_page.dart';
+import 'package:flutter/widgets.dart';
 
 class SearchPage extends StatefulWidget {
   final List<dynamic> liveCounsellors;
@@ -41,6 +42,10 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hasResults = (_filterItems(widget.liveCounsellors).isNotEmpty ||
+        _filterItems(widget.topRatedCounsellors).isNotEmpty ||
+        _filterItems(widget.topNews).isNotEmpty);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -88,10 +93,10 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
                 Positioned(
-                  right: 8,
-                  top: 8,
+                  right: 12,
+                  top: 14,
                   child: Icon(Icons.mic,
-                      color: Colors.orange), // Voice Search Icon
+                      color: Colors.orange), // Adjusted Voice Search Icon
                 ),
               ],
             ),
@@ -105,45 +110,76 @@ class _SearchPageState extends State<SearchPage> {
               ],
             ),
             SizedBox(height: 20),
-            if (_searchQuery.isNotEmpty)
+            if (_searchQuery.isEmpty)
               Expanded(
-                child: ListView(
-                  children: [
-                    if ((_selectedFilters.isEmpty ||
-                            _selectedFilters.contains("counsellors")) &&
-                        _filterItems(widget.liveCounsellors).isNotEmpty)
-                      _buildCard("Live Counsellors",
-                          _filterItems(widget.liveCounsellors)),
-                    if ((_selectedFilters.isEmpty ||
-                            _selectedFilters.contains("counsellors")) &&
-                        _filterItems(widget.topRatedCounsellors).isNotEmpty)
-                      _buildCard("Top Rated Counsellors",
-                          _filterItems(widget.topRatedCounsellors)),
-                    if ((_selectedFilters.isEmpty ||
-                            _selectedFilters.contains("news")) &&
-                        _filterItems(widget.topNews).isNotEmpty)
-                      _buildCard("Top News", _filterItems(widget.topNews),
-                          isNews: true),
-                  ],
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.network(
+                        "https://media.giphy.com/media/AS1QYqISiXDiwLtPg3/giphy.gif?cid=ecf05e474o90gzgjxy0f6bmvdo3iiufy9e7hyck7x6n0e1cy&ep=v1_stickers_related&rid=giphy.gif&ct=s",
+                        //'https://media.giphy.com/media/gkbppgFMYr908R1ZfA/giphy.gif?cid=ecf05e472uibu5mav9wvtdfq0yvqq7v32j19gdac8zub3f2j&ep=v1_stickers_related&rid=giphy.gif&ct=s',
+                        height: 150,
+                        fit: BoxFit.contain,
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        "Start typing to search",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
               )
+            else if (_searchQuery.isNotEmpty)
+              Expanded(
+                child: hasResults
+                    ? ListView(
+                        children: [
+                          if ((_selectedFilters.isEmpty ||
+                                  _selectedFilters.contains("counsellors")) &&
+                              _filterItems(widget.liveCounsellors).isNotEmpty)
+                            _buildList(_filterItems(widget.liveCounsellors)),
+                          if ((_selectedFilters.isEmpty ||
+                                  _selectedFilters.contains("counsellors")) &&
+                              _filterItems(widget.topRatedCounsellors)
+                                  .isNotEmpty)
+                            _buildList(
+                                _filterItems(widget.topRatedCounsellors)),
+                          if ((_selectedFilters.isEmpty ||
+                                  _selectedFilters.contains("news")) &&
+                              _filterItems(widget.topNews).isNotEmpty)
+                            _buildList(_filterItems(widget.topNews),
+                                isNews: true),
+                        ],
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Opacity(
+                              opacity: 0.5,
+                              child: Image.asset(
+                                'assets/images/no_results.png', // Add your asset path
+                                height: 150,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Transform.translate(
+                              offset: Offset(-10, -20), // Adjust image position
+                              child: Text(
+                                "No results found",
+                                style:
+                                    TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              )
             else
-              Center(
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/images/no_results.png', // Add your asset path
-                      height: 150,
-                      fit: BoxFit.contain,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      "Start typing to see results",
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
+              SizedBox.shrink(),
           ],
         ),
       ),
@@ -179,128 +215,101 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildCard(String title, List<dynamic> items, {bool isNews = false}) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
-          SizedBox(
-            height: 160,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                if (isNews) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailsPage(
-                            itemName: items[index],
-                            userId: widget.userId,
-                            counsellorId: '',
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 120,
-                      margin: EdgeInsets.symmetric(horizontal: 8),
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          items[index],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ),
+  Widget _buildList(List<dynamic> items, {bool isNews = false}) {
+    return SizedBox(
+      height: 160,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          if (isNews) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailsPage(
+                      itemName: items[index],
+                      userId: widget.userId,
+                      counsellorId: '',
                     ),
-                  );
-                } else {
-                  final counsellor = items[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailsPage(
-                            itemName: counsellor['firstName'] ??
-                                counsellor['userName'],
-                            userId: widget.userId,
-                            counsellorId: counsellor['userName'] ?? '',
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 120,
-                      margin: EdgeInsets.symmetric(horizontal: 8),
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 1,
-                            blurRadius: 6,
-                            offset: Offset(0, 0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              counsellor['photoUrl'] ??
-                                  'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
-                            ),
-                            radius: 30,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            counsellor['firstName'] ??
-                                counsellor['userName'] ??
-                                'Unknown',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+                  ),
+                );
               },
-            ),
-          ),
-        ],
+              child: Container(
+                width: 120,
+                margin: EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    items[index],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ),
+            );
+          } else {
+            final counsellor = items[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailsPage(
+                      itemName:
+                          counsellor['firstName'] ?? counsellor['userName'],
+                      userId: widget.userId,
+                      counsellorId: counsellor['userName'] ?? '',
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 120,
+                margin: EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 1,
+                      blurRadius: 6,
+                      offset: Offset(0, 0),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(
+                        counsellor['photoUrl'] ??
+                            'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
+                      ),
+                      radius: 30,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      counsellor['firstName'] ??
+                          counsellor['userName'] ??
+                          'Unknown',
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
