@@ -95,4 +95,50 @@ static Future<String> signIn(String identifier, String password) async {
       return "An error occurred: $e";
     }
   }
+
+  //new signup stuff
+
+  Future<http.Response> verifyAndSignup(String phoneNumber, String otp) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/verifyAndUserSignup'),
+      body: {'phoneNumber': phoneNumber, 'otp': otp},
+    );
+    return response;
+  }
+
+  Future<http.Response> isUserDetailsNull(String phoneNumber) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/isUserDetailsNull?phoneNumber=$phoneNumber'),
+    );
+    return response;
+  }
+
+  Future<http.Response> generateOtp(String phoneNumber) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/generateOtp'),
+      body: {'phoneNumber': phoneNumber},
+    );
+    return response;
+  }
+
+   static Future<void> updateUserDetails(String userId, List<String> userInterestedStates, String interestedCourse) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('http://localhost:8080/api/user/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userInterestedStateOfCounsellors': userInterestedStates,
+          'interestedCourse': interestedCourse,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update user details. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error updating user details: $e');
+    }
+  }
 }

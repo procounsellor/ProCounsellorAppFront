@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/counsellor_signup_data.dart';
-import 'package:my_app/screens/signup_success.dart';
+import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/signup_success.dart';
 import 'package:my_app/services/auth_service.dart';
 
 class CounsellorSignUpStep3 extends StatefulWidget {

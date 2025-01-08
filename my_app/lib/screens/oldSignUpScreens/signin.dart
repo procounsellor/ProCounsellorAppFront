@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:my_app/screens/counselllor_signup_step1.dart';
-import 'package:my_app/screens/counsellor_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
+import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
-import 'package:my_app/screens/user_signup_data.dart';
-import 'package:my_app/screens/user_signup_step1.dart';
-import '../services/auth_service.dart';
-import 'dashboards/userDashboard/base_page.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_step1.dart';
+import '../../services/auth_service.dart';
+import '../dashboards/userDashboard/base_page.dart';
 
 final storage = FlutterSecureStorage();
 

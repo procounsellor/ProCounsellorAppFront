@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/counselllor_signup_step2.dart';
-import 'package:my_app/screens/counsellor_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/user_signup_step2.dart';
 
-class CounsellorSignUpStep1 extends StatefulWidget {
-  final CounsellorSignUpData signUpData;
+class UserSignUpStep1 extends StatefulWidget {
+  final UserSignUpData signUpData;
 
-  CounsellorSignUpStep1({required this.signUpData});
+  UserSignUpStep1({required this.signUpData});
 
   @override
-  _CounsellorSignUpStep1State createState() => _CounsellorSignUpStep1State();
+  _UserSignUpStep1State createState() => _UserSignUpStep1State();
 }
 
-class _CounsellorSignUpStep1State extends State<CounsellorSignUpStep1> {
+class _UserSignUpStep1State extends State<UserSignUpStep1> {
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -114,14 +114,6 @@ class _CounsellorSignUpStep1State extends State<CounsellorSignUpStep1> {
                           obscureText: true,
                           onSave: (value) => widget.signUpData.password = value,
                         ),
-                        SizedBox(height: 20),
-                        _buildTextField(
-                          label: "Rate per Year",
-                          initialValue: widget.signUpData.ratePerYear?.toString(),
-                          keyboardType: TextInputType.number,
-                          onSave: (value) => widget.signUpData.ratePerYear =
-                              value != null ? double.tryParse(value) : null,
-                        ),
                         SizedBox(height: 40),
                         SizedBox(
                           width: double.infinity,
@@ -140,7 +132,7 @@ class _CounsellorSignUpStep1State extends State<CounsellorSignUpStep1> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        CounsellorSignUpStep2(signUpData: widget.signUpData),
+                                        UserSignUpStep2(signUpData: widget.signUpData),
                                   ),
                                 );
                               }

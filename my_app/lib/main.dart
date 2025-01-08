@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/signin.dart';
+import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
+import 'package:my_app/screens/oldSignUpScreens/signin.dart';
 import 'screens/dashboards/userDashboard/call_page.dart'; // Import CallPage
 import 'screens/dashboards/userDashboard/liked_videos_page.dart'; // Import LikedVideosPage
 import 'screens/dashboards/userDashboard/liked_articles_page.dart'; // Import LikedArticlesPage
@@ -40,6 +41,7 @@ class ProCounsellorApp extends StatelessWidget {
           ),
       initialRoute: '/',
       routes: {
+        // '/': (context) => NewSignInPage(), // Sign-in page as the initial route
         '/': (context) => SignInScreen(), // Sign-in page as the initial route
         '/my_activities': (context) => MyActivitiesPage(
             username: 'User123'), // Replace with dynamic username as needed
