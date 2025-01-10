@@ -270,6 +270,156 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  //review summary section
+// Function to calculate ratings summary
+  Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
+    int totalRatings = reviews.length;
+    double averageRating = 0.0;
+    Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+
+    for (var review in reviews) {
+      if (review is Map<String, dynamic>) {
+        int rating = review['rating'] ?? 0;
+        if (rating > 0 && rating <= 5) {
+          starCounts[rating] = (starCounts[rating] ?? 0) + 1;
+          averageRating += rating;
+        }
+      }
+    }
+
+    if (totalRatings > 0) {
+      averageRating /= totalRatings;
+    }
+
+    return {
+      "averageRating": averageRating,
+      "totalRatings": totalRatings,
+      "starCounts": starCounts,
+    };
+  }
+
+// Widget for Rating Summary
+  Widget buildRatingSummary(List<Map<String, dynamic>> reviews) {
+    final ratingSummary = calculateRatingSummary(reviews);
+
+    double averageRating = ratingSummary['averageRating'];
+    int totalRatings = ratingSummary['totalRatings'];
+    Map<int, int> starCounts = ratingSummary['starCounts'];
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Average Rating and Total Reviews
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                averageRating.toStringAsFixed(2),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        Icons.star,
+                        color: index < averageRating.round()
+                            ? Colors.orange
+                            : Colors.grey,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "$totalRatings orders",
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(width: 16),
+
+          // Star Rating Breakdown
+          Expanded(
+            child: Column(
+              children: List.generate(5, (index) {
+                int star = 5 - index;
+                int count = starCounts[star] ?? 0;
+                double percentage =
+                    totalRatings > 0 ? (count / totalRatings) * 100 : 0;
+
+                return Row(
+                  children: [
+                    Text(
+                      "$star",
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey[300],
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: percentage / 100,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: star == 5
+                                  ? Colors.green
+                                  : star == 4
+                                      ? Colors.lightGreen
+                                      : star == 3
+                                          ? Colors.amber
+                                          : star == 2
+                                              ? Colors.orange
+                                              : Colors.red,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      count.toString(),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // summary section end
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -628,8 +778,9 @@ class _DetailsPageState extends State<DetailsPage> {
                                     label: Text("Call",
                                         style: TextStyle(fontSize: 12)),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.green[300], // Green hue button
+                                      backgroundColor: Colors.green[300],
+                                      foregroundColor:
+                                          Colors.black, // Green hue button
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -661,6 +812,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           Colors.green[300], // Green hue button
+                                      foregroundColor: Colors.black,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -688,6 +840,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
                                           Colors.green[300], // Green hue button
+                                      foregroundColor: Colors.black,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -703,9 +856,7 @@ class _DetailsPageState extends State<DetailsPage> {
 
                         SizedBox(height: 20),
                         // Reviews Section
-                        // Reviews Section
-                        // Reviews Section
-                        // Reviews Section
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -742,7 +893,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                         ? Colors
                                             .green[300] // Enabled button color
                                         : Colors.grey, // Disabled button color
-                                    foregroundColor: Colors.white, // Text color
+                                    foregroundColor: Colors.black, // Text color
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -773,6 +924,10 @@ class _DetailsPageState extends State<DetailsPage> {
                             ),
                           ],
                         ),
+                        SizedBox(height: 16),
+
+                        buildRatingSummary(
+                            reviews.cast<Map<String, dynamic>>()),
                         SizedBox(height: 10),
                         reviews.isNotEmpty
                             ? Column(
