@@ -76,7 +76,9 @@ class _DetailsPageState extends State<DetailsPage> {
       if (response.statusCode == 200) {
         setState(() {
           counsellorDetails = json.decode(response.body);
-          isLoading = false; // Stop loading after fetching details
+          isLoading = false;
+          print(counsellorDetails?[
+              'photoUrl']); // Stop loading after fetching details
         });
       } else {
         setState(() {
@@ -325,7 +327,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                   image: DecorationImage(
                                     image: NetworkImage(
                                       counsellorDetails?['photoUrl'] ??
-                                          'https://via.placeholder.com/150', // Fallback image
+                                          'https://via.placeholder.com/150',
+                                      // Fallback image
                                     ),
                                     fit: BoxFit.cover,
                                   ),
@@ -701,10 +704,74 @@ class _DetailsPageState extends State<DetailsPage> {
                         SizedBox(height: 20),
                         // Reviews Section
                         // Reviews Section
-                        Text(
-                          "Reviews",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                        // Reviews Section
+                        // Reviews Section
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Reviews Heading
+                            Text(
+                              "Reviews",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+
+                            // Post Review Button and View More
+                            Row(
+                              children: [
+                                // Post Review Button
+                                ElevatedButton(
+                                  onPressed: isSubscribed
+                                      ? () {
+                                          // Navigate to the Post Review Page
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PostUserReview(
+                                                userName: widget.userId,
+                                                counsellorName:
+                                                    widget.counsellorId,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      : null, // Disabled if not subscribed
+                                  child: Text("Post Review"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isSubscribed
+                                        ? Colors
+                                            .green[300] // Enabled button color
+                                        : Colors.grey, // Disabled button color
+                                    foregroundColor: Colors.white, // Text color
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                  ),
+                                ),
+
+                                // View More Text
+                                if (reviews.length > 2)
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => MyReviewPage(
+                                            username: widget.counsellorId,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text("View More"),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.blue,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
                         ),
                         SizedBox(height: 10),
                         reviews.isNotEmpty
@@ -762,7 +829,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                           ),
                                           SizedBox(height: 6),
 
-                                          // Reduced space
+                                          // Rating Stars
                                           Row(
                                             children: [
                                               ...List.generate(
@@ -775,6 +842,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                             ],
                                           ),
                                           SizedBox(height: 8),
+
                                           // Review Text
                                           Text(
                                             review["reviewText"] ??
@@ -784,10 +852,6 @@ class _DetailsPageState extends State<DetailsPage> {
                                                 color: Colors.black54),
                                           ),
                                           SizedBox(height: 6), // Reduced space
-
-                                          // Rating (Display actual stars)
-
-                                          // Reduced space
 
                                           // Like and Comments
                                           Row(
@@ -895,24 +959,6 @@ class _DetailsPageState extends State<DetailsPage> {
                                       ),
                                     );
                                   }).toList(),
-
-                                  // "See More" button if there are more than two reviews
-                                  if (reviews.length > 2)
-                                    Center(
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => MyReviewPage(
-                                                username: widget.counsellorId,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        child: Text("See More"),
-                                      ),
-                                    ),
                                 ],
                               )
                             : Text(
@@ -922,22 +968,6 @@ class _DetailsPageState extends State<DetailsPage> {
                               ),
 
 // Button to navigate to PostUserReview page
-                        Center(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PostUserReview(
-                                    userName: widget.userId,
-                                    counsellorName: widget.counsellorId,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Text("Post Review"),
-                          ),
-                        ),
                       ],
                     ),
                   ),
