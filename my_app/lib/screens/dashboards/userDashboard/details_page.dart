@@ -698,7 +698,8 @@ class _DetailsPageState extends State<DetailsPage> {
                           ),
                         ),
 
-                        SizedBox(height: 23),
+                        SizedBox(height: 20),
+                        // Reviews Section
                         // Reviews Section
                         Text(
                           "Reviews",
@@ -719,9 +720,10 @@ class _DetailsPageState extends State<DetailsPage> {
                                         TextEditingController();
 
                                     return Container(
-                                      margin:
-                                          EdgeInsets.symmetric(vertical: 8.0),
-                                      padding: EdgeInsets.all(12),
+                                      margin: EdgeInsets.symmetric(
+                                          vertical: 6.0), // Reduced margin
+                                      padding:
+                                          EdgeInsets.all(10), // Reduced padding
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         boxShadow: [
@@ -758,30 +760,34 @@ class _DetailsPageState extends State<DetailsPage> {
                                               ),
                                             ],
                                           ),
-                                          SizedBox(height: 8),
+                                          SizedBox(height: 6),
 
+                                          // Reduced space
+                                          Row(
+                                            children: [
+                                              ...List.generate(
+                                                review["rating"] ??
+                                                    0, // Generate stars based on rating
+                                                (index) => Icon(Icons.star,
+                                                    color: Colors.orange,
+                                                    size: 16),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
                                           // Review Text
                                           Text(
                                             review["reviewText"] ??
                                                 "No review text provided.",
-                                            style: TextStyle(fontSize: 14),
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54),
                                           ),
-                                          SizedBox(height: 8),
+                                          SizedBox(height: 6), // Reduced space
 
-                                          // Rating
-                                          Row(
-                                            children: [
-                                              Icon(Icons.star,
-                                                  color: Colors.orange,
-                                                  size: 16),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                "${review["rating"] ?? 'N/A'}",
-                                                style: TextStyle(fontSize: 14),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10),
+                                          // Rating (Display actual stars)
+
+                                          // Reduced space
 
                                           // Like and Comments
                                           Row(
@@ -794,14 +800,15 @@ class _DetailsPageState extends State<DetailsPage> {
                                                     icon: Icon(
                                                       userIDliked.contains(
                                                               widget.userId)
-                                                          ? Icons.thumb_up
-                                                          : Icons
-                                                              .thumb_up_off_alt,
+                                                          ? Icons.heart_broken
+                                                          : Icons.favorite,
                                                       color: userIDliked
                                                               .contains(
                                                                   widget.userId)
                                                           ? Colors.blueAccent
-                                                          : Colors.black,
+                                                          : const Color
+                                                              .fromARGB(
+                                                              255, 222, 20, 20),
                                                     ),
                                                     onPressed: () => addLike(
                                                         widget.userId,
@@ -809,7 +816,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                                         userIDliked),
                                                   ),
                                                   Text(
-                                                      "Likes: ${review['noOfLikes']}"),
+                                                      "${review['noOfLikes']}"),
                                                 ],
                                               ),
                                               TextButton(
@@ -1004,10 +1011,10 @@ class _DetailsPageState extends State<DetailsPage> {
                           IconButton(
                             icon: Icon(
                               userIDliked.contains(widget.userId)
-                                  ? Icons.thumb_up
-                                  : Icons.thumb_up_off_alt,
+                                  ? Icons.favorite
+                                  : Icons.heart_broken,
                               color: userIDliked.contains(widget.userId)
-                                  ? Colors.blueAccent
+                                  ? Colors.black45
                                   : Colors.black,
                             ),
                             onPressed: () =>
