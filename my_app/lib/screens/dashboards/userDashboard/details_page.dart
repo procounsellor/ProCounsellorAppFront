@@ -4,6 +4,7 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import 'chatting_page.dart';
+import 'dart:ui';
 
 class DetailsPage extends StatefulWidget {
   final String itemName;
@@ -29,8 +30,8 @@ class _DetailsPageState extends State<DetailsPage> {
   bool isFollowed = false; // Track following status
   bool isLoading = true; // Track loading status for API calls
   Map<String, dynamic>? counsellorDetails; // Store fetched counsellor details
-   List<dynamic> reviews = [];
-   Map<String, bool> showComments = {};
+  List<dynamic> reviews = [];
+  Map<String, bool> showComments = {};
 
   @override
   void initState() {
@@ -126,7 +127,6 @@ class _DetailsPageState extends State<DetailsPage> {
       );
     }
   }
-
 
   // Function to check if the user is already following the counsellor
   Future<void> checkFollowingStatus() async {
@@ -269,335 +269,811 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(widget.itemName),
-      centerTitle: true,
-    ),
-    body: SingleChildScrollView(
-      // Wrap content in a scrollable view
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? Center(
-                child: CircularProgressIndicator(),
-              ) // Show loader while fetching status
-            : Align(
-                alignment: Alignment.center, // Ensures content is centered
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Details about ${widget.itemName}",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 20),
+  Widget build(BuildContext context) {
+    return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          title: Text(widget.itemName, style: TextStyle(color: Colors.black)),
+          centerTitle: true,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
+        body: SingleChildScrollView(
+          // Wrap content in a scrollable view
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  ) // Show loader while fetching status
+                : Align(
+                    alignment: Alignment.center, // Ensures content is centered
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Required for the glassy effect
 
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: NetworkImage(
-                        counsellorDetails?['photoUrl'] ??
-                            'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Name: ${counsellorDetails?['firstName'] ?? 'N/A'} ${counsellorDetails?['lastName'] ?? ''}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Organisation: ${counsellorDetails?['organisationName'] ?? 'N/A'}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Specialization: ${counsellorDetails?['specialization'] ?? 'N/A'}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Rate per Minute (Call): \$${counsellorDetails?['ratePerMinuteCall'] ?? 'N/A'}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      "Rate per Minute (Video Call): \$${counsellorDetails?['ratePerMinuteVideoCall'] ?? 'N/A'}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      "Rate per Minute (Chat): \$${counsellorDetails?['ratePerMinuteChat'] ?? 'N/A'}",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 20),
+                        Container(
+                          width: double.infinity, // Full width of the page
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 2,
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Image
+                              Container(
+                                width: MediaQuery.of(context).size.width *
+                                    0.8, // Cover 80% of card width
+                                height: MediaQuery.of(context).size.width *
+                                    0.7, // Increased height
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                      12), // Rounded corners
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                      counsellorDetails?['photoUrl'] ??
+                                          'https://via.placeholder.com/150', // Fallback image
+                                    ),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  border: Border.all(
+                                      color: Colors.orange.withOpacity(0.7),
+                                      width: 2), // Tinted orange border
+                                ),
+                              ),
+                              SizedBox(
+                                  height:
+                                      16), // Space between image and full name
 
-                    // Call button
-                    ElevatedButton.icon(
-                      onPressed: isSubscribed
-                          ? () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        "Calling ${counsellorDetails?['firstName']}...")),
-                              );
-                            }
-                          : null, // Disable button if not subscribed
-                      icon: Icon(Icons.call),
-                      label: Text("Call"),
-                    ),
-                    SizedBox(height: 10),
+                              // Full Name
+                              Text(
+                                "${counsellorDetails?['firstName'] ?? 'N/A'} ${counsellorDetails?['lastName'] ?? ''}",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize:
+                                      22, // Slightly larger font for the name
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(
+                                  height:
+                                      16), // Space between full name and buttons
 
-                    // Chat button
-                    ElevatedButton.icon(
-                      onPressed: isSubscribed
-                          ? () {
+                              // Expertise, Subscribe, and Follow Buttons Row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // Expertise Button
+                                  TextButton(
+                                    onPressed: () {
+                                      showGeneralDialog(
+                                        context: context,
+                                        barrierDismissible: true,
+                                        barrierLabel:
+                                            MaterialLocalizations.of(context)
+                                                .modalBarrierDismissLabel,
+                                        pageBuilder: (BuildContext context,
+                                            Animation<double> animation,
+                                            Animation<double>
+                                                secondaryAnimation) {
+                                          final expertiseList =
+                                              counsellorDetails?['expertise']
+                                                      as List<dynamic>? ??
+                                                  [];
+                                          return Center(
+                                            child: Container(
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 20),
+                                              padding: EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                    color: Colors.orange
+                                                        .withOpacity(0.7),
+                                                    width: 2),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.orange
+                                                        .withOpacity(0.3),
+                                                    blurRadius: 20,
+                                                    spreadRadius: 1,
+                                                    offset: Offset(0, 8),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Material(
+                                                color: Colors.transparent,
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "Expertise",
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 18,
+                                                        color:
+                                                            Colors.orange[800],
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 10),
+                                                    SingleChildScrollView(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: expertiseList
+                                                            .map((expertise) {
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    vertical:
+                                                                        4.0),
+                                                            child: Text(
+                                                              "- $expertise",
+                                                              style: TextStyle(
+                                                                  fontSize: 16),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 10),
+                                                    Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(),
+                                                        style: TextButton
+                                                            .styleFrom(
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                          backgroundColor:
+                                                              Colors.orange
+                                                                  .withOpacity(
+                                                                      0.7),
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
+                                                          ),
+                                                        ),
+                                                        child: Text("Close"),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        transitionDuration:
+                                            Duration(milliseconds: 300),
+                                        transitionBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          return ScaleTransition(
+                                            scale: CurvedAnimation(
+                                              parent: animation,
+                                              curve: Curves.easeOutBack,
+                                            ),
+                                            child: child,
+                                          );
+                                        },
+                                      );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 6, horizontal: 12),
+                                      backgroundColor:
+                                          Colors.orange.withOpacity(0.2),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      "Expertise",
+                                      style: TextStyle(
+                                        color: Colors.orange[700],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Subscribe Button
+                                  ElevatedButton.icon(
+                                    onPressed:
+                                        isSubscribed ? unsubscribe : subscribe,
+                                    icon: Icon(
+                                      isSubscribed
+                                          ? Icons.cancel
+                                          : Icons.subscriptions,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      isSubscribed
+                                          ? "Unsubscribe"
+                                          : "Subscribe",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 12),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange
+                                          .withOpacity(
+                                              0.7), // Tinted orange button
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 6),
+                                    ),
+                                  ),
+
+                                  // Follow Button
+                                  ElevatedButton.icon(
+                                    onPressed: isFollowed ? unfollow : follow,
+                                    icon: Icon(
+                                      isFollowed
+                                          ? Icons.cancel
+                                          : Icons.subscriptions,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      isFollowed ? "Unfollow" : "Follow",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 12),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange
+                                          .withOpacity(
+                                              0.7), // Tinted orange button
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                  height:
+                                      16), // Space between buttons and information
+
+                              // Additional Information
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Organisation: ${counsellorDetails?['organisationName'] ?? 'N/A'}",
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      "Subscription: \$${counsellorDetails?['ratePerYear'] ?? 'N/A'} per year",
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                  height:
+                                      16), // Space between information and buttons
+
+                              // Call, Chat, and Video Call Buttons Row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // Call Button
+                                  ElevatedButton.icon(
+                                    onPressed: isSubscribed
+                                        ? () {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      "Calling ${counsellorDetails?['firstName']}...")),
+                                            );
+                                          }
+                                        : null, // Disable button if not subscribed
+                                    icon: Icon(Icons.call, size: 16),
+                                    label: Text("Call",
+                                        style: TextStyle(fontSize: 12)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.green[300], // Green hue button
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                  ),
+
+                                  // Chat Button
+                                  ElevatedButton.icon(
+                                    onPressed: isSubscribed
+                                        ? () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => ChattingPage(
+                                                  itemName: widget.itemName,
+                                                  userId: widget.userId,
+                                                  counsellorId:
+                                                      widget.counsellorId,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        : null, // Disable button if not subscribed
+                                    icon: Icon(Icons.chat, size: 16),
+                                    label: Text("Chat",
+                                        style: TextStyle(fontSize: 12)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.green[300], // Green hue button
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                  ),
+
+                                  // Video Call Button
+                                  ElevatedButton.icon(
+                                    onPressed: isSubscribed
+                                        ? () {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      "Video calling ${counsellorDetails?['firstName']}...")),
+                                            );
+                                          }
+                                        : null, // Disable button if not subscribed
+                                    icon: Icon(Icons.video_call, size: 16),
+                                    label: Text("Video Call",
+                                        style: TextStyle(fontSize: 12),
+                                        selectionColor: Colors.white),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.green[300], // Green hue button
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: 23),
+                        // Reviews Section
+                        Text(
+                          "Reviews",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 10),
+                        reviews.isNotEmpty
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Show first two reviews
+                                  ...reviews.take(2).map((review) {
+                                    final reviewId = review['reviewId'];
+                                    final userIDliked = List<String>.from(
+                                        review['userIDliked'] ?? []);
+                                    TextEditingController _commentController =
+                                        TextEditingController();
+
+                                    return Container(
+                                      margin:
+                                          EdgeInsets.symmetric(vertical: 8.0),
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.3),
+                                            spreadRadius: 1,
+                                            blurRadius: 6,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // User Info
+                                          Row(
+                                            children: [
+                                              CircleAvatar(
+                                                backgroundImage: NetworkImage(
+                                                  review["photoUrl"] ??
+                                                      'https://via.placeholder.com/150',
+                                                ),
+                                                radius: 20,
+                                              ),
+                                              SizedBox(width: 10),
+                                              Text(
+                                                review["userName"] ??
+                                                    "Anonymous",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
+
+                                          // Review Text
+                                          Text(
+                                            review["reviewText"] ??
+                                                "No review text provided.",
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                          SizedBox(height: 8),
+
+                                          // Rating
+                                          Row(
+                                            children: [
+                                              Icon(Icons.star,
+                                                  color: Colors.orange,
+                                                  size: 16),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                "${review["rating"] ?? 'N/A'}",
+                                                style: TextStyle(fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 10),
+
+                                          // Like and Comments
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      userIDliked.contains(
+                                                              widget.userId)
+                                                          ? Icons.thumb_up
+                                                          : Icons
+                                                              .thumb_up_off_alt,
+                                                      color: userIDliked
+                                                              .contains(
+                                                                  widget.userId)
+                                                          ? Colors.blueAccent
+                                                          : Colors.black,
+                                                    ),
+                                                    onPressed: () => addLike(
+                                                        widget.userId,
+                                                        reviewId,
+                                                        userIDliked),
+                                                  ),
+                                                  Text(
+                                                      "Likes: ${review['noOfLikes']}"),
+                                                ],
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    showComments[reviewId] =
+                                                        !(showComments[
+                                                                reviewId] ??
+                                                            false);
+                                                  });
+                                                },
+                                                child: Text("Comments"),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // Comments Section
+                                          if (showComments[reviewId] ==
+                                              true) ...[
+                                            ...review["comments"]
+                                                    ?.map<Widget>((comment) {
+                                                  return ListTile(
+                                                    leading: CircleAvatar(
+                                                      backgroundImage: comment[
+                                                                  'photoUrl'] !=
+                                                              null
+                                                          ? NetworkImage(
+                                                              comment[
+                                                                  'photoUrl'])
+                                                          : null,
+                                                      child:
+                                                          comment['photoUrl'] ==
+                                                                  null
+                                                              ? Icon(
+                                                                  Icons.person,
+                                                                  size: 20)
+                                                              : null,
+                                                      radius: 15,
+                                                    ),
+                                                    title: Text(
+                                                        comment['userName'] ??
+                                                            "Anonymous"),
+                                                    subtitle: Text(comment[
+                                                            'commentText'] ??
+                                                        ""),
+                                                  );
+                                                })?.toList() ??
+                                                [
+                                                  Text("No comments available.")
+                                                ],
+                                            TextField(
+                                              controller: _commentController,
+                                              decoration: InputDecoration(
+                                                hintText: "Add a comment...",
+                                                border: OutlineInputBorder(),
+                                              ),
+                                            ),
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: TextButton(
+                                                onPressed: () {
+                                                  if (_commentController
+                                                      .text.isNotEmpty) {
+                                                    addComment(
+                                                        reviewId,
+                                                        _commentController.text,
+                                                        widget.userId);
+                                                    _commentController.clear();
+                                                  }
+                                                },
+                                                child: Text("Post Comment"),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+
+                                  // "See More" button if there are more than two reviews
+                                  if (reviews.length > 2)
+                                    Center(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => MyReviewPage(
+                                                username: widget.counsellorId,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text("See More"),
+                                      ),
+                                    ),
+                                ],
+                              )
+                            : Text(
+                                "No reviews available.",
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.grey),
+                              ),
+
+// Button to navigate to PostUserReview page
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => ChattingPage(
-                                    itemName: widget.itemName,
-                                    userId: widget.userId,
-                                    counsellorId: widget.counsellorId,
+                                  builder: (_) => PostUserReview(
+                                    userName: widget.userId,
+                                    counsellorName: widget.counsellorId,
                                   ),
                                 ),
                               );
-                            }
-                          : null, // Disable button if not subscribed
-                      icon: Icon(Icons.chat),
-                      label: Text("Chat"),
-                    ),
-                    SizedBox(height: 10),
-
-                    // Video call button
-                    ElevatedButton.icon(
-                      onPressed: isSubscribed
-                          ? () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        "Video calling ${counsellorDetails?['firstName']}...")),
-                              );
-                            }
-                          : null, // Disable button if not subscribed
-                      icon: Icon(Icons.video_call),
-                      label: Text("Video Call"),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Subscribe/Unsubscribe Button
-                    ElevatedButton.icon(
-                      onPressed: isSubscribed ? unsubscribe : subscribe,
-                      icon: Icon(
-                          isSubscribed ? Icons.cancel : Icons.subscriptions),
-                      label: Text(isSubscribed ? "Unsubscribe" : "Subscribe"),
-                    ),
-                    SizedBox(height: 20),
-
-                    //Follow/Unfollow button
-                    ElevatedButton.icon(
-                      onPressed: isFollowed ? unfollow : follow,
-                      icon: Icon(
-                          isFollowed ? Icons.cancel : Icons.subscriptions),
-                      label: Text(isFollowed ? "Unfollow" : "Follow"),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Reviews Section
-                    Text(
-                      "User Reviews",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10),
-                    reviews.isNotEmpty
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildUserReviews(reviews.take(2).toList()),
-                              if (reviews.length > 2)
-                                Center(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => MyReviewPage(
-                                            username: widget.counsellorId,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Text("See More"),
-                                  ),
-                                ),
-                            ],
-                          )
-                        : Text("No reviews available."),
-
-                      // Button to navigate to PostUserReview page
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PostUserReview(
-                                  userName: widget.userId,
-                                  counsellorName: widget.counsellorId,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text("Post Review"),
+                            },
+                            child: Text("Post Review"),
+                          ),
                         ),
-                      )
-                  ],
-                ),
-              ),
-      ),
-    )
-  );
+                      ],
+                    ),
+                  ),
+          ),
+        ));
   }
-
-
-
 
   //Need to think upon as it's reusable.....
   Widget _buildUserReviews(List<dynamic> reviews) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: reviews.map((review) {
-      final reviewId = review['reviewId'];
-      final userIDliked = List<String>.from(review['userIDliked'] ?? []);
-      TextEditingController _commentController = TextEditingController();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: reviews.map((review) {
+        final reviewId = review['reviewId'];
+        final userIDliked = List<String>.from(review['userIDliked'] ?? []);
+        TextEditingController _commentController = TextEditingController();
 
-      return FutureBuilder<String>(
-        future: fetchUserFullName(review['userName'] ?? "Unknown"),
-        builder: (context, snapshot) {
-          final userFullName = snapshot.data ?? "Loading...";
+        return FutureBuilder<String>(
+          future: fetchUserFullName(review['userName'] ?? "Unknown"),
+          builder: (context, snapshot) {
+            final userFullName = snapshot.data ?? "Loading...";
 
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 8.0),
-            padding: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: review["photoUrl"] != null
-                          ? NetworkImage(review["photoUrl"])
-                          : null,
-                      child: review["photoUrl"] == null
-                          ? Icon(Icons.person, size: 30)
-                          : null,
-                      radius: 20,
-                    ),
-                    SizedBox(width: 8.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "$userFullName",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.0),
-                _buildListItem("Review", review["reviewText"]),
-                _buildListItem("Rating", review["rating"]),
-                _buildListItem(
-                  "Timestamp",
-                  review["timestamp"] != null
-                      ? formatTimestamp(review["timestamp"]["seconds"])
-                      : "Not provided",
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text("Likes: ${review['noOfLikes']}", style: TextStyle(fontSize: 14)),
-                        IconButton(
-                          icon: Icon(
-                            userIDliked.contains(widget.userId)
-                                ? Icons.thumb_up
-                                : Icons.thumb_up_off_alt,
-                            color: userIDliked.contains(widget.userId)
-                                ? Colors.blueAccent
-                                : Colors.black,
-                          ),
-                          onPressed: () => addLike(widget.userId, reviewId, userIDliked),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          showComments[reviewId] = !(showComments[reviewId] ?? false);
-                        });
-                      },
-                      child: Text("Comments"),
-                    ),
-                  ],
-                ),
-                if (showComments[reviewId] == true) ...[
-                  ...review['comments']?.map<Widget>((comment) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: comment['photoUrl'] != null
-                            ? NetworkImage(comment['photoUrl'])
+            return Container(
+              margin: EdgeInsets.symmetric(vertical: 8.0),
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: review["photoUrl"] != null
+                            ? NetworkImage(review["photoUrl"])
                             : null,
-                        child: comment['photoUrl'] == null
-                            ? Icon(Icons.person, size: 20)
+                        child: review["photoUrl"] == null
+                            ? Icon(Icons.person, size: 30)
                             : null,
-                        radius: 15,
+                        radius: 20,
                       ),
-                      title: Text(comment['userName'] ?? "Anonymous"),
-                      subtitle: Text(comment['commentText'] ?? ""),
-                    );
-                  })?.toList() ??
-                  [Text("No comments available.")],
-                  TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: "Add a comment...",
-                      border: OutlineInputBorder(),
-                    ),
+                      SizedBox(width: 8.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "$userFullName",
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        if (_commentController.text.isNotEmpty) {
-                          addComment(reviewId, _commentController.text, widget.userId);
-                          _commentController.clear();
-                        }
-                      },
-                      child: Text("Post Comment"),
-                    ),
+                  SizedBox(height: 8.0),
+                  _buildListItem("Review", review["reviewText"]),
+                  _buildListItem("Rating", review["rating"]),
+                  _buildListItem(
+                    "Timestamp",
+                    review["timestamp"] != null
+                        ? formatTimestamp(review["timestamp"]["seconds"])
+                        : "Not provided",
                   ),
-                ]
-              ],
-            ),
-          );
-        },
-      );
-    }).toList(),
-  );
-}
-Widget _buildListItem(String title, dynamic value) {
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text("Likes: ${review['noOfLikes']}",
+                              style: TextStyle(fontSize: 14)),
+                          IconButton(
+                            icon: Icon(
+                              userIDliked.contains(widget.userId)
+                                  ? Icons.thumb_up
+                                  : Icons.thumb_up_off_alt,
+                              color: userIDliked.contains(widget.userId)
+                                  ? Colors.blueAccent
+                                  : Colors.black,
+                            ),
+                            onPressed: () =>
+                                addLike(widget.userId, reviewId, userIDliked),
+                          ),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            showComments[reviewId] =
+                                !(showComments[reviewId] ?? false);
+                          });
+                        },
+                        child: Text("Comments"),
+                      ),
+                    ],
+                  ),
+                  if (showComments[reviewId] == true) ...[
+                    ...review['comments']?.map<Widget>((comment) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: comment['photoUrl'] != null
+                                  ? NetworkImage(comment['photoUrl'])
+                                  : null,
+                              child: comment['photoUrl'] == null
+                                  ? Icon(Icons.person, size: 20)
+                                  : null,
+                              radius: 15,
+                            ),
+                            title: Text(comment['userName'] ?? "Anonymous"),
+                            subtitle: Text(comment['commentText'] ?? ""),
+                          );
+                        })?.toList() ??
+                        [Text("No comments available.")],
+                    TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: "Add a comment...",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          if (_commentController.text.isNotEmpty) {
+                            addComment(reviewId, _commentController.text,
+                                widget.userId);
+                            _commentController.clear();
+                          }
+                        },
+                        child: Text("Post Comment"),
+                      ),
+                    ),
+                  ]
+                ],
+              ),
+            );
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildListItem(String title, dynamic value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -613,10 +1089,12 @@ Widget _buildListItem(String title, dynamic value) {
     );
   }
 
-  Future<void> addComment(String reviewId, String commentText, String username) async {
+  Future<void> addComment(
+      String reviewId, String commentText, String username) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/reviews/$reviewId/comments/$username'),
+        Uri.parse(
+            'http://localhost:8080/api/reviews/$reviewId/comments/$username'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'commentText': commentText}),
       );
@@ -631,35 +1109,40 @@ Widget _buildListItem(String title, dynamic value) {
     }
   }
 
-Future<void> addLike(String userId, String reviewId, List<String> userIDliked) async {
-  try {
-    final String userId = widget.userId; // Assuming userId is the username (you can change this based on your logic)
+  Future<void> addLike(
+      String userId, String reviewId, List<String> userIDliked) async {
+    try {
+      final String userId = widget
+          .userId; // Assuming userId is the username (you can change this based on your logic)
 
-    // Check if the current user has already liked the review
-    bool isLiked = userIDliked.contains(userId);
+      // Check if the current user has already liked the review
+      bool isLiked = userIDliked.contains(userId);
 
-    final response = isLiked
-        ? await http.post(
-            Uri.parse('http://localhost:8080/api/reviews/$userId/$reviewId/unlike'),
-          ) // Unliking
-        : await http.post(
-            Uri.parse('http://localhost:8080/api/reviews/$userId/$reviewId/like'),
-          ); // Liking
+      final response = isLiked
+          ? await http.post(
+              Uri.parse(
+                  'http://localhost:8080/api/reviews/$userId/$reviewId/unlike'),
+            ) // Unliking
+          : await http.post(
+              Uri.parse(
+                  'http://localhost:8080/api/reviews/$userId/$reviewId/like'),
+            ); // Liking
 
-    if (response.statusCode == 200) {
-      fetchReviews(); // Refresh reviews after toggling like/unlike
-    } else {
-      print('Error toggling like: ${response.body}');
+      if (response.statusCode == 200) {
+        fetchReviews(); // Refresh reviews after toggling like/unlike
+      } else {
+        print('Error toggling like: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
-  } catch (e) {
-    print('Error: $e');
   }
-}
 
   Future<void> removeComment(String reviewId, String commentId) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:8080/api/reviews/$reviewId/comments/$commentId'),
+        Uri.parse(
+            'http://localhost:8080/api/reviews/$reviewId/comments/$commentId'),
       );
 
       if (response.statusCode == 200) {
