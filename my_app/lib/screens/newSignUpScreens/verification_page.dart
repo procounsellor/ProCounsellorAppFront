@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/get_user_details_step1.dart';
@@ -110,6 +111,7 @@ class _VerificationPageState extends State<VerificationPage> {
         final Map<String, dynamic> body = jsonDecode(response.body);
         String jwtToken = body['jwtToken'];
         String userId = body['userId'];
+        String firebaseCustomToken = body['firebaseCustomToken'];
 
         if (response.statusCode == 200) {
           final detailsResponse = await _apiService.isUserDetailsNull(userId);
@@ -118,6 +120,16 @@ class _VerificationPageState extends State<VerificationPage> {
             // Save JWT and userId in secure storage when signed in
             await storage.write(key: "jwtToken", value: jwtToken);
             await storage.write(key: "userId", value: userId);
+
+            // Authenticate with Firebase using the custom token
+            await FirebaseAuth.instance.signInWithCustomToken(firebaseCustomToken);
+            User? user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                print("Authenticated user: ${user.uid}");
+              } else {
+                print("Authentication failed.");
+              }
+
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
@@ -136,6 +148,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
                   userId: userId,
                   jwtToken: jwtToken,
+                  firebaseCustomToken: firebaseCustomToken,
                   onSignOut: _signOut,
                 ),
               ),
@@ -149,6 +162,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
                 userId: userId,
                 jwtToken: jwtToken,
+                firebaseCustomToken: firebaseCustomToken,
                 onSignOut: _signOut,
               ),
             ),

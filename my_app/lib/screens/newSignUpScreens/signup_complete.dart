@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
@@ -7,9 +8,10 @@ final storage = FlutterSecureStorage();
 class SignUpCompleteScreen extends StatefulWidget {
   final String userId;
   final String jwtToken;
+  final String firebaseCustomToken;
   final Future<void> Function() onSignOut;
 
-  SignUpCompleteScreen({required this.userId, required this.jwtToken, required this.onSignOut});
+  SignUpCompleteScreen({required this.userId, required this.jwtToken, required this.firebaseCustomToken, required this.onSignOut});
 
   @override
   _SignUpCompleteScreenState createState() => _SignUpCompleteScreenState();
@@ -25,6 +27,16 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
   Future<void> _storeCredentials() async {
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
+
+     // Authenticate with Firebase using the custom token
+    await FirebaseAuth.instance.signInWithCustomToken(widget.firebaseCustomToken);
+    
+    User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        print("Authenticated user: ${user.uid}");
+      } else {
+        print("Authentication failed.");
+      }
   }
 
   @override

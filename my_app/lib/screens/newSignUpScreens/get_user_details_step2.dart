@@ -7,9 +7,10 @@ class GetUserDetailsStep2 extends StatefulWidget {
   final UserDetails userDetails;
   final String userId;
   final String jwtToken;
+  final String firebaseCustomToken;
   final Future<void> Function() onSignOut;
 
-  GetUserDetailsStep2({required this.userDetails, required this.userId, required this.jwtToken, required this.onSignOut});
+  GetUserDetailsStep2({required this.userDetails, required this.userId, required this.jwtToken, required this.firebaseCustomToken, required this.onSignOut});
 
   @override
   _GetUserDetailsStep2State createState() => _GetUserDetailsStep2State();
@@ -143,7 +144,7 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpCompleteScreen(userId: widget.userId, jwtToken:widget.jwtToken, onSignOut: widget.onSignOut),
+                              builder: (context) => SignUpCompleteScreen(userId: widget.userId, jwtToken: widget.jwtToken, firebaseCustomToken: widget.firebaseCustomToken, onSignOut: widget.onSignOut),
                             ),
                           );
                         } catch (e) {

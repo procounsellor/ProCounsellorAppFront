@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:my_app/screens/newSignUpScreens/verification_page.dart';
+import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
+import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
+import 'package:my_app/screens/oldSignUpScreens/signin.dart';
 
 class NewSignInPage extends StatefulWidget {
   @override
@@ -104,6 +107,32 @@ class _NewSignInPageState extends State<NewSignInPage> {
               ),
               child: Text('Get verification code'),
             ),
+            TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CounsellorSignUpStep1(signUpData: CounsellorSignUpData()),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Sign up as a Counsellor.",
+                    style: TextStyle(color: Color(0xFFFAAF84), fontSize: 16),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => SignInScreen(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Sign in as a Counsellor.",
+                    style: TextStyle(color: Color(0xFFFAAF84), fontSize: 16),
+                  ),
+                ),
             Spacer(),
           ],
         ),

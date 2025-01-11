@@ -6,9 +6,11 @@ class GetUserDetailsStep1 extends StatefulWidget {
   final UserDetails userDetails;
   final String userId;
   final String jwtToken;
+  final String firebaseCustomToken;
+
   final Future<void> Function() onSignOut;
 
-  GetUserDetailsStep1({required this.userDetails, required this.userId, required this.jwtToken, required this.onSignOut});
+  GetUserDetailsStep1({required this.userDetails, required this.userId, required this.jwtToken, required this.firebaseCustomToken, required this.onSignOut});
 
   @override
   _GetUserDetailsStep1State createState() => _GetUserDetailsStep1State();
@@ -98,6 +100,7 @@ class _GetUserDetailsStep1State extends State<GetUserDetailsStep1> {
                                       userDetails: widget.userDetails,
                                       userId: widget.userId,
                                       jwtToken:widget.jwtToken,
+                                      firebaseCustomToken: widget.firebaseCustomToken,
                                       onSignOut: widget.onSignOut,
                                 ),
                               )
