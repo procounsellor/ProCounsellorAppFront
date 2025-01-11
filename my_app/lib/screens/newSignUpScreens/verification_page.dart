@@ -109,21 +109,21 @@ class _VerificationPageState extends State<VerificationPage> {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final Map<String, dynamic> body = jsonDecode(response.body);
         String jwtToken = body['jwtToken'];
-
-        // Save JWT and phone number in secure storage
-        await storage.write(key: "jwtToken", value: jwtToken);
-        await storage.write(key: "phoneNumber", value: widget.phoneNumber);
+        String userId = body['userId'];
 
         if (response.statusCode == 200) {
-          final detailsResponse = await _apiService.isUserDetailsNull(widget.phoneNumber);
+          final detailsResponse = await _apiService.isUserDetailsNull(userId);
 
           if (detailsResponse.statusCode == 200 && detailsResponse.body == 'false') {
+            // Save JWT and userId in secure storage when signed in
+            await storage.write(key: "jwtToken", value: jwtToken);
+            await storage.write(key: "userId", value: userId);
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
                 builder: (context) => BasePage(
                   onSignOut: _signOut,
-                  username: widget.phoneNumber,
+                  username: userId,
                 ),
               ),
               (route) => false, // Remove all previous routes
@@ -134,7 +134,8 @@ class _VerificationPageState extends State<VerificationPage> {
               MaterialPageRoute(
                 builder: (context) => GetUserDetailsStep1(
                   userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
-                  phoneNumber: widget.phoneNumber,
+                  userId: userId,
+                  jwtToken: jwtToken,
                   onSignOut: _signOut,
                 ),
               ),
@@ -146,7 +147,8 @@ class _VerificationPageState extends State<VerificationPage> {
             MaterialPageRoute(
               builder: (context) => GetUserDetailsStep1(
                 userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
-                phoneNumber: widget.phoneNumber,
+                userId: userId,
+                jwtToken: jwtToken,
                 onSignOut: _signOut,
               ),
             ),
@@ -185,7 +187,7 @@ class _VerificationPageState extends State<VerificationPage> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => NewSignInPage()),
-      (route) => false,
+      (route) => true,
     );
   }
 

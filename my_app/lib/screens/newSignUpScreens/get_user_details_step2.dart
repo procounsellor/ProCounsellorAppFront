@@ -5,10 +5,11 @@ import 'package:my_app/services/auth_service.dart';
 
 class GetUserDetailsStep2 extends StatefulWidget {
   final UserDetails userDetails;
-  final String phoneNumber;
+  final String userId;
+  final String jwtToken;
   final Future<void> Function() onSignOut;
 
-  GetUserDetailsStep2({required this.userDetails, required this.phoneNumber, required this.onSignOut});
+  GetUserDetailsStep2({required this.userDetails, required this.userId, required this.jwtToken, required this.onSignOut});
 
   @override
   _GetUserDetailsStep2State createState() => _GetUserDetailsStep2State();
@@ -134,7 +135,7 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                       onPressed: () async {
                         try {
                           await AuthService.updateUserDetails(
-                            widget.phoneNumber,
+                            widget.userId,
                             widget.userDetails.userInterestedStates,
                             widget.userDetails.interestedCourse!,
                           );
@@ -142,7 +143,7 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpCompleteScreen(phoneNumber: widget.phoneNumber, onSignOut: widget.onSignOut),
+                              builder: (context) => SignUpCompleteScreen(userId: widget.userId, jwtToken:widget.jwtToken, onSignOut: widget.onSignOut),
                             ),
                           );
                         } catch (e) {

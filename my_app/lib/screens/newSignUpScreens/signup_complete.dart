@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 
-class SignUpCompleteScreen extends StatelessWidget {
-  final String phoneNumber;
+final storage = FlutterSecureStorage();
+
+class SignUpCompleteScreen extends StatefulWidget {
+  final String userId;
+  final String jwtToken;
   final Future<void> Function() onSignOut;
 
-  SignUpCompleteScreen({required this.phoneNumber, required this.onSignOut});
+  SignUpCompleteScreen({required this.userId, required this.jwtToken, required this.onSignOut});
+
+  @override
+  _SignUpCompleteScreenState createState() => _SignUpCompleteScreenState();
+}
+
+class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _storeCredentials();
+  }
+
+  Future<void> _storeCredentials() async {
+    await storage.write(key: "jwtToken", value: widget.jwtToken);
+    await storage.write(key: "userId", value: widget.userId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +59,7 @@ class SignUpCompleteScreen extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              "Phone Number: $phoneNumber",
+              "Phone Number: ${widget.userId}",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[700],
@@ -55,14 +75,14 @@ class SignUpCompleteScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              onPressed: (){
-                  Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BasePage(username: phoneNumber, onSignOut: onSignOut),
-                            ),
-                          );
-              }, // Navigate to BasePage
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BasePage(username: widget.userId, onSignOut: widget.onSignOut),
+                  ),
+                );
+              },
               child: Text(
                 "Go to Dashboard",
                 style: TextStyle(

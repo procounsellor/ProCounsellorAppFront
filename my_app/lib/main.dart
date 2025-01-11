@@ -9,9 +9,9 @@ final storage = FlutterSecureStorage();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Fetch stored token and phone number
+  // Fetch stored token and userId
   String? jwtToken = await storage.read(key: "jwtToken");
-  String? phoneNumber = await storage.read(key: "phoneNumber");
+  String? userId = await storage.read(key: "userId");
 
   // Initialize Firebase
   await Firebase.initializeApp(
@@ -26,44 +26,44 @@ void main() async {
     ),
   );
 
-  runApp(ProCounsellorApp(jwtToken: jwtToken, phoneNumber: phoneNumber));
+  runApp(ProCounsellorApp(jwtToken: jwtToken, userId: userId));
 }
 
 class ProCounsellorApp extends StatelessWidget {
   final String? jwtToken;
-  final String? phoneNumber;
+  final String? userId;
 
-  ProCounsellorApp({this.jwtToken, this.phoneNumber});
+  ProCounsellorApp({this.jwtToken, this.userId});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AppInitializer(jwtToken: jwtToken, phoneNumber: phoneNumber),
+      home: AppInitializer(jwtToken: jwtToken, userId: userId),
     );
   }
 }
 
 class AppInitializer extends StatelessWidget {
   final String? jwtToken;
-  final String? phoneNumber;
+  final String? userId;
 
-  AppInitializer({this.jwtToken, this.phoneNumber});
+  AppInitializer({this.jwtToken, this.userId});
 
   @override
   Widget build(BuildContext context) {
     // Redirect based on authentication state
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (jwtToken != null && jwtToken!.isNotEmpty && phoneNumber != null && phoneNumber!.isNotEmpty) {
+      if (jwtToken != null && jwtToken!.isNotEmpty && userId != null && userId!.isNotEmpty) {
         // Navigate to dashboard and clear navigation stack
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (_) => BasePage(
-              username: phoneNumber!,
+              username: userId!,
               onSignOut: () async {
                 await storage.deleteAll();
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => true);
               },
             ),
           ),
