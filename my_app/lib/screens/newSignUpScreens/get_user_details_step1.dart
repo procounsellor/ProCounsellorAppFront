@@ -4,10 +4,11 @@ import 'package:my_app/screens/newSignUpScreens/user_details.dart';
 
 class GetUserDetailsStep1 extends StatefulWidget {
   final UserDetails userDetails;
-  final String phoneNumber;
+  final String userId;
+  final String jwtToken;
   final Future<void> Function() onSignOut;
 
-  GetUserDetailsStep1({required this.userDetails, required this.phoneNumber, required this.onSignOut});
+  GetUserDetailsStep1({required this.userDetails, required this.userId, required this.jwtToken, required this.onSignOut});
 
   @override
   _GetUserDetailsStep1State createState() => _GetUserDetailsStep1State();
@@ -95,7 +96,8 @@ class _GetUserDetailsStep1State extends State<GetUserDetailsStep1> {
                                 MaterialPageRoute(
                                   builder: (context) => GetUserDetailsStep2(
                                       userDetails: widget.userDetails,
-                                      phoneNumber: widget.phoneNumber,
+                                      userId: widget.userId,
+                                      jwtToken:widget.jwtToken,
                                       onSignOut: widget.onSignOut,
                                 ),
                               )

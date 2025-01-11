@@ -241,21 +241,38 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         ),
       ),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Color(0xFFF0BB78),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb), label: "Learn with Us"),
-          BottomNavigationBarItem(icon: Icon(Icons.groups), label: "Community"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt), label: "My Activities"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
+ bottomNavigationBar: BottomNavigationBar(
+    currentIndex: _selectedIndex,
+    onTap: _onItemTapped,
+    selectedItemColor: Color(0xFFF0BB78), // Custom color for selected item
+    unselectedItemColor: Colors.grey, // Color for unselected items
+    backgroundColor: Colors.white, // Set a consistent white background color
+    type: BottomNavigationBarType.fixed, // Use fixed to keep the white background
+    showSelectedLabels: true, // Show label only for selected item
+    showUnselectedLabels: false, // Hide labels for unselected items
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: "Home",
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.lightbulb),
+        label: "Learn with Us",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.groups),
+        label: "Community",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.list_alt),
+        label: "My Activities",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: "Profile",
+      ),
+    ],
+  ),
     );
   }
 

@@ -106,9 +106,9 @@ static Future<String> signIn(String identifier, String password) async {
     return response;
   }
 
-  Future<http.Response> isUserDetailsNull(String phoneNumber) async {
+  Future<http.Response> isUserDetailsNull(String userId) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/isUserDetailsNull?phoneNumber=$phoneNumber'),
+      Uri.parse('$_baseUrl/isUserDetailsNull?userId=$userId'),
     );
     return response;
   }
