@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:my_app/screens/dashboards/userDashboard/news_details_page.dart';
+
+class News {
+  final String imageUrl;
+  final String description;
+  final String fullNews;
+
+  News({required this.imageUrl, required this.description, required this.fullNews});
+
+  // Factory constructor to parse JSON
+  factory News.fromJson(Map<String, dynamic> json) {
+    return News(
+      imageUrl: json['imageUrl'] ?? '',
+      description: json['descriptionParagraph'] ?? '',
+      fullNews: json['fullNews'] ?? '',
+    );
+  }
+}
 
 class TopNewsCarousel extends StatefulWidget {
   @override
@@ -10,14 +30,13 @@ class TopNewsCarousel extends StatefulWidget {
 class _TopNewsCarouselState extends State<TopNewsCarousel> {
   final PageController _pageController = PageController();
   late Timer _timer;
-  final List<String> _imageUrls = [];
-  final List<String> _paragraphs = [];
+  final List<News> _newsList = [];
   int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _preloadImagesAndText(); // Preload images and paragraphs
+    _fetchNews();
     _startAutoScroll();
   }
 
@@ -28,53 +47,45 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
     super.dispose();
   }
 
-  Future<void> _preloadImagesAndText() async {
-    // Preload 5 images and paragraphs
-    for (int i = 0; i < 5; i++) {
-      _imageUrls.add('https://random.imagecdn.app/500/150?unique=$i');
-      _paragraphs.add(_generateRandomParagraph());
+  Future<void> _fetchNews() async {
+    const String apiUrl = 'http://localhost:8080/api/news';
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final List<dynamic> newsData = json.decode(response.body);
+        for (var newsItem in newsData) {
+          final news = News.fromJson(newsItem);
+          setState(() {
+            _newsList.add(news);
+          });
+        }
+      } else {
+        throw Exception('Failed to load news');
+      }
+    } catch (e) {
+      print('Error fetching news: $e');
     }
-    setState(() {}); // Trigger UI update
   }
 
   void _startAutoScroll() {
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) async {
-      if (_currentPage == _imageUrls.length - 1) {
-        // Fetch the next batch of images and paragraphs if we're at the end
-        for (int i = 0; i < 3; i++) {
-          _imageUrls.add(
-              'https://random.imagecdn.app/500/150?unique=${_imageUrls.length + i}');
-          _paragraphs.add(_generateRandomParagraph());
-        }
+    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+      if (_newsList.isNotEmpty) {
+        setState(() {
+          _currentPage = (_currentPage + 1) % _newsList.length;
+        });
+        _pageController.animateToPage(
+          _currentPage,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
       }
-      _currentPage = (_currentPage + 1) % _imageUrls.length;
-      _pageController.animateToPage(
-        _currentPage,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-      setState(() {}); // Ensure the UI stays synced
     });
-  }
-
-  String _generateRandomParagraph() {
-    // Generates a random paragraph of text
-    const sentences = [
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
-      "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.",
-      "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui.",
-    ];
-    final random = Random();
-    return List.generate(3, (_) => sentences[random.nextInt(sentences.length)])
-        .join(' ');
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300, // Adjust the height as needed
+      height: 300,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -87,53 +98,64 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
           ),
         ],
       ),
-      child: _imageUrls.isEmpty
+      child: _newsList.isEmpty
           ? Center(
-              child:
-                  CircularProgressIndicator()) // Show loader until images are loaded
+              child: CircularProgressIndicator(),
+            )
           : PageView.builder(
               controller: _pageController,
-              itemCount: _imageUrls.length,
+              itemCount: _newsList.length,
               itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    // Image Section
-                    Expanded(
-                      flex: 2,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10),
-                        ),
-                        child: Image.network(
-                          _imageUrls[index],
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(child: CircularProgressIndicator());
-                          },
-                          errorBuilder: (context, error, stackTrace) => Center(
-                            child: Text(
-                              "Failed to load image",
-                              style: TextStyle(color: Colors.grey),
+                return GestureDetector(
+                  onTap: () {
+                    // Navigate to News Details Page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewsDetailsPage(news: _newsList[index]),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      // Image Section
+                      Expanded(
+                        flex: 2,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10),
+                          ),
+                          child: Image.network(
+                            _newsList[index].imageUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(child: CircularProgressIndicator());
+                            },
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Text(
+                                "Failed to load image",
+                                style: TextStyle(color: Colors.grey),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    // Paragraph Section
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          _paragraphs[index],
-                          style: TextStyle(fontSize: 14, color: Colors.black),
-                          textAlign: TextAlign.center,
+                      // Description Section
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            _newsList[index].description,
+                            style: TextStyle(fontSize: 14, color: Colors.black),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
