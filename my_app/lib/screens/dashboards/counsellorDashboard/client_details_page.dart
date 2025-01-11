@@ -27,7 +27,7 @@ class ClientDetailsPage extends StatelessWidget {
             SizedBox(height: 20),
             Text("Name: ${client['firstName']} ${client['lastName']}"),
             Text("Email: ${client['email']}"),
-            Text("Phone: ${client['phone'] ?? 'N/A'}"),
+            Text("Phone: ${client['phoneNumber'] ?? 'N/A'}"),
             SizedBox(height: 20),
             ElevatedButton.icon(
               icon: Icon(Icons.chat),
