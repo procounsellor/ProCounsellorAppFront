@@ -1,34 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/newSignUpScreens/signup_complete.dart';
-import 'package:my_app/screens/newSignUpScreens/user_details.dart';
-import 'package:my_app/services/auth_service.dart';
 
-class GetUserDetailsStep2 extends StatefulWidget {
-  final UserDetails userDetails;
-  final String userId;
-  final String jwtToken;
-  final String firebaseCustomToken;
-  final Future<void> Function() onSignOut;
-
-  GetUserDetailsStep2({
-    required this.userDetails,
-    required this.userId,
-    required this.jwtToken,
-    required this.firebaseCustomToken,
-    required this.onSignOut,
-  });
-
+class GetUserDetailsStep2Test extends StatefulWidget {
   @override
-  _GetUserDetailsStep2State createState() => _GetUserDetailsStep2State();
+  _GetUserDetailsStep2TestState createState() =>
+      _GetUserDetailsStep2TestState();
 }
 
-class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
+class _GetUserDetailsStep2TestState extends State<GetUserDetailsStep2Test> {
   final List<Map<String, String>> allowedStates = [
     {'name': 'KARNATAKA', 'image': 'assets/images/karnataka.jpg'},
     {'name': 'MAHARASHTRA', 'image': 'assets/images/maharashtra.png'},
     {'name': 'TAMILNADU', 'image': 'assets/images/tamilnadu.png'},
     {'name': 'OTHERS', 'image': 'assets/images/india.png'}
   ];
+
+  // Simulated user data for testing
+  final List<String> selectedStates = [];
 
   @override
   Widget build(BuildContext context) {
@@ -60,28 +47,19 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                     true, // Prevent GridView from taking infinite height
                 physics: NeverScrollableScrollPhysics(), // Grid doesn't scroll
                 children: allowedStates.map((state) {
-                  final isSelected = widget.userDetails.userInterestedStates
-                      .contains(state['name']);
+                  final isSelected = selectedStates.contains(state['name']);
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         if (isSelected) {
-                          widget.userDetails.userInterestedStates
-                              .remove(state['name']);
+                          selectedStates.remove(state['name']);
                         } else {
-                          widget.userDetails.userInterestedStates
-                              .add(state['name']!);
+                          selectedStates.add(state['name']!);
                         }
                       });
                     },
                     child: Column(
-                      // mainAxisSize:
-                      //     MainAxisSize.min, // Prevent overflow in Column
                       children: [
-                        // Card for the image
-                        // AspectRatio(
-                        //   aspectRatio: 1, // Ensures the card is a square
-                        // child:
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15),
@@ -101,11 +79,9 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                               width: MediaQuery.sizeOf(context).width / 2 -
                                   50, // Fills the horizontal space
                               height: MediaQuery.sizeOf(context).width / 2 - 61,
-                              // Fills the horizontal space
                             ),
                           ),
                         ),
-                        //),
                         SizedBox(height: 8), // Space between card and text
                         Text(
                           state['name']!,
@@ -133,30 +109,22 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                  onPressed: () async {
-                    try {
-                      await AuthService.updateUserDetails(
-                        widget.userId,
-                        widget.userDetails.userInterestedStates,
-                        widget.userDetails.interestedCourse!,
-                      );
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SignUpCompleteScreen(
-                            userId: widget.userId,
-                            jwtToken: widget.jwtToken,
-                            firebaseCustomToken: widget.firebaseCustomToken,
-                            onSignOut: widget.onSignOut,
+                  onPressed: () {
+                    // Mock submission action
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text("Submitted States"),
+                        content: Text(
+                            "You have selected: ${selectedStates.join(', ')}"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text("Close"),
                           ),
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Sign Up Failed: $e")),
-                      );
-                    }
+                        ],
+                      ),
+                    );
                   },
                   child: Text(
                     "Submit",

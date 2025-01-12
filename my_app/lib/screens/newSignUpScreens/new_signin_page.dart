@@ -29,6 +29,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -42,7 +43,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 4),
             Text(
               'Your Counselling Expert',
               style: TextStyle(
@@ -50,7 +51,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
                 color: Colors.grey,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 24),
             Row(
               children: [
                 Container(
@@ -72,7 +73,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
                         selectedCountryCode = value!;
                       });
                     },
-                    underline: SizedBox(), // Removes the default underline
+                    underline: SizedBox(),
                   ),
                 ),
                 SizedBox(width: 8),
@@ -94,45 +95,102 @@ class _NewSignInPageState extends State<NewSignInPage> {
             ElevatedButton(
               onPressed: isButtonEnabled
                   ? () {
-                      // Call the generateOtp API and navigate to the verification page
-                      String phoneNumber = "$selectedCountryCode${_phoneController.text}";
+                      String phoneNumber =
+                          "$selectedCountryCode${_phoneController.text}";
                       generateOtp(phoneNumber);
                     }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
+                backgroundColor:
+                    isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text('Get verification code'),
             ),
-            TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => CounsellorSignUpStep1(signUpData: CounsellorSignUpData()),
+            Spacer(),
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  backgroundColor: Colors.white,
+                  context: context,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  isScrollControlled: true,
+                  builder: (BuildContext context) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.15,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => CounsellorSignUpStep1(
+                                            signUpData: CounsellorSignUpData()),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFAAF84),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Sign up',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SignInScreen(),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFAAF84),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Sign in',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
-                  child: Text(
-                    "Sign up as a Counsellor.",
-                    style: TextStyle(color: Color(0xFFFAAF84), fontSize: 16),
-                  ),
+                );
+              },
+              child: Text(
+                'SignIn as counsellor',
+                style: TextStyle(
+                  color: Colors.blue.shade300,
+                  fontSize: 16,
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => SignInScreen(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "Sign in as a Counsellor.",
-                    style: TextStyle(color: Color(0xFFFAAF84), fontSize: 16),
-                  ),
-                ),
+              ),
+            ),
             Spacer(),
           ],
         ),
@@ -142,6 +200,9 @@ class _NewSignInPageState extends State<NewSignInPage> {
 
   void generateOtp(String phoneNumber) async {
     try {
+      //random code
+
+      //
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/auth/generateOtp'),
         body: {'phoneNumber': phoneNumber},
@@ -155,11 +216,9 @@ class _NewSignInPageState extends State<NewSignInPage> {
         );
       } else {
         print('Failed to generate OTP: ${response.body}');
-        // Show an error message to the user
       }
     } catch (e) {
       print('Error calling API: $e');
-      // Show an error message to the user
     }
   }
 }

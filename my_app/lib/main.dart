@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
+import 'package:my_app/screens/newSignUpScreens/clone.dart';
+import 'package:my_app/screens/newSignUpScreens/get_user_details_step2.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -54,7 +56,10 @@ class AppInitializer extends StatelessWidget {
   Widget build(BuildContext context) {
     // Redirect based on authentication state
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (jwtToken != null && jwtToken!.isNotEmpty && userId != null && userId!.isNotEmpty) {
+      if (jwtToken != null &&
+          jwtToken!.isNotEmpty &&
+          userId != null &&
+          userId!.isNotEmpty) {
         // Navigate to dashboard and clear navigation stack
         Navigator.pushAndRemoveUntil(
           context,
@@ -63,7 +68,8 @@ class AppInitializer extends StatelessWidget {
               username: userId!,
               onSignOut: () async {
                 await storage.deleteAll();
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => true);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/', (route) => true);
               },
             ),
           ),
@@ -74,6 +80,7 @@ class AppInitializer extends StatelessWidget {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => NewSignInPage()),
+          //MaterialPageRoute(builder: (_) => GetUserDetailsStep2Test()),
           (route) => false,
         );
       }
