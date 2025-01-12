@@ -11,7 +11,11 @@ class SignUpCompleteScreen extends StatefulWidget {
   final String firebaseCustomToken;
   final Future<void> Function() onSignOut;
 
-  SignUpCompleteScreen({required this.userId, required this.jwtToken, required this.firebaseCustomToken, required this.onSignOut});
+  SignUpCompleteScreen(
+      {required this.userId,
+      required this.jwtToken,
+      required this.firebaseCustomToken,
+      required this.onSignOut});
 
   @override
   _SignUpCompleteScreenState createState() => _SignUpCompleteScreenState();
@@ -28,20 +32,22 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
 
-     // Authenticate with Firebase using the custom token
-    await FirebaseAuth.instance.signInWithCustomToken(widget.firebaseCustomToken);
-    
+    // Authenticate with Firebase using the custom token
+    await FirebaseAuth.instance
+        .signInWithCustomToken(widget.firebaseCustomToken);
+
     User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        print("Authenticated user: ${user.uid}");
-      } else {
-        print("Authentication failed.");
-      }
+    if (user != null) {
+      print("Authenticated user: ${user.uid}");
+    } else {
+      print("Authentication failed.");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -91,7 +97,8 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BasePage(username: widget.userId, onSignOut: widget.onSignOut),
+                    builder: (context) => BasePage(
+                        username: widget.userId, onSignOut: widget.onSignOut),
                   ),
                 );
               },

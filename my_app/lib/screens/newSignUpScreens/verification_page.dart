@@ -27,85 +27,87 @@ class _VerificationPageState extends State<VerificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Spacer(),
-              Text(
-                'Verification code',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Please enter the 6-digit code sent on ${widget.phoneNumber}',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (index) {
-                  return Container(
-                    width: 40,
-                    margin: EdgeInsets.symmetric(horizontal: 4),
-                    child: TextField(
-                      onChanged: (value) {
-                        if (value.isNotEmpty) {
-                          otpDigits[index] = value;
-                          if (index < 5) {
-                            FocusScope.of(context).nextFocus();
-                          }
-                        } else {
-                          otpDigits[index] = "";
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Spacer(),
+            Text(
+              'Verification code',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Please enter the 6-digit code sent on ${widget.phoneNumber}',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(6, (index) {
+                return Container(
+                  width: 40,
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  child: TextField(
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        otpDigits[index] = value;
+                        if (index < 5) {
+                          FocusScope.of(context).nextFocus();
                         }
-                        setState(() {
-                          isButtonEnabled = otpDigits.every((digit) => digit.isNotEmpty);
-                        });
-                      },
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      decoration: InputDecoration(
-                        counterText: "",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      } else {
+                        otpDigits[index] = "";
+                      }
+                      setState(() {
+                        isButtonEnabled =
+                            otpDigits.every((digit) => digit.isNotEmpty);
+                      });
+                    },
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 1,
+                    decoration: InputDecoration(
+                      counterText: "",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                  );
-                }),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: isButtonEnabled
-                    ? () => _handleVerification()
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
                   ),
+                );
+              }),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: isButtonEnabled ? () => _handleVerification() : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('Login'),
               ),
-              SizedBox(height: 16),
-              TextButton(
-                onPressed: () => _resendOtp(),
-                child: Text('Resend OTP'),
-              ),
-              Spacer(),
-            ],
-          ),
+              child: Text('Login'),
+            ),
+            SizedBox(height: 16),
+            TextButton(
+              onPressed: () => _resendOtp(),
+              child: Text('Resend OTP'),
+            ),
+            Spacer(),
+          ],
         ),
-      );
+      ),
+    );
   }
 
   Future<void> _handleVerification() async {
     try {
       String otp = otpDigits.join();
-      final response = await _apiService.verifyAndSignup(widget.phoneNumber, otp);
+      final response =
+          await _apiService.verifyAndSignup(widget.phoneNumber, otp);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final Map<String, dynamic> body = jsonDecode(response.body);
@@ -116,19 +118,21 @@ class _VerificationPageState extends State<VerificationPage> {
         if (response.statusCode == 200) {
           final detailsResponse = await _apiService.isUserDetailsNull(userId);
 
-          if (detailsResponse.statusCode == 200 && detailsResponse.body == 'false') {
+          if (detailsResponse.statusCode == 200 &&
+              detailsResponse.body == 'false') {
             // Save JWT and userId in secure storage when signed in
             await storage.write(key: "jwtToken", value: jwtToken);
             await storage.write(key: "userId", value: userId);
 
             // Authenticate with Firebase using the custom token
-            await FirebaseAuth.instance.signInWithCustomToken(firebaseCustomToken);
+            await FirebaseAuth.instance
+                .signInWithCustomToken(firebaseCustomToken);
             User? user = FirebaseAuth.instance.currentUser;
-              if (user != null) {
-                print("Authenticated user: ${user.uid}");
-              } else {
-                print("Authentication failed.");
-              }
+            if (user != null) {
+              print("Authenticated user: ${user.uid}");
+            } else {
+              print("Authentication failed.");
+            }
 
             Navigator.pushAndRemoveUntil(
               context,
@@ -145,7 +149,8 @@ class _VerificationPageState extends State<VerificationPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => GetUserDetailsStep1(
-                  userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
+                  userDetails: UserDetails(
+                      userInterestedStates: [], interestedCourse: null),
                   userId: userId,
                   jwtToken: jwtToken,
                   firebaseCustomToken: firebaseCustomToken,
@@ -159,7 +164,8 @@ class _VerificationPageState extends State<VerificationPage> {
             context,
             MaterialPageRoute(
               builder: (context) => GetUserDetailsStep1(
-                userDetails: UserDetails(userInterestedStates: [], interestedCourse: null),
+                userDetails: UserDetails(
+                    userInterestedStates: [], interestedCourse: null),
                 userId: userId,
                 jwtToken: jwtToken,
                 firebaseCustomToken: firebaseCustomToken,
