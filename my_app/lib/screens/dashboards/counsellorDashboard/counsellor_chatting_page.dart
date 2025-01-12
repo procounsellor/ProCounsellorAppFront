@@ -8,13 +8,13 @@ class ChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
-  final String photo;
+  final String? photo; // Allow photo to be nullable
 
   ChattingPage({
     required this.itemName,
     required this.userId,
     required this.counsellorId,
-    required this.photo,
+    this.photo,
   });
 
   @override
@@ -170,8 +170,7 @@ class _ChattingPageState extends State<ChattingPage> {
     final databaseReference =
         FirebaseDatabase.instance.ref('userStates/$userId/state');
     return databaseReference.onValue.map((event) {
-      final state =
-          event.snapshot.value as String?; // Explicitly cast to String
+      final state = event.snapshot.value as String?;
       return state ?? 'offline'; // Default to 'offline' if null
     });
   }
@@ -204,7 +203,7 @@ class _ChattingPageState extends State<ChattingPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous screen
+            Navigator.pop(context);
           },
         ),
         title: Row(
@@ -212,7 +211,8 @@ class _ChattingPageState extends State<ChattingPage> {
             Stack(
               children: [
                 CircleAvatar(
-                  backgroundImage: NetworkImage(widget.photo),
+                  backgroundImage: NetworkImage(
+                      widget.photo ?? ''), // Fallback to empty string if null
                 ),
                 Positioned(
                   bottom: 0,
@@ -221,7 +221,7 @@ class _ChattingPageState extends State<ChattingPage> {
                     stream: getUserState(widget.userId),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        final state = snapshot.data;
+                        final state = snapshot.data ?? 'offline';
                         return CircleAvatar(
                           radius: 6,
                           backgroundColor: Colors.white,
@@ -245,15 +245,17 @@ class _ChattingPageState extends State<ChattingPage> {
                 ),
               ],
             ),
-            SizedBox(width: 8), // Spacing between the photo and name
+            SizedBox(width: 8),
             Expanded(
               child: Text(
-                widget.itemName,
+                widget.itemName.isNotEmpty
+                    ? widget.itemName
+                    : 'Unknown User', // Provide default value
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
-                overflow: TextOverflow.ellipsis, // Handle long names gracefully
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -271,10 +273,9 @@ class _ChattingPageState extends State<ChattingPage> {
                       'lastName': widget.itemName.split(' ').length > 1
                           ? widget.itemName.split(' ')[1]
                           : '',
-                      'email': widget
-                          .itemName, // Add logic to fetch or pass the email
-                      'phone': '', // Add logic to fetch or pass the phone
-                      'photo': widget.photo,
+                      'email': widget.itemName,
+                      'phone': '',
+                      'photo': widget.photo ?? '',
                       'userName': widget.userId,
                     },
                     counsellorId: widget.counsellorId,
@@ -318,14 +319,14 @@ class _ChattingPageState extends State<ChattingPage> {
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                             child: Text(
-                              message['text'] ?? 'No message',
+                              message['text'] ??
+                                  'No message', // Fallback for empty message
                               style: TextStyle(
                                 color: Colors.black,
                                 fontSize: 16.0,
                               ),
                             ),
                           ),
-                          // Show 'Seen' indicator for the last message only
                           if (index == messages.length - 1 &&
                               isCounsellorMessage &&
                               message['isSeen'] == true)
