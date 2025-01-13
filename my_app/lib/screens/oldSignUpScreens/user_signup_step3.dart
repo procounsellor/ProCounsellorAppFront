@@ -140,17 +140,17 @@ class _UserSignUpStep3State extends State<UserSignUpStep3> {
                       ),
                       onPressed: () async {
                         try {
-                          await AuthService.userSignUp(
-                            widget.signUpData.username!,
-                            widget.signUpData.firstName!,
-                            widget.signUpData.lastName!,
-                            widget.signUpData.phoneNumber!,
-                            widget.signUpData.email!,
-                            widget.signUpData.password!,
-                            widget.signUpData.role!,
-                            widget.signUpData.userInterestedStates,
-                            widget.signUpData.interestedCourse!,
-                          );
+                          // await AuthService.userSignUp(
+                          //   widget.signUpData.username!,
+                          //   widget.signUpData.firstName!,
+                          //   widget.signUpData.lastName!,
+                          //   widget.signUpData.phoneNumber!,
+                          //   widget.signUpData.email!,
+                          //   widget.signUpData.password!,
+                          //   widget.signUpData.role!,
+                          //   widget.signUpData.userInterestedStates,
+                          //   widget.signUpData.interestedCourse!,
+                          // );
                           Navigator.push(
                             context,
                             MaterialPageRoute(

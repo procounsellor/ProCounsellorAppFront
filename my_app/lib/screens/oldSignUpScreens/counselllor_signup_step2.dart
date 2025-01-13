@@ -21,105 +21,77 @@ class _CounsellorSignUpStep2State extends State<CounsellorSignUpStep2> {
       appBar: AppBar(
         backgroundColor: Color(0xFFFFE4B5), // Lighter shade of orange
         title: Text(
-          "Sign Up - Step 2",
+          "Sign Up",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Positioned(
-              top: -50,
-              left: -50,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFE4B5).withOpacity(0.3), // Semi-transparent orange
-                  shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Choose Your Expertise",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFAAF84), // Slightly darker shade of orange
                 ),
               ),
-            ),
-            Positioned(
-              bottom: -50,
-              right: -50,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFE4B5).withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 20),
+              GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 children: [
-                  Text(
-                    "Choose Your Expertise",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFAAF84), // Slightly darker shade of orange
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildOption("HSC", Icons.school, "HSC"),
-                      _buildOption("ENGINEERING", Icons.engineering, "ENGINEERING"),
-                      _buildOption("MEDICAL", Icons.local_hospital, "MEDICAL"),
-                      _buildOption("MBA", Icons.business, "MBA"),
-                      _buildOption("OTHERS", Icons.more_horiz, "OTHERS"),
-                    ],
-                  ),
-                  SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _selectedExpertise.isNotEmpty
-                            ? Color(0xFFFAAF84)
-                            : Colors.grey,
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      onPressed: _selectedExpertise.isNotEmpty
-                          ? () {
-                              widget.signUpData.expertise = _selectedExpertise;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CounsellorSignUpStep3(
-                                      signUpData: widget.signUpData),
-                                ),
-                              );
-                            }
-                          : null,
-                      child: Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildOption("HSC", Icons.school, "HSC"),
+                  _buildOption("ENGINEERING", Icons.engineering, "ENGINEERING"),
+                  _buildOption("MEDICAL", Icons.local_hospital, "MEDICAL"),
+                  _buildOption("MBA", Icons.business, "MBA"),
+                  _buildOption("OTHERS", Icons.more_horiz, "OTHERS"),
                 ],
               ),
-            ),
-          ],
+              SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedExpertise.isNotEmpty
+                        ? Color(0xFFFAAF84)
+                        : Colors.grey,
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  onPressed: _selectedExpertise.isNotEmpty
+                      ? () {
+                          widget.signUpData.expertise = _selectedExpertise;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CounsellorSignUpStep3(
+                                  signUpData: widget.signUpData),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Text(
+                    "Next",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,8 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
-import 'package:my_app/screens/newSignUpScreens/clone.dart';
-import 'package:my_app/screens/newSignUpScreens/get_user_details_step2.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -10,10 +11,6 @@ final storage = FlutterSecureStorage();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Fetch stored token and userId
-  String? jwtToken = await storage.read(key: "jwtToken");
-  String? userId = await storage.read(key: "userId");
 
   // Initialize Firebase
   await Firebase.initializeApp(
@@ -28,67 +25,100 @@ void main() async {
     ),
   );
 
-  runApp(ProCounsellorApp(jwtToken: jwtToken, userId: userId));
+  runApp(AppRoot());
 }
 
-class ProCounsellorApp extends StatelessWidget {
-  final String? jwtToken;
-  final String? userId;
+class AppRoot extends StatefulWidget {
+  @override
+  _AppRootState createState() => _AppRootState();
+}
 
-  ProCounsellorApp({this.jwtToken, this.userId});
+class _AppRootState extends State<AppRoot> {
+  String? jwtToken;
+  String? userId;
+  String? role;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: AppInitializer(jwtToken: jwtToken, userId: userId),
-    );
+  void initState() {
+    super.initState();
+    _initializeApp();
   }
-}
 
-class AppInitializer extends StatelessWidget {
-  final String? jwtToken;
-  final String? userId;
+  Future<void> _initializeApp() async {
+    jwtToken = await storage.read(key: "jwtToken");
+    userId = await storage.read(key: "userId");
+    role = await storage.read(key: "role");
+    setState(() {});
+  }
 
-  AppInitializer({this.jwtToken, this.userId});
+  Future<void> restartApp() async {
+    await storage.deleteAll();
+
+    setState(() {
+      jwtToken = null;
+      userId = null;
+      role = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Redirect based on authentication state
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (jwtToken != null &&
-          jwtToken!.isNotEmpty &&
-          userId != null &&
-          userId!.isNotEmpty) {
-        // Navigate to dashboard and clear navigation stack
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BasePage(
-              username: userId!,
-              onSignOut: () async {
-                await storage.deleteAll();
-                Navigator.pushNamedAndRemoveUntil(
-                    context, '/', (route) => true);
-              },
-            ),
-          ),
-          (route) => false, // Clear previous stack
-        );
-      } else {
-        // Navigate to login screen and clear navigation stack
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => NewSignInPage()),
-          //MaterialPageRoute(builder: (_) => GetUserDetailsStep2Test()),
-          (route) => false,
-        );
-      }
-    });
+    if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
+      // Show login page if the token or userId is not present
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: NewSignInPage(
+          onSignOut: restartApp,
+        ),
+      );
+    }
 
-    // Return a temporary loading screen
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    // Navigate based on role
+    switch (role) {
+      case "user":
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: BasePage(
+            username: userId!,
+            onSignOut: restartApp,
+          ),
+        );
+      case "counsellor":
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: CounsellorBasePage(
+            onSignOut: restartApp,
+            counsellorId: userId!
+          ),
+        );
+      default:
+        return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Invalid Role. Please contact support.",
+              style: TextStyle(fontSize: 18, color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20), // Add spacing between text and button
+            ElevatedButton(
+              onPressed: () {
+                restartApp();
+              },
+              child: Text("Go to Login"),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+    }
   }
 }

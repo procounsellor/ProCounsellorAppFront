@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/get_user_details_step1.dart';
-import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/newSignUpScreens/user_details.dart';
 import 'package:my_app/services/auth_service.dart';
@@ -13,7 +12,9 @@ final storage = FlutterSecureStorage();
 class VerificationPage extends StatefulWidget {
   final String phoneNumber;
 
-  VerificationPage({required this.phoneNumber});
+    final Future<void> Function() onSignOut;
+
+  VerificationPage({required this.phoneNumber, required this.onSignOut});
 
   @override
   _VerificationPageState createState() => _VerificationPageState();
@@ -22,7 +23,14 @@ class VerificationPage extends StatefulWidget {
 class _VerificationPageState extends State<VerificationPage> {
   List<String> otpDigits = List.filled(6, "");
   bool isButtonEnabled = false;
+  final FocusNode firstOtpFieldFocusNode = FocusNode();
   final AuthService _apiService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    firstOtpFieldFocusNode.requestFocus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +60,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   width: 40,
                   margin: EdgeInsets.symmetric(horizontal: 4),
                   child: TextField(
+                    focusNode: index == 0 ? firstOtpFieldFocusNode : null,
                     onChanged: (value) {
                       if (value.isNotEmpty) {
                         otpDigits[index] = value;
@@ -62,8 +71,7 @@ class _VerificationPageState extends State<VerificationPage> {
                         otpDigits[index] = "";
                       }
                       setState(() {
-                        isButtonEnabled =
-                            otpDigits.every((digit) => digit.isNotEmpty);
+                        isButtonEnabled = otpDigits.every((digit) => digit.isNotEmpty);
                       });
                     },
                     keyboardType: TextInputType.number,
@@ -114,13 +122,15 @@ class _VerificationPageState extends State<VerificationPage> {
         String jwtToken = body['jwtToken'];
         String userId = body['userId'];
         String firebaseCustomToken = body['firebaseCustomToken'];
+        String role = "user";
 
         if (response.statusCode == 200) {
           final detailsResponse = await _apiService.isUserDetailsNull(userId);
 
           if (detailsResponse.statusCode == 200 &&
               detailsResponse.body == 'false') {
-            // Save JWT and userId in secure storage when signed in
+            // Save role, JWT and userId in secure storage when signed in
+            await storage.write(key: "role", value: role);
             await storage.write(key: "jwtToken", value: jwtToken);
             await storage.write(key: "userId", value: userId);
 
@@ -138,7 +148,7 @@ class _VerificationPageState extends State<VerificationPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => BasePage(
-                  onSignOut: _signOut,
+                  onSignOut: widget.onSignOut,
                   username: userId,
                 ),
               ),
@@ -154,7 +164,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   userId: userId,
                   jwtToken: jwtToken,
                   firebaseCustomToken: firebaseCustomToken,
-                  onSignOut: _signOut,
+                  onSignOut: widget.onSignOut,
                 ),
               ),
             );
@@ -169,7 +179,7 @@ class _VerificationPageState extends State<VerificationPage> {
                 userId: userId,
                 jwtToken: jwtToken,
                 firebaseCustomToken: firebaseCustomToken,
-                onSignOut: _signOut,
+                onSignOut: widget.onSignOut,
               ),
             ),
           );
@@ -197,18 +207,6 @@ class _VerificationPageState extends State<VerificationPage> {
       print('Error: $e');
       showErrorDialog('An error occurred. Please try again.');
     }
-  }
-
-  Future<void> _signOut() async {
-    await storage.deleteAll();
-
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => NewSignInPage()),
-      (route) => true,
-    );
   }
 
   void showErrorDialog(String message) {
