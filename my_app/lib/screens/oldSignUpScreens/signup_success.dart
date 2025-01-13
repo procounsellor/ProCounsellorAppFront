@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/oldSignUpScreens/signin.dart';
+import 'package:my_app/screens/oldSignUpScreens/counsellor_signin.dart';
 
 class SignUpSuccessScreen extends StatelessWidget {
   @override
@@ -51,11 +51,15 @@ class SignUpSuccessScreen extends StatelessWidget {
                 ),
               ),
               onPressed: () {
-                Navigator.push(
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SignInScreen(),
+                    builder: (_) => CounsellorSignInScreen(onSignOut: () async {
+                      await storage.deleteAll();
+                      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                      },),
                   ),
+                  (route) => false,
                 );
               },
               child: Text(

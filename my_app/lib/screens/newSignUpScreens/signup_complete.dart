@@ -29,6 +29,7 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
   }
 
   Future<void> _storeCredentials() async {
+    await storage.write(key: "role", value: "user");
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
 
@@ -94,13 +95,16 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
                 ),
               ),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BasePage(
-                        username: widget.userId, onSignOut: widget.onSignOut),
+                Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BasePage(
+                    username: widget.userId,
+                    onSignOut: widget.onSignOut,
                   ),
-                );
+                ),
+                (route) => false,
+              );
               },
               child: Text(
                 "Go to Dashboard",

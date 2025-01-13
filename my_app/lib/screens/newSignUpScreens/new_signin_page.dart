@@ -4,9 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:my_app/screens/newSignUpScreens/verification_page.dart';
 import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
 import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
-import 'package:my_app/screens/oldSignUpScreens/signin.dart';
+import 'package:my_app/screens/oldSignUpScreens/counsellor_signin.dart';
 
 class NewSignInPage extends StatefulWidget {
+    final Future<void> Function() onSignOut;
+
+    NewSignInPage({required this.onSignOut});
+
   @override
   _NewSignInPageState createState() => _NewSignInPageState();
 }
@@ -158,7 +162,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => SignInScreen(),
+                                        builder: (_) => CounsellorSignInScreen(onSignOut: widget.onSignOut),
                                       ),
                                     );
                                   },
@@ -211,7 +215,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VerificationPage(phoneNumber: phoneNumber),
+              builder: (context) => VerificationPage(phoneNumber: phoneNumber, onSignOut: widget.onSignOut),
           ),
         );
       } else {
