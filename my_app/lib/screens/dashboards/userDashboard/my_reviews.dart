@@ -42,24 +42,6 @@ class _MyReviewPageState extends State<MyReviewPage> {
     }
   }
 
-  Future<String> fetchCounsellorFullName(String counsellorName) async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/reviews/counsellor/fullname/$counsellorName'),
-      );
-
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        print('Error fetching counsellor full name: ${response.body}');
-        return "Unknown";
-      }
-    } catch (e) {
-      print('Error: $e');
-      return "Unknown";
-    }
-  }
-
   Future<void> fetchReviews() async {
     try {
       List<dynamic> reviews = await fetchUserReviews(widget.username);
@@ -75,16 +57,18 @@ class _MyReviewPageState extends State<MyReviewPage> {
     }
   }
 
-  Future<void> addComment(String reviewId, String commentText, String username) async {
+  Future<void> addComment(
+      String reviewId, String commentText, String username) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/reviews/$reviewId/comments/$username'),
+        Uri.parse(
+            'http://localhost:8080/api/reviews/$reviewId/comments/$username'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'commentText': commentText}),
       );
 
       if (response.statusCode == 200) {
-        fetchReviews(); // Refresh reviews after adding the comment
+        fetchReviews();
       } else {
         print('Error posting comment: ${response.body}');
       }
@@ -93,41 +77,21 @@ class _MyReviewPageState extends State<MyReviewPage> {
     }
   }
 
-Future<void> addLike(String userId, String reviewId, List<String> userIDliked) async {
-  try {
-    final String userId = widget.username; // Assuming userId is the username (you can change this based on your logic)
-
-    // Check if the current user has already liked the review
-    bool isLiked = userIDliked.contains(userId);
-
-    final response = isLiked
-        ? await http.post(
-            Uri.parse('http://localhost:8080/api/reviews/$userId/$reviewId/unlike'),
-          ) // Unliking
-        : await http.post(
-            Uri.parse('http://localhost:8080/api/reviews/$userId/$reviewId/like'),
-          ); // Liking
-
-    if (response.statusCode == 200) {
-      fetchReviews(); // Refresh reviews after toggling like/unlike
-    } else {
-      print('Error toggling like: ${response.body}');
-    }
-  } catch (e) {
-    print('Error: $e');
-  }
-}
-
-  Future<void> removeComment(String reviewId, String commentId) async {
+  Future<void> addLike(
+      String userId, String reviewId, List<String> userIDliked) async {
     try {
-      final response = await http.delete(
-        Uri.parse('http://localhost:8080/api/reviews/$reviewId/comments/$commentId'),
-      );
+      bool isLiked = userIDliked.contains(userId);
+
+      final response = isLiked
+          ? await http.post(Uri.parse(
+              'http://localhost:8080/api/reviews/$userId/$reviewId/unlike'))
+          : await http.post(Uri.parse(
+              'http://localhost:8080/api/reviews/$userId/$reviewId/like'));
 
       if (response.statusCode == 200) {
-        fetchReviews(); // Refresh reviews after removing comment
+        fetchReviews();
       } else {
-        print('Error removing comment: ${response.body}');
+        print('Error toggling like: ${response.body}');
       }
     } catch (e) {
       print('Error: $e');
@@ -139,92 +103,98 @@ Future<void> addLike(String userId, String reviewId, List<String> userIDliked) a
     return "${date.hour}:${date.minute} ${date.day}/${date.month}/${date.year}";
   }
 
-Widget _buildUserReviews(List<dynamic> reviews) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: reviews.map((review) {
-      final reviewId = review['reviewId'];
-      final userIDliked = List<String>.from(review['userIDliked'] ?? []);
-      TextEditingController _commentController = TextEditingController();
+  Widget ReviewCard({
+    required Map<String, dynamic> review,
+    required String userId,
+    required void Function(String reviewId, String comment, String userId)
+        addComment,
+    required void Function(
+            String userId, String reviewId, List<String> userIDliked)
+        addLike,
+  }) {
+    final reviewId = review['reviewId'];
+    final userIDliked = List<String>.from(review['userIDliked'] ?? []);
+    final _commentController = TextEditingController();
 
-      return FutureBuilder<String>(
-        future: fetchCounsellorFullName(review['counsellorName'] ?? "Unknown"),
-        builder: (context, snapshot) {
-          final counsellorFullName = snapshot.data ?? "Loading...";
-
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 8.0),
-            padding: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8.0),
+    return Card(
+      color: Colors.white,
+      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(
+                      review["photoUrl"] ?? 'https://via.placeholder.com/150'),
+                  radius: 20,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  review["userName"] ?? "Anonymous",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Spacer(),
+                Text(
+                  formatTimestamp(review['timestamp']['seconds']),
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(height: 8),
+            Text(
+              "Counsellor: ${review['counsellorName'] ?? 'Unknown'}",
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+            SizedBox(height: 6),
+            Row(
+              children: List.generate(
+                review["rating"] ?? 0,
+                (index) => Icon(Icons.star, color: Colors.orange, size: 16),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              review["reviewText"] ?? "No review text provided.",
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      backgroundImage: review["photoUrl"] != null
-                          ? NetworkImage(review["photoUrl"])
-                          : null,
-                      child: review["photoUrl"] == null
-                          ? Icon(Icons.person, size: 30)
-                          : null,
-                      radius: 20,
+                    IconButton(
+                      icon: Icon(
+                        userIDliked.contains(userId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: userIDliked.contains(userId)
+                            ? Colors.red
+                            : Colors.grey,
+                      ),
+                      onPressed: () => addLike(userId, reviewId, userIDliked),
                     ),
-                    SizedBox(width: 8.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Counsellor: $counsellorFullName",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                    Text("${review['noOfLikes']}")
                   ],
                 ),
-                SizedBox(height: 8.0),
-                _buildListItem("Review", review["reviewText"]),
-                _buildListItem("Rating", review["rating"]),
-                _buildListItem(
-                  "Timestamp",
-                  review["timestamp"] != null
-                      ? formatTimestamp(review["timestamp"]["seconds"])
-                      : "Not provided",
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showComments[reviewId] =
+                          !(showComments[reviewId] ?? false);
+                    });
+                  },
+                  child: Text("Comments"),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text("Likes: ${review['noOfLikes']}", style: TextStyle(fontSize: 14)),
-                        IconButton(
-                          icon: Icon(
-                            userIDliked.contains(widget.username)
-                                ? Icons.thumb_up
-                                : Icons.thumb_up_off_alt,
-                            color: userIDliked.contains(widget.username)
-                                ? Colors.blueAccent
-                                : Colors.black,
-                          ),
-                          onPressed: () => addLike(widget.username, reviewId, userIDliked),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          showComments[reviewId] = !(showComments[reviewId] ?? false);
-                        });
-                      },
-                      child: Text("Comments"),
-                    ),
-                  ],
-                ),
-                if (showComments[reviewId] == true) ...[
-                  ...review['comments']?.map<Widget>((comment) {
+              ],
+            ),
+            if (showComments[reviewId] == true) ...[
+              ...review["comments"]?.map<Widget>((comment) {
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundImage: comment['photoUrl'] != null
@@ -239,49 +209,31 @@ Widget _buildUserReviews(List<dynamic> reviews) {
                       subtitle: Text(comment['commentText'] ?? ""),
                     );
                   })?.toList() ??
-                  [Text("No comments available.")],
-                  TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: "Add a comment...",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        if (_commentController.text.isNotEmpty) {
-                          addComment(reviewId, _commentController.text, widget.username);
-                          _commentController.clear();
-                        }
-                      },
-                      child: Text("Post Comment"),
-                    ),
-                  ),
-                ]
-              ],
-            ),
-          );
-        },
-      );
-    }).toList(),
-  );
-}
-
-
-  Widget _buildListItem(String title, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$title: ",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Expanded(child: Text(value?.toString() ?? "Not provided")),
-        ],
+                  [
+                    Text("No comments available."),
+                  ],
+              TextField(
+                controller: _commentController,
+                decoration: InputDecoration(
+                  hintText: "Add a comment...",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    if (_commentController.text.isNotEmpty) {
+                      addComment(reviewId, _commentController.text, userId);
+                      _commentController.clear();
+                    }
+                  },
+                  child: Text("Post Comment"),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -289,23 +241,25 @@ Widget _buildUserReviews(List<dynamic> reviews) {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text("My Reviews"),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                userReviews.isEmpty
-                    ? Center(child: Text("No reviews available."))
-                    : Expanded(
-                        child: SingleChildScrollView(
-                          padding: EdgeInsets.all(8.0),
-                          child: _buildUserReviews(userReviews),
-                        ),
-                      ),
-              ],
-            ),
+          : userReviews.isEmpty
+              ? Center(child: Text("No reviews available."))
+              : ListView(
+                  padding: EdgeInsets.all(8.0),
+                  children: userReviews.map((review) {
+                    return ReviewCard(
+                      review: review,
+                      userId: widget.username,
+                      addComment: addComment,
+                      addLike: addLike,
+                    );
+                  }).toList(),
+                ),
     );
   }
 }
