@@ -61,7 +61,7 @@ class _ChatPageState extends State<ChatPage> {
 
         setState(() {
           counsellorsWithChats = counsellors;
-          filteredCounsellors = counsellors; // Initially, show all counsellors
+          filteredCounsellors = counsellors;
           isLoading = false;
         });
       } else {
@@ -105,27 +105,38 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               onChanged: filterCounsellors,
               decoration: InputDecoration(
                 hintText: "Search counsellors...",
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Colors.orange),
+                fillColor: Color(0xFFFFF3E0),
+                filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide(color: Colors.orange),
                 ),
               ),
             ),
           ),
-          // Main Content
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
                 : filteredCounsellors.isEmpty
                     ? Center(child: Text("No chats available"))
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (context, index) => Divider(
+                          color: Colors.grey.shade300,
+                          thickness: 1,
+                          indent: 10,
+                          endIndent: 10,
+                        ),
                         itemCount: filteredCounsellors.length,
                         itemBuilder: (context, index) {
                           final counsellor = filteredCounsellors[index];
@@ -135,54 +146,66 @@ class _ChatPageState extends State<ChatPage> {
                               'https://via.placeholder.com/150';
                           final counsellorId = counsellor['id'];
 
-                          return Card(
-                            margin: EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            child: ListTile(
-                              leading: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundImage: NetworkImage(photoUrl),
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChattingPage(
+                                    itemName: name,
+                                    userId: widget.userId,
+                                    counsellorId: counsellorId,
                                   ),
-                                  // StreamBuilder to show real-time online status
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: StreamBuilder<String>(
-                                      stream: getCounsellorState(counsellorId),
-                                      builder: (context, snapshot) {
-                                        final state =
-                                            snapshot.data ?? 'offline';
-                                        return CircleAvatar(
-                                          radius: 6,
-                                          backgroundColor: Colors.white,
-                                          child: CircleAvatar(
-                                            radius: 5,
-                                            backgroundColor: state == 'online'
-                                                ? Colors.green
-                                                : Colors.grey,
-                                          ),
-                                        );
-                                      },
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              child: Row(
+                                children: [
+                                  Stack(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 35,
+                                        backgroundImage: NetworkImage(photoUrl),
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: StreamBuilder<String>(
+                                          stream:
+                                              getCounsellorState(counsellorId),
+                                          builder: (context, snapshot) {
+                                            final state =
+                                                snapshot.data ?? 'offline';
+                                            return CircleAvatar(
+                                              radius: 8,
+                                              backgroundColor: Colors.white,
+                                              child: CircleAvatar(
+                                                radius: 6,
+                                                backgroundColor:
+                                                    state == 'online'
+                                                        ? Colors.green
+                                                        : Colors.grey,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      name,
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],
-                              ),
-                              title: Text(name),
-                              trailing: IconButton(
-                                icon: Icon(Icons.chat),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ChattingPage(
-                                        itemName: name,
-                                        userId: widget.userId,
-                                        counsellorId: counsellorId,
-                                      ),
-                                    ),
-                                  );
-                                },
                               ),
                             ),
                           );
