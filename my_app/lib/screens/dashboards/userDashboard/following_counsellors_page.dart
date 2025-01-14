@@ -57,7 +57,9 @@ class _FollowingCounsellorsPageState extends State<FollowingCounsellorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text("Followed Counsellors"),
         centerTitle: true,
       ),
