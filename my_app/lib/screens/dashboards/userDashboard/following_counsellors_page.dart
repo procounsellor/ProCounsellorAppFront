@@ -41,7 +41,7 @@ class _FollowingCounsellorsPageState extends State<FollowingCounsellorsPage> {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load subscribed counsellors")),
+          SnackBar(content: Text("Failed to load followed counsellors")),
         );
       }
     } catch (e) {
@@ -70,8 +70,18 @@ class _FollowingCounsellorsPageState extends State<FollowingCounsellorsPage> {
                   TextField(
                     decoration: InputDecoration(
                       labelText: 'Search',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: Colors.orange),
+                      prefixIcon: Icon(Icons.search, color: Colors.orange),
+                      fillColor: Color(0xFFFFF3E0),
+                      filled: true,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide(color: Colors.orange),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -81,47 +91,79 @@ class _FollowingCounsellorsPageState extends State<FollowingCounsellorsPage> {
                   ),
                   SizedBox(height: 16.0),
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: counsellors.length,
+                    child: ListView.separated(
+                      separatorBuilder: (context, index) => Divider(
+                        color: Colors.grey.shade300,
+                        thickness: 1,
+                        indent: 10,
+                        endIndent: 10,
+                      ),
+                      itemCount: counsellors
+                          .where((counsellor) {
+                            final name =
+                                counsellor['firstName']?.toLowerCase() ?? '';
+                            return name.contains(searchQuery);
+                          })
+                          .toList()
+                          .length,
                       itemBuilder: (context, index) {
-                        final counsellor = counsellors[index];
-                        final name = counsellor['firstName'] ?? 'Unknown';
+                        final filteredCounsellors =
+                            counsellors.where((counsellor) {
+                          final name = counsellor['firstName']?.toLowerCase() +
+                                  " " +
+                                  counsellor['lastName']?.toLowerCase() ??
+                              '';
+                          return name.contains(searchQuery);
+                        }).toList();
 
-                        if (searchQuery.isNotEmpty &&
-                            !name.toLowerCase().contains(searchQuery)) {
-                          return SizedBox.shrink();
-                        }
+                        final counsellor = filteredCounsellors[index];
+                        final name = counsellor['firstName'] +
+                                " " +
+                                counsellor['lastName']?.toLowerCase() ??
+                            'Unknown';
 
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8.0),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                counsellor['photoUrl'] ??
-                                    'https://via.placeholder.com/150/0000FF/808080 ?Text=PAKAINFO.com',
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DetailsPage(
+                                  itemName: counsellor['firstName'] ??
+                                      counsellor['userName'],
+                                  userId: widget.username,
+                                  counsellorId: counsellor['userName'] ?? '',
+                                  isNews: false,
+                                  counsellor: counsellor,
+                                ),
                               ),
-                            ),
-                            title: Text(name),
-                            onTap: () {
-                              // Navigate to the DetailsPage when tapped
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DetailsPage(
-                                    itemName: counsellor['firstName'] ??
-                                        counsellor[
-                                            'userName'], // Pass the counsellor's name
-                                    userId: widget.username, // Pass the userId
-                                    counsellorId: counsellor['userName'] ??
-                                        '', // Pass the counsellorId
-                                    isNews:
-                                        false, // This is a counsellor, so isNews is false
-                                    counsellor:
-                                        counsellor, // Pass the full counsellor object
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    counsellor['photoUrl'] ??
+                                        'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                              );
-                            },
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
