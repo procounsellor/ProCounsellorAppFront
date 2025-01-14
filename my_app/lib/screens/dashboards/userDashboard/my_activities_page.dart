@@ -12,11 +12,7 @@ class MyActivitiesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("My Activities"),
-        forceMaterialTransparency: true,
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.count(
@@ -25,7 +21,7 @@ class MyActivitiesPage extends StatelessWidget {
           mainAxisSpacing: 16.0, // Vertical spacing between items
           children: [
             ActivityBox(
-              icon: Icons.person,
+              imageAsset: 'images/c1.png',
               title: "Counsellors Subscribed",
               onTap: () {
                 // Pass userId to SubscribedCounsellorsPage
@@ -39,7 +35,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.person_2_rounded,
+              imageAsset: 'images/add-friend.png',
               title: "Counsellors Following",
               onTap: () {
                 Navigator.push(
@@ -52,7 +48,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.reviews,
+              imageAsset: 'images/rating.png',
               title: "My Reviews",
               onTap: () {
                 Navigator.push(
@@ -64,7 +60,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.chat,
+              imageAsset: 'images/chat.png',
               title: "Chats",
               onTap: () {
                 Navigator.push(
@@ -76,7 +72,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.call,
+              imageAsset: 'images/call.png',
               title: "Calls (Video/Audio)",
               onTap: () {
                 // Navigate to Calls Page
@@ -84,7 +80,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.favorite,
+              imageAsset: 'images/play.png',
               title: "Liked Videos",
               onTap: () {
                 // Navigate to Liked Videos Page
@@ -92,7 +88,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.article,
+              imageAsset: 'images/bookmarking.png',
               title: "Liked Articles",
               onTap: () {
                 // Navigate to Liked Articles Page
@@ -100,7 +96,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.bookmark,
+              imageAsset: 'images/article.png',
               title: "Saved Articles",
               onTap: () {
                 // Navigate to Saved Articles Page
@@ -108,7 +104,7 @@ class MyActivitiesPage extends StatelessWidget {
               },
             ),
             ActivityBox(
-              icon: Icons.groups,
+              imageAsset: 'images/diversity.png',
               title: "My Communities",
               onTap: () {
                 // Navigate to My Communities Page
@@ -123,11 +119,13 @@ class MyActivitiesPage extends StatelessWidget {
 }
 
 class ActivityBox extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
   final String title;
   final VoidCallback onTap;
 
-  ActivityBox({required this.icon, required this.title, required this.onTap});
+  ActivityBox(
+      {this.icon, this.imageAsset, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -136,25 +134,54 @@ class ActivityBox extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(15.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 6.0,
-              offset: Offset(0, 3),
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 8.0,
+              offset: Offset(0, 4),
             ),
           ],
         ),
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40.0, color: Color(0xFFF0BB78)),
-            SizedBox(height: 10.0),
+            if (imageAsset != null)
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                padding: EdgeInsets.all(8.0),
+                child: Image.asset(
+                  imageAsset!,
+                  height: 50.0,
+                  width: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            if (icon != null)
+              Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFFF0BB78),
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                padding: EdgeInsets.all(8.0),
+                child: Icon(
+                  icon,
+                  size: 40.0,
+                  color: Colors.white,
+                ),
+              ),
+            SizedBox(height: 12.0),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
