@@ -154,6 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
         profileData?['userInterestedStateOfCounsellors'] ?? []);
 
     showModalBottomSheet(
+      backgroundColor: Colors.white,
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
