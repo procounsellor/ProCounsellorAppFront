@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import 'chatting_page.dart';
 import 'package:intl/intl.dart';
@@ -26,13 +25,6 @@ class _ChatPageState extends State<ChatPage> {
     fetchChats();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh chats when coming back to this page
-    fetchChats();
-  }
-
   Future<void> fetchChats() async {
     try {
       final response = await http.get(Uri.parse(
@@ -49,48 +41,60 @@ class _ChatPageState extends State<ChatPage> {
           final counsellorPhotoUrl =
               counsellor['photoUrl'] ?? 'https://via.placeholder.com/150';
 
-          // Fetch or initialize chat ID
-          final chatResponse = await http.post(
-            Uri.parse(
-                'http://localhost:8080/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
-          );
+          // Check if chat exists
+          final chatExistsResponse = await http.get(Uri.parse(
+              'http://localhost:8080/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
 
-          if (chatResponse.statusCode == 200) {
-            final chatData = json.decode(chatResponse.body);
-            final chatId = chatData['chatId'];
+          if (chatExistsResponse.statusCode == 200) {
+            final chatExists = json.decode(chatExistsResponse.body) as bool;
 
-            // Fetch messages for the chat
-            final messagesResponse = await http.get(
-              Uri.parse('http://localhost:8080/api/chats/$chatId/messages'),
-            );
+            if (chatExists) {
+              // Fetch or initialize chat ID
+              final chatResponse = await http.post(
+                Uri.parse(
+                    'http://localhost:8080/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
+              );
 
-            if (messagesResponse.statusCode == 200) {
-              final messages =
-                  json.decode(messagesResponse.body) as List<dynamic>;
-              final lastMessage = messages.isNotEmpty
-                  ? messages.last['text']
-                  : 'No messages yet';
-              final timestamp = messages.isNotEmpty
-                  ? DateFormat('dd MMM yyyy, h:mm a').format(
+              if (chatResponse.statusCode == 200) {
+                final chatData = json.decode(chatResponse.body);
+                final chatId = chatData['chatId'];
+
+                // Fetch messages for the chat
+                final messagesResponse = await http.get(
+                  Uri.parse('http://localhost:8080/api/chats/$chatId/messages'),
+                );
+
+                if (messagesResponse.statusCode == 200) {
+                  final messages =
+                      json.decode(messagesResponse.body) as List<dynamic>;
+
+                  String lastMessage = 'No messages yet';
+                  String timestamp = 'N/A';
+                  bool isSeen = true;
+                  String senderId = '';
+
+                  if (messages.isNotEmpty) {
+                    lastMessage = messages.last['text'] ?? 'No message';
+                    timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
                       DateTime.fromMillisecondsSinceEpoch(
                           messages.last['timestamp']),
-                    )
-                  : 'N/A';
-              final isSeen =
-                  messages.isNotEmpty ? messages.last['isSeen'] : true;
+                    );
+                    isSeen = messages.last['isSeen'] ?? true;
+                    senderId = messages.last['senderId'] ?? '';
+                  }
 
-              final senderId = messages.last['senderId'];
-
-              chatDetails.add({
-                'id': chatId,
-                'counsellorId': counsellorId,
-                'name': counsellorName,
-                'photoUrl': counsellorPhotoUrl,
-                'lastMessage': lastMessage,
-                'timestamp': timestamp,
-                'isSeen': isSeen,
-                'senderId': senderId,
-              });
+                  chatDetails.add({
+                    'id': chatId,
+                    'counsellorId': counsellorId,
+                    'name': counsellorName,
+                    'photoUrl': counsellorPhotoUrl,
+                    'lastMessage': lastMessage,
+                    'timestamp': timestamp,
+                    'isSeen': isSeen,
+                    'senderId': senderId,
+                  });
+                }
+              }
             }
           }
         }
@@ -123,13 +127,6 @@ class _ChatPageState extends State<ChatPage> {
               .contains(query.toLowerCase()))
           .toList();
     });
-  }
-
-  Stream<String> getCounsellorState(String counsellorId) {
-    final databaseReference =
-        FirebaseDatabase.instance.ref('counsellorStates/$counsellorId/state');
-    return databaseReference.onValue
-        .map((event) => event.snapshot.value as String? ?? 'offline');
   }
 
   @override
@@ -207,36 +204,9 @@ class _ChatPageState extends State<ChatPage> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Stack(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 35,
-                                        backgroundImage: NetworkImage(photoUrl),
-                                      ),
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: StreamBuilder<String>(
-                                          stream:
-                                              getCounsellorState(counsellorId),
-                                          builder: (context, snapshot) {
-                                            final state =
-                                                snapshot.data ?? 'offline';
-                                            return CircleAvatar(
-                                              radius: 8,
-                                              backgroundColor: Colors.white,
-                                              child: CircleAvatar(
-                                                radius: 6,
-                                                backgroundColor:
-                                                    state == 'online'
-                                                        ? Colors.green
-                                                        : Colors.grey,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                                  CircleAvatar(
+                                    radius: 35,
+                                    backgroundImage: NetworkImage(photoUrl),
                                   ),
                                   SizedBox(width: 16),
                                   Expanded(
