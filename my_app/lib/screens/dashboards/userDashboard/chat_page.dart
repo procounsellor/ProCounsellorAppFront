@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:convert';
 import 'chatting_page.dart';
+import 'package:intl/intl.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -14,54 +15,89 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  List<Map<String, dynamic>> counsellorsWithChats = [];
-  List<Map<String, dynamic>> filteredCounsellors = [];
+  List<Map<String, dynamic>> chats = [];
+  List<Map<String, dynamic>> filteredChats = [];
   bool isLoading = true;
   String searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    fetchSubscribedCounsellorsWithChats();
+    fetchChats();
   }
 
-  Future<void> fetchSubscribedCounsellorsWithChats() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh chats when coming back to this page
+    fetchChats();
+  }
+
+  Future<void> fetchChats() async {
     try {
-      final subscribedUrl = Uri.parse(
-          'http://localhost:8080/api/user/${widget.userId}/subscribed-counsellors');
-      final subscribedResponse = await http.get(subscribedUrl);
+      final response = await http.get(Uri.parse(
+          'http://localhost:8080/api/user/${widget.userId}/subscribed-counsellors'));
 
-      if (subscribedResponse.statusCode == 200) {
-        final subscribedCounsellors =
-            json.decode(subscribedResponse.body) as List<dynamic>;
+      if (response.statusCode == 200) {
+        final List<dynamic> counsellors = json.decode(response.body);
+        List<Map<String, dynamic>> chatDetails = [];
 
-        List<Map<String, dynamic>> counsellors = [];
-        for (var counsellor in subscribedCounsellors) {
+        for (var counsellor in counsellors) {
           final counsellorId = counsellor['userName'];
           final counsellorName =
               counsellor['firstName'] ?? 'Unknown Counsellor';
           final counsellorPhotoUrl =
               counsellor['photoUrl'] ?? 'https://via.placeholder.com/150';
 
-          final chatExistsUrl = Uri.parse(
-              'http://localhost:8080/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId');
-          final chatExistsResponse = await http.get(chatExistsUrl);
+          // Fetch or initialize chat ID
+          final chatResponse = await http.post(
+            Uri.parse(
+                'http://localhost:8080/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
+          );
 
-          if (chatExistsResponse.statusCode == 200) {
-            final chatExists = json.decode(chatExistsResponse.body) as bool;
-            if (chatExists) {
-              counsellors.add({
-                'id': counsellorId,
+          if (chatResponse.statusCode == 200) {
+            final chatData = json.decode(chatResponse.body);
+            final chatId = chatData['chatId'];
+
+            // Fetch messages for the chat
+            final messagesResponse = await http.get(
+              Uri.parse('http://localhost:8080/api/chats/$chatId/messages'),
+            );
+
+            if (messagesResponse.statusCode == 200) {
+              final messages =
+                  json.decode(messagesResponse.body) as List<dynamic>;
+              final lastMessage = messages.isNotEmpty
+                  ? messages.last['text']
+                  : 'No messages yet';
+              final timestamp = messages.isNotEmpty
+                  ? DateFormat('dd MMM yyyy, h:mm a').format(
+                      DateTime.fromMillisecondsSinceEpoch(
+                          messages.last['timestamp']),
+                    )
+                  : 'N/A';
+              final isSeen =
+                  messages.isNotEmpty ? messages.last['isSeen'] : true;
+
+              final senderId = messages.last['senderId'];
+
+              chatDetails.add({
+                'id': chatId,
+                'counsellorId': counsellorId,
                 'name': counsellorName,
                 'photoUrl': counsellorPhotoUrl,
+                'lastMessage': lastMessage,
+                'timestamp': timestamp,
+                'isSeen': isSeen,
+                'senderId': senderId,
               });
             }
           }
         }
 
         setState(() {
-          counsellorsWithChats = counsellors;
-          filteredCounsellors = counsellors;
+          chats = chatDetails;
+          filteredChats = chatDetails;
           isLoading = false;
         });
       } else {
@@ -77,11 +113,11 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void filterCounsellors(String query) {
+  void filterChats(String query) {
     setState(() {
       searchQuery = query;
-      filteredCounsellors = counsellorsWithChats
-          .where((counsellor) => counsellor['name']
+      filteredChats = chats
+          .where((chat) => chat['name']
               .toString()
               .toLowerCase()
               .contains(query.toLowerCase()))
@@ -108,7 +144,7 @@ class _ChatPageState extends State<ChatPage> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              onChanged: filterCounsellors,
+              onChanged: filterChats,
               decoration: InputDecoration(
                 hintText: "Search counsellors...",
                 prefixIcon: Icon(Icons.search, color: Colors.orange),
@@ -128,7 +164,7 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
-                : filteredCounsellors.isEmpty
+                : filteredChats.isEmpty
                     ? Center(child: Text("No chats available"))
                     : ListView.separated(
                         separatorBuilder: (context, index) => Divider(
@@ -137,14 +173,16 @@ class _ChatPageState extends State<ChatPage> {
                           indent: 10,
                           endIndent: 10,
                         ),
-                        itemCount: filteredCounsellors.length,
+                        itemCount: filteredChats.length,
                         itemBuilder: (context, index) {
-                          final counsellor = filteredCounsellors[index];
-                          final name =
-                              counsellor['name'] ?? 'Unknown Counsellor';
-                          final photoUrl = counsellor['photoUrl'] ??
-                              'https://via.placeholder.com/150';
-                          final counsellorId = counsellor['id'];
+                          final chat = filteredChats[index];
+                          final name = chat['name'] ?? 'Unknown Counsellor';
+                          final photoUrl = chat['photoUrl'];
+                          final counsellorId = chat['counsellorId'];
+                          final lastMessage = chat['lastMessage'];
+                          final timestamp = chat['timestamp'];
+                          final isSeen = chat['isSeen'];
+                          final senderId = chat['senderId'];
 
                           return GestureDetector(
                             onTap: () {
@@ -157,12 +195,15 @@ class _ChatPageState extends State<ChatPage> {
                                     counsellorId: counsellorId,
                                   ),
                                 ),
-                              );
+                              ).then((_) {
+                                fetchChats(); // Refresh chats on returning
+                              });
                             },
-                            child: Padding(
+                            child: Container(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 8.0, horizontal: 16.0),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Stack(
                                     children: [
@@ -197,12 +238,55 @@ class _ChatPageState extends State<ChatPage> {
                                   ),
                                   SizedBox(width: 16),
                                   Expanded(
-                                    child: Text(
-                                      name,
-                                      style: TextStyle(
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              name,
+                                              style: TextStyle(
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              timestamp,
+                                              style: TextStyle(
+                                                fontSize: 12.0,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                lastMessage,
+                                                style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  color: Colors.grey[600],
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            if (!isSeen &&
+                                                senderId != widget.userId)
+                                              Icon(
+                                                Icons.circle,
+                                                color: Colors.blue,
+                                                size: 10,
+                                              ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
