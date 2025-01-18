@@ -12,6 +12,7 @@ class CommunityPage extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text("Community"),
         centerTitle: true,
@@ -25,7 +26,7 @@ class CommunityPage extends StatelessWidget {
             margin: EdgeInsets.symmetric(vertical: 8.0),
             child: ListTile(
               title: Text(group, style: TextStyle(fontSize: 18.0)),
-              trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+              trailing: Icon(Icons.arrow_forward_ios, color: Colors.orange),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Opening $group")),

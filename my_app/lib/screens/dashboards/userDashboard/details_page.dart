@@ -4,7 +4,6 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import 'chatting_page.dart';
-import 'dart:ui';
 
 class DetailsPage extends StatefulWidget {
   final String itemName;
@@ -742,7 +741,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                     ),
                                     SizedBox(height: 8),
                                     Text(
-                                      "Subscription: \$${counsellorDetails?['ratePerYear'] ?? 'N/A'} per year",
+                                      "Subscription: \₹ ${counsellorDetails?['ratePerYear'] ?? 'N/A'} per year",
                                       style: TextStyle(
                                         color: Colors.black87,
                                         fontSize: 16,
@@ -1126,157 +1125,6 @@ class _DetailsPageState extends State<DetailsPage> {
                   ),
           ),
         ));
-  }
-
-  //Need to think upon as it's reusable.....
-  Widget _buildUserReviews(List<dynamic> reviews) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: reviews.map((review) {
-        final reviewId = review['reviewId'];
-        final userIDliked = List<String>.from(review['userIDliked'] ?? []);
-        TextEditingController _commentController = TextEditingController();
-
-        return FutureBuilder<String>(
-          future: fetchUserFullName(review['userName'] ?? "Unknown"),
-          builder: (context, snapshot) {
-            final userFullName = review['userFullName'] ?? review['userName'];
-
-            return Container(
-              margin: EdgeInsets.symmetric(vertical: 8.0),
-              padding: EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: review["userPhotoUrl"] != null
-                            ? NetworkImage(review["userPhotoUrl"])
-                            : null,
-                        child: review["photoUrl"] == null
-                            ? Icon(Icons.person, size: 30)
-                            : null,
-                        radius: 20,
-                      ),
-                      SizedBox(width: 8.0),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "$userFullName",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.0),
-                  _buildListItem("Review", review["reviewText"]),
-                  _buildListItem("Rating", review["rating"]),
-                  _buildListItem(
-                    "Timestamp",
-                    review["timestamp"] != null
-                        ? formatTimestamp(review["timestamp"]["seconds"])
-                        : "Not provided",
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text("Likes: ${review['noOfLikes']}",
-                              style: TextStyle(fontSize: 14)),
-                          IconButton(
-                            icon: Icon(
-                              userIDliked.contains(widget.userId)
-                                  ? Icons.favorite
-                                  : Icons.heart_broken,
-                              color: userIDliked.contains(widget.userId)
-                                  ? Colors.black45
-                                  : Colors.black,
-                            ),
-                            onPressed: () =>
-                                addLike(widget.userId, reviewId, userIDliked),
-                          ),
-                        ],
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            showComments[reviewId] =
-                                !(showComments[reviewId] ?? false);
-                          });
-                        },
-                        child: Text("Comments"),
-                      ),
-                    ],
-                  ),
-                  if (showComments[reviewId] == true) ...[
-                    ...review['comments']?.map<Widget>((comment) {
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: comment['photoUrl'] != null
-                                  ? NetworkImage(comment['photoUrl'])
-                                  : null,
-                              child: comment['photoUrl'] == null
-                                  ? Icon(Icons.person, size: 20)
-                                  : null,
-                              radius: 15,
-                            ),
-                            title: Text(comment['userFullName'] ?? comment['userName']),
-                            subtitle: Text(comment['commentText'] ?? ""),
-                          );
-                        })?.toList() ??
-                        [Text("No comments available.")],
-                    TextField(
-                      controller: _commentController,
-                      decoration: InputDecoration(
-                        hintText: "Add a comment...",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          if (_commentController.text.isNotEmpty) {
-                            addComment(reviewId, _commentController.text,
-                                widget.userId);
-                            _commentController.clear();
-                          }
-                        },
-                        child: Text("Post Comment"),
-                      ),
-                    ),
-                  ]
-                ],
-              ),
-            );
-          },
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildListItem(String title, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$title: ",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Expanded(child: Text(value?.toString() ?? "Not provided")),
-        ],
-      ),
-    );
   }
 
   Future<void> addComment(
