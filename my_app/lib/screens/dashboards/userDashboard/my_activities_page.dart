@@ -3,137 +3,204 @@ import 'package:my_app/screens/dashboards/userDashboard/following_counsellors_pa
 import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'subscribed_counsellors_page.dart';
 import 'chat_page.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class MyActivitiesPage extends StatelessWidget {
-  final String username; // Added userId
+class MyActivitiesPage extends StatefulWidget {
+  final String username;
 
   MyActivitiesPage({required this.username});
+
+  @override
+  _MyActivitiesPageState createState() => _MyActivitiesPageState();
+}
+
+class _MyActivitiesPageState extends State<MyActivitiesPage> {
+  bool isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _simulateLoading();
+  }
+
+  Future<void> _simulateLoading() async {
+    try {
+      await Future.wait([
+        precacheImage(
+            AssetImage("images/my_activity_counsellor_subs1.jpg"), context),
+        precacheImage(AssetImage("images/follow.jpg"), context),
+        precacheImage(AssetImage("images/reviews.jpg"), context),
+        precacheImage(AssetImage("images/chat.png"), context),
+        precacheImage(AssetImage("images/calls.jpg"), context),
+        precacheImage(AssetImage("images/play.png"), context),
+        precacheImage(AssetImage("images/bookmarking.png"), context),
+        precacheImage(AssetImage("images/article.png"), context),
+        precacheImage(AssetImage("images/diversity.png"), context),
+      ]);
+    } catch (e) {
+      print("Error during image preloading: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2, // Number of columns in the grid
-          crossAxisSpacing: 16.0, // Horizontal spacing between items
-          mainAxisSpacing: 16.0, // Vertical spacing between items
-          children: [
-            ActivityBox(
-              imageAsset: 'images/c1.png',
-              title: "Counsellors Subscribed",
-              onTap: () {
-                // Pass userId to SubscribedCounsellorsPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        SubscribedCounsellorsPage(username: username),
+      body: isLoading
+          ? Center(
+              child: LoadingAnimationWidget.twistingDots(
+                leftDotColor: const Color.fromARGB(255, 191, 114, 21),
+                rightDotColor: const Color.fromARGB(255, 76, 234, 55),
+                size: 100,
+              ),
+            )
+          : Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+              child: ListView(
+                children: [
+                  buildActivityRow(
+                    context,
+                    "images/my_activity_counsellor_subs1.jpg",
+                    "Counsellors Subscribed",
+                    SubscribedCounsellorsPage(username: widget.username),
+                    isReversed: false,
                   ),
-                );
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/add-friend.png',
-              title: "Counsellors Following",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FollowingCounsellorsPage(username: username),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/follow.jpg",
+                    "Followed Counselor",
+                    FollowingCounsellorsPage(username: widget.username),
+                    isReversed: true,
                   ),
-                );
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/rating.png',
-              title: "My Reviews",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MyReviewPage(username: username),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/reviews.jpg",
+                    "My Reviews",
+                    MyReviewPage(username: widget.username),
+                    isReversed: false,
                   ),
-                );
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/chat.png',
-              title: "Chats",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatPage(userId: username),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/chat.png",
+                    "Chats",
+                    ChatPage(userId: widget.username),
+                    isReversed: true,
                   ),
-                );
-              },
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/calls.jpg",
+                    "Calls (Video/Audio)",
+                    null,
+                    isReversed: false,
+                    routeName: '/calls',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/play.png",
+                    "Liked Videos",
+                    null,
+                    isReversed: true,
+                    routeName: '/liked_videos',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/bookmarking.png",
+                    "Liked Articles",
+                    null,
+                    isReversed: false,
+                    routeName: '/liked_articles',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/article.png",
+                    "Saved Articles",
+                    null,
+                    isReversed: true,
+                    routeName: '/saved_articles',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/diversity.png",
+                    "My Community",
+                    null,
+                    isReversed: false,
+                    routeName: '/my_communities',
+                  ),
+                ],
+              ),
             ),
-            ActivityBox(
-              imageAsset: 'images/call.png',
-              title: "Calls (Video/Audio)",
-              onTap: () {
-                // Navigate to Calls Page
-                Navigator.pushNamed(context, '/calls');
-              },
+    );
+  }
+
+  Widget buildActivityRow(
+    BuildContext context,
+    String imageAsset,
+    String title,
+    Widget? nextPage, {
+    required bool isReversed,
+    String? routeName,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment:
+            isReversed ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isReversed)
+            buildImageCard(imageAsset, context, nextPage, routeName),
+          SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: isReversed ? TextAlign.end : TextAlign.start,
             ),
-            ActivityBox(
-              imageAsset: 'images/play.png',
-              title: "Liked Videos",
-              onTap: () {
-                // Navigate to Liked Videos Page
-                Navigator.pushNamed(context, '/liked_videos');
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/bookmarking.png',
-              title: "Liked Articles",
-              onTap: () {
-                // Navigate to Liked Articles Page
-                Navigator.pushNamed(context, '/liked_articles');
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/article.png',
-              title: "Saved Articles",
-              onTap: () {
-                // Navigate to Saved Articles Page
-                Navigator.pushNamed(context, '/saved_articles');
-              },
-            ),
-            ActivityBox(
-              imageAsset: 'images/diversity.png',
-              title: "My Communities",
-              onTap: () {
-                // Navigate to My Communities Page
-                Navigator.pushNamed(context, '/my_communities');
-              },
-            ),
-          ],
-        ),
+          ),
+          if (isReversed) SizedBox(width: 16),
+          if (isReversed)
+            buildImageCard(imageAsset, context, nextPage, routeName),
+        ],
       ),
     );
   }
-}
 
-class ActivityBox extends StatelessWidget {
-  final IconData? icon;
-  final String? imageAsset;
-  final String title;
-  final VoidCallback onTap;
-
-  ActivityBox(
-      {this.icon, this.imageAsset, required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget buildImageCard(String imageAsset, BuildContext context,
+      Widget? nextPage, String? routeName) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (nextPage != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => nextPage),
+          );
+        } else if (routeName != null) {
+          Navigator.pushNamed(context, routeName);
+        }
+      },
       child: Container(
+        height: 120,
+        width: MediaQuery.of(context).size.width * 0.6,
         decoration: BoxDecoration(
-          color: Colors.white,
+          image: DecorationImage(
+            image: AssetImage(imageAsset),
+            fit: BoxFit.cover,
+          ),
           borderRadius: BorderRadius.circular(15.0),
           boxShadow: [
             BoxShadow(
@@ -143,49 +210,15 @@ class ActivityBox extends StatelessWidget {
             ),
           ],
         ),
-        padding: EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (imageAsset != null)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-                padding: EdgeInsets.all(8.0),
-                child: Image.asset(
-                  imageAsset!,
-                  height: 50.0,
-                  width: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            if (icon != null)
-              Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFF0BB78),
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-                padding: EdgeInsets.all(8.0),
-                child: Icon(
-                  icon,
-                  size: 40.0,
-                  color: Colors.white,
-                ),
-              ),
-            SizedBox(height: 12.0),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+
+  Widget buildDivider() {
+    return Divider(
+      color: Colors.grey[300],
+      thickness: 1,
+      height: 16,
     );
   }
 }
