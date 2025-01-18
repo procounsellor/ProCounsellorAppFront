@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'chatting_page.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -162,7 +163,12 @@ class _ChatPageState extends State<ChatPage> {
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: LoadingAnimationWidget.staggeredDotsWave(
+                      color: Colors.deepOrangeAccent,
+                      size: 50,
+                    ),
+                  )
                 : filteredChats.isEmpty
                     ? Center(child: Text("No chats available"))
                     : ListView.separated(
