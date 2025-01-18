@@ -193,7 +193,10 @@ class _ChattingPageState extends State<ChattingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: Row(
           children: [
             GestureDetector(
@@ -231,7 +234,13 @@ class _ChattingPageState extends State<ChattingPage> {
               ),
             ),
             SizedBox(width: 10),
-            Text(widget.itemName),
+            Text(
+              widget.itemName,
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         centerTitle: true,
@@ -242,13 +251,14 @@ class _ChattingPageState extends State<ChattingPage> {
               children: [
                 Expanded(
                   child: ListView.builder(
+                    reverse: true,
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final message = messages[index];
+                      final message = messages[messages.length - 1 - index];
                       final isUserMessage =
                           message['senderId'] == widget.userId;
-                      final isLastMessage = index == messages.length - 1;
+                      final isLastMessage = index == 0;
 
                       return Column(
                         crossAxisAlignment: isUserMessage
@@ -267,8 +277,8 @@ class _ChattingPageState extends State<ChattingPage> {
                               padding: EdgeInsets.all(10.0),
                               decoration: BoxDecoration(
                                 color: isUserMessage
-                                    ? Colors.blue[100]
-                                    : Colors.grey[300],
+                                    ? Colors.orangeAccent.withOpacity(0.2)
+                                    : Colors.blueGrey.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               child: Text(
@@ -307,13 +317,17 @@ class _ChattingPageState extends State<ChattingPage> {
                           controller: _controller,
                           decoration: InputDecoration(
                             hintText: "Type a message...",
-                            border: OutlineInputBorder(),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
                           ),
                           onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.send),
+                        icon: Icon(Icons.send, color: Colors.orangeAccent),
                         onPressed: _sendMessage,
                       ),
                     ],
