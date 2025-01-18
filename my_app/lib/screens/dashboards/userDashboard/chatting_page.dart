@@ -27,6 +27,7 @@ class _ChattingPageState extends State<ChattingPage> {
   late String chatId;
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
+  bool showSendButton = false;
 
   // For counsellor's online status
   String counsellorPhotoUrl = 'https://via.placeholder.com/150';
@@ -154,6 +155,9 @@ class _ChattingPageState extends State<ChattingPage> {
         await ChatService().sendMessage(chatId, messageRequest);
 
         _controller.clear();
+        setState(() {
+          showSendButton = false;
+        });
         _scrollToBottom();
       } catch (e) {
         print('Error sending message: $e');
@@ -164,7 +168,11 @@ class _ChattingPageState extends State<ChattingPage> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.minScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -312,23 +320,47 @@ class _ChattingPageState extends State<ChattingPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
+                      IconButton(
+                        icon: Icon(Icons.add, color: Colors.black54),
+                        onPressed: () {},
+                      ),
                       Expanded(
                         child: TextField(
                           controller: _controller,
+                          onChanged: (text) {
+                            setState(() {
+                              showSendButton = text.isNotEmpty;
+                            });
+                          },
                           decoration: InputDecoration(
                             hintText: "Type a message...",
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 15.0,
+                              vertical: 10.0,
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(30.0),
+                              borderSide: BorderSide.none,
                             ),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: Colors.grey[200],
                           ),
-                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.send, color: Colors.orangeAccent),
-                        onPressed: _sendMessage,
+                        icon: Icon(Icons.attach_file, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.camera_alt, color: Colors.black54),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          showSendButton ? Icons.send : Icons.mic,
+                          color: Colors.black54,
+                        ),
+                        onPressed: showSendButton ? _sendMessage : () {},
                       ),
                     ],
                   ),
