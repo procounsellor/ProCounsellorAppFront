@@ -52,10 +52,9 @@ class _MyActivitiesPageState extends State<MyActivitiesPage> {
       backgroundColor: Colors.white,
       body: isLoading
           ? Center(
-              child: LoadingAnimationWidget.twistingDots(
-                leftDotColor: const Color.fromARGB(255, 191, 114, 21),
-                rightDotColor: const Color.fromARGB(255, 76, 234, 55),
-                size: 100,
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.orangeAccent,
+                size: 50,
               ),
             )
           : Padding(
