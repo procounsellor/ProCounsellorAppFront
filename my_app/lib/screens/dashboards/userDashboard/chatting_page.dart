@@ -320,40 +320,49 @@ class _ChattingPageState extends State<ChattingPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.add, color: Colors.black54),
-                        onPressed: () {},
-                      ),
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.add, color: Colors.black54),
+                          onPressed: () {},
+                        ),
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.attach_file, color: Colors.black54),
+                          onPressed: () {},
+                        ),
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.camera_alt, color: Colors.black54),
+                          onPressed: () {},
+                        ),
                       Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          onChanged: (text) {
-                            setState(() {
-                              showSendButton = text.isNotEmpty;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Type a message...",
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 15.0,
-                              vertical: 10.0,
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
+                          width: showSendButton
+                              ? MediaQuery.of(context).size.width * 0.8
+                              : MediaQuery.of(context).size.width * 0.65,
+                          child: TextField(
+                            controller: _controller,
+                            onChanged: (text) {
+                              setState(() {
+                                showSendButton = text.isNotEmpty;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Type a message...",
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 15.0,
+                                vertical: 10.0,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[200],
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30.0),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[200],
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.attach_file, color: Colors.black54),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.camera_alt, color: Colors.black54),
-                        onPressed: () {},
                       ),
                       IconButton(
                         icon: Icon(
