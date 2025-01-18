@@ -130,12 +130,12 @@ class _MyReviewPageState extends State<MyReviewPage> {
               children: [
                 CircleAvatar(
                   backgroundImage: NetworkImage(
-                      review["photoUrl"] ?? 'https://via.placeholder.com/150'),
+                      review["counsellorPhotoUrl"] ?? 'https://via.placeholder.com/150'),
                   radius: 20,
                 ),
                 SizedBox(width: 10),
                 Text(
-                  review["userName"] ?? "Anonymous",
+                  review["counsellorFullName"] ?? review["counsellorName"],
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Spacer(),
@@ -147,8 +147,8 @@ class _MyReviewPageState extends State<MyReviewPage> {
             ),
             SizedBox(height: 8),
             Text(
-              "Counsellor: ${review['counsellorName'] ?? 'Unknown'}",
-              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+              review["reviewText"] ?? "No review text provided.",
+              style: TextStyle(fontSize: 14, color: Colors.black87),
             ),
             SizedBox(height: 6),
             Row(
@@ -156,11 +156,6 @@ class _MyReviewPageState extends State<MyReviewPage> {
                 review["rating"] ?? 0,
                 (index) => Icon(Icons.star, color: Colors.orange, size: 16),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              review["reviewText"] ?? "No review text provided.",
-              style: TextStyle(fontSize: 14, color: Colors.black87),
             ),
             SizedBox(height: 10),
             Row(
@@ -205,7 +200,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
                             : null,
                         radius: 15,
                       ),
-                      title: Text(comment['userName'] ?? "Anonymous"),
+                      title: Text(comment['userFullName'] ?? comment['userName']),
                       subtitle: Text(comment['commentText'] ?? ""),
                     );
                   })?.toList() ??
