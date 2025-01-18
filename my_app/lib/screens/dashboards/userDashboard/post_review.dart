@@ -14,32 +14,27 @@ class PostUserReview extends StatefulWidget {
 
 class _PostUserReviewState extends State<PostUserReview> {
   final TextEditingController _reviewController = TextEditingController();
-  final TextEditingController _ratingController = TextEditingController();
+  double _rating = 0.0;
   bool _isSubmitting = false;
 
-  // Post review function
   Future<void> postReview() async {
     setState(() {
       _isSubmitting = true;
     });
 
-    // Parse the rating as a float (double)
-    final rating = double.tryParse(_ratingController.text) ?? 1.0; // Default to 1.0 if invalid
-
-    // Prepare the body for the POST request
     final body = {
       'reviewText': _reviewController.text,
-      'rating': rating.toString(), // Ensure rating is sent as a string
+      'rating': _rating.toString(),
     };
 
     final headers = {
-      'Content-Type': 'application/json', // Use JSON format
+      'Content-Type': 'application/json',
     };
 
     final response = await http.post(
       Uri.parse('http://localhost:8080/api/reviews/${widget.userName}/${widget.counsellorName}'),
       headers: headers,
-      body: jsonEncode(body), // Encode the body as JSON
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {
@@ -52,54 +47,117 @@ class _PostUserReviewState extends State<PostUserReview> {
       _isSubmitting = false;
     });
 
-    // After posting, navigate back to the previous page
-    Navigator.pop(context);
+    Navigator.pop(context, true); // Pass true to indicate a refresh is needed
+  }
+
+  Widget buildStarRating() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        return IconButton(
+          icon: Icon(
+            Icons.star,
+            color: index < _rating ? Colors.orange : Colors.grey,
+          ),
+          onPressed: () {
+            setState(() {
+              _rating = index + 1.0;
+            });
+          },
+        );
+      }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Post Review for ${widget.counsellorName}"),
+        backgroundColor: Colors.white,
+        title: Text("Post Review"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Write your review:",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _reviewController,
-              decoration: InputDecoration(
-                hintText: "Enter your review",
-                border: OutlineInputBorder(),
+            Card(
+              color: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
               ),
-              maxLines: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Write your review:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: _reviewController,
+                      decoration: InputDecoration(
+                        hintText: "Enter your review",
+                        filled: true,
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey[500]!),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      maxLines: 5,
+                    ),
+                  ],
+                ),
+              ),
             ),
             SizedBox(height: 20),
-            Text(
-              "Rating:",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _ratingController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true), // Ensure it's a float input
-              decoration: InputDecoration(
-                hintText: "Enter rating (1.0 to 5.0)",
-                border: OutlineInputBorder(),
+            Card(
+              color: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Rating:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    buildStarRating(),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             _isSubmitting
-                ? Center(child: CircularProgressIndicator())
+                ? CircularProgressIndicator()
                 : ElevatedButton(
+                    style: ElevatedButton.styleFrom( 
+                                  backgroundColor: Colors.green[300],
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                  ),
                     onPressed: postReview,
-                    child: Text("Post Review"),
+                    child: Text(
+                      "Post Review",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
                   ),
           ],
         ),

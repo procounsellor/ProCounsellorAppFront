@@ -77,8 +77,6 @@ class _DetailsPageState extends State<DetailsPage> {
         setState(() {
           counsellorDetails = json.decode(response.body);
           isLoading = false;
-          print(counsellorDetails?[
-              'photoUrl']); // Stop loading after fetching details
         });
       } else {
         setState(() {
@@ -967,15 +965,15 @@ class _DetailsPageState extends State<DetailsPage> {
                                             children: [
                                               CircleAvatar(
                                                 backgroundImage: NetworkImage(
-                                                  review["photoUrl"] ??
+                                                  review["userPhotoUrl"] ??
                                                       'https://via.placeholder.com/150',
                                                 ),
                                                 radius: 20,
                                               ),
                                               SizedBox(width: 10),
                                               Text(
-                                                review["userName"] ??
-                                                    "Anonymous",
+                                                review["userFullName"] ??
+                                                    review["userName"],
                                                 style: TextStyle(
                                                     fontWeight:
                                                         FontWeight.bold),
@@ -1076,8 +1074,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                                       radius: 15,
                                                     ),
                                                     title: Text(
-                                                        comment['userName'] ??
-                                                            "Anonymous"),
+                                                        comment['userFullName'] ??
+                                                            comment['userName']),
                                                     subtitle: Text(comment[
                                                             'commentText'] ??
                                                         ""),
@@ -1142,7 +1140,7 @@ class _DetailsPageState extends State<DetailsPage> {
         return FutureBuilder<String>(
           future: fetchUserFullName(review['userName'] ?? "Unknown"),
           builder: (context, snapshot) {
-            final userFullName = snapshot.data ?? "Loading...";
+            final userFullName = review['userFullName'] ?? review['userName'];
 
             return Container(
               margin: EdgeInsets.symmetric(vertical: 8.0),
@@ -1157,8 +1155,8 @@ class _DetailsPageState extends State<DetailsPage> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: review["photoUrl"] != null
-                            ? NetworkImage(review["photoUrl"])
+                        backgroundImage: review["userPhotoUrl"] != null
+                            ? NetworkImage(review["userPhotoUrl"])
                             : null,
                         child: review["photoUrl"] == null
                             ? Icon(Icons.person, size: 30)
@@ -1230,7 +1228,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                   : null,
                               radius: 15,
                             ),
-                            title: Text(comment['userName'] ?? "Anonymous"),
+                            title: Text(comment['userFullName'] ?? comment['userName']),
                             subtitle: Text(comment['commentText'] ?? ""),
                           );
                         })?.toList() ??
