@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app/screens/dashboards/adminDashboard/admin_signin.dart';
 
 import 'package:my_app/screens/newSignUpScreens/verification_page.dart';
 import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
@@ -178,6 +179,29 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                         color: Colors.white, fontSize: 16),
                                   ),
                                 ),
+
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AdminSignInScreen(onSignOut: widget.onSignOut),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFFFAAF84),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Admin Sign in',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                ),
+                                
                               ],
                             ),
                           ],

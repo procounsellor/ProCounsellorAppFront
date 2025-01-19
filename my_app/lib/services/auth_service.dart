@@ -51,6 +51,22 @@ class AuthService {
     return response;
   }
 
+  Future<http.Response> adminSignIn(String identifier, String password) async {
+    final String endpoint = '$_baseUrl/adminSignin';
+
+    final uri = Uri.parse(endpoint).replace(queryParameters: {
+      'identifier': identifier,
+      'password': password,
+    });
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    return response;
+  }
+
   //new user signup
   Future<http.Response> verifyAndSignup(String phoneNumber, String otp) async {
     final response = await http.post(

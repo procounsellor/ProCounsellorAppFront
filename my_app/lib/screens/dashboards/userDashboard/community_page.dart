@@ -13,10 +13,6 @@ class CommunityPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("Community"),
-        centerTitle: true,
-      ),
       body: ListView.builder(
         padding: EdgeInsets.all(16.0),
         itemCount: communityGroups.length,
