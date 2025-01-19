@@ -23,12 +23,13 @@ class UserDashboard extends StatefulWidget {
 
 class _UserDashboardState extends State<UserDashboard>
     with TickerProviderStateMixin {
+  bool _isAnimationControllerDisposed = false;
   List<dynamic> _liveCounsellors = [];
   List<dynamic> _topRatedCounsellors = [];
   Map<String, List<dynamic>> _stateCounsellors = {
     'Karnataka': [],
     'Maharashtra': [],
-    'Tamil Nadu': [],
+    'TamilNadu': [],
   };
   List<String> _activeStates = [];
   final List<String> _topNews = ["Kite", "Lion", "Monkey", "Nest", "Owl"];
@@ -82,6 +83,7 @@ class _UserDashboardState extends State<UserDashboard>
 
   @override
   void dispose() {
+    _isAnimationControllerDisposed = true;
     _animationController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -135,7 +137,7 @@ class _UserDashboardState extends State<UserDashboard>
   }
 
   Future<void> _fetchCounsellorsByState() async {
-    final states = ['Karnataka', 'Maharashtra', 'Tamil Nadu'];
+    final states = ['Karnataka', 'Maharashtra', 'TamilNadu'];
 
     for (String state in states) {
       try {
@@ -158,28 +160,39 @@ class _UserDashboardState extends State<UserDashboard>
   }
 
   void _toggleState(String state) {
-    setState(() {
-      if (_activeStates.contains(state)) {
-        _activeStates.remove(state);
+  //if (!mounted || _pageController.isAnimating || _pageController.isCompleted) return;
+  setState(() {
+    if (_activeStates.contains(state)) {
+      _activeStates.remove(state);
+      if (_pageController.status != AnimationStatus.dismissed) {
         _pageController.reverse(); // Transition back to original position
-      } else {
-        _activeStates.add(state);
+      }
+    } else {
+      _activeStates.add(state);
+      if (_pageController.status != AnimationStatus.completed) {
         _pageController.forward(); // Move lists down with transition
       }
-    });
-  }
+    }
+  });
+}
 
-  void _startSearchHintCycle() {
-    Timer.periodic(Duration(seconds: 3), (timer) {
-      _animationController.forward().then((_) {
-        setState(() {
-          _currentSearchHintIndex =
-              (_currentSearchHintIndex + 1) % _searchHints.length;
-        });
-        _animationController.reset();
+void _startSearchHintCycle() {
+  Timer.periodic(Duration(seconds: 3), (timer) {
+    if (_isAnimationControllerDisposed || !mounted) {
+      timer.cancel();
+      return;
+    }
+
+    _animationController.forward().then((_) {
+      if (!mounted || _isAnimationControllerDisposed) return;
+      setState(() {
+        _currentSearchHintIndex =
+            (_currentSearchHintIndex + 1) % _searchHints.length;
       });
+      _animationController.reset();
     });
-  }
+  });
+}
 
   @override
   Widget build(BuildContext context) {

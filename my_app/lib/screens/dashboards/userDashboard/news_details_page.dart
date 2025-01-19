@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/dashboards/userDashboard/top_news_carousel.dart';
+import 'package:my_app/screens/dashboards/userDashboard/news_class.dart';
 
 class NewsDetailsPage extends StatelessWidget {
   final News news;
