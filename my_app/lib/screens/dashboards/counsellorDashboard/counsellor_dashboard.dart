@@ -15,22 +15,18 @@ class CounsellorDashboard extends StatefulWidget {
 }
 
 class _CounsellorDashboardState extends State<CounsellorDashboard> {
-  bool isLoading = true; // To track the loading state
-  List<dynamic> clients = []; // To store the list of subscribed clients
-  List<dynamic> reviews = []; // To store reviews
+  bool isLoading = true;
+  List<dynamic> clients = [];
+  List<dynamic> filteredClients = [];
   String counsellorName = "";
-  double earnings = 150.0; // Placeholder earnings value
-  String  counsellorFullName = "";
-
+  double earnings = 150.0;
 
   @override
   void initState() {
     super.initState();
-    fetchDashboardData(); 
-    fetchCounsellorFullName(widget.counsellorId);
+    fetchDashboardData();
   }
 
-  // Fetch clients and counsellor details
   Future<void> fetchDashboardData() async {
     final clientUrl = Uri.parse(
         'http://localhost:8080/api/counsellor/${widget.counsellorId}/clients');
@@ -38,9 +34,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
         'http://localhost:8080/api/counsellor/${widget.counsellorId}');
 
     try {
-      // Fetch clients
       final clientResponse = await http.get(clientUrl);
-      // Fetch counsellor details
       final detailsResponse = await http.get(detailsUrl);
 
       if (clientResponse.statusCode == 200 &&
@@ -48,13 +42,12 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
         final detailsData = json.decode(detailsResponse.body);
         setState(() {
           clients = json.decode(clientResponse.body);
-          reviews = detailsData['reviews'] ?? [];
-          counsellorName = detailsData['firstName'] ?? "Counsellor";
-          isLoading = false; // Stop loading
+          filteredClients = clients;
+          isLoading = false;
         });
       } else {
         setState(() {
-          isLoading = false; // Stop loading in case of an error
+          isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to fetch data")),
@@ -62,7 +55,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
       }
     } catch (e) {
       setState(() {
-        isLoading = false; // Stop loading if an exception occurs
+        isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -70,194 +63,207 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
     }
   }
 
-  void fetchCounsellorFullName(String counsellorName) async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/reviews/counsellor/fullname/$counsellorName'),
-      );
-
-      if (response.statusCode == 200) {
-        counsellorFullName = response.body;
-      } else {
-        print('Error fetching counsellor full name: ${response.body}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
+  void filterClients(String query) {
+    setState(() {
+      filteredClients = clients
+          .where((client) => client['firstName']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text("Counsellor Dashboard"),
-    ),
-    body: isLoading
-        ? Center(
-            child: CircularProgressIndicator(), // Show loader while loading
-          )
-        : SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Welcome Message
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    "Welcome, $counsellorFullName !",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // Horizontal Scrollable Client List
-                clients.isEmpty
-                    ? Center(
-                        child: Text("No subscribed clients found."),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: clients.length,
-                            itemBuilder: (context, index) {
-                              final client = clients[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ClientDetailsPage(
-                                        client: client,
-                                        counsellorId: widget.counsellorId,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  width: 100,
-                                  margin: EdgeInsets.symmetric(horizontal: 8),
-                                  child: Column(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage: NetworkImage(
-                                          client['photo'] ??
-                                              'https://via.placeholder.com/150',
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        client['firstName'] ?? "Unknown",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      onChanged: filterClients,
+                      decoration: InputDecoration(
+                        hintText: "Search subscribers...",
+                        prefixIcon: Icon(Icons.search, color: Colors.orange),
+                        fillColor: Color(0xFFFFF3E0),
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25.0),
+                          borderSide: BorderSide(color: Colors.orange),
                         ),
                       ),
-
-                // Earnings Section
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Earnings",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                "\$${earnings.toStringAsFixed(2)}",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Withdrawal initiated."),
-                                ),
-                              );
-                            },
-                            child: Text("Withdraw"),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
-                ),
-
-                // Reviews Section
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Reviews",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    child: Card(
+                      color: Colors.white,
+                      elevation: 4,
+                      shadowColor: const Color.fromARGB(255, 16, 15, 15)
+                          .withOpacity(0.2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "My Subscribers",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Manage your reviews here.",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(height: 16),
-                          // Wrap the ElevatedButton in a Row with flexibility
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => MyReviewPage(username: widget.counsellorId),
-                                      ),
-                                    );
-                                  },
-                                  child: Text("Go to My Reviews"),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                            SizedBox(height: 10),
+                            filteredClients.isEmpty
+                                ? Center(
+                                    child: Text("No subscribed clients found."),
+                                  )
+                                : SizedBox(
+                                    height: 160,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: filteredClients.length,
+                                      itemBuilder: (context, index) {
+                                        final client = filteredClients[index];
+                                        return Card(
+                                          color: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15.0),
+                                          ),
+                                          elevation: 2,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ClientDetailsPage(
+                                                    client: client,
+                                                    counsellorId:
+                                                        widget.counsellorId,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              width: 100,
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 8),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                        color: Colors.orange,
+                                                        width: 1,
+                                                      ),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: CircleAvatar(
+                                                      radius: 30,
+                                                      backgroundImage:
+                                                          NetworkImage(
+                                                        client['photo'] ??
+                                                            'https://via.placeholder.com/150',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    client['firstName'] ??
+                                                        "Unknown",
+                                                    textAlign: TextAlign.center,
+                                                    style:
+                                                        TextStyle(fontSize: 14),
+                                                  ),
+                                                  SizedBox(height: 6),
+                                                  // Button-like text for "Contact"
+                                                  Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            vertical: 4,
+                                                            horizontal: 12),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green
+                                                          .withOpacity(
+                                                              0.1), // Light green background
+                                                      border: Border.all(
+                                                        color: Colors
+                                                            .green, // Green border
+                                                        width: 1,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                    ),
+                                                    child: Text(
+                                                      "Contact",
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.green,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      child: Text(
+                          "Withdraw Earnings: \$${earnings.toStringAsFixed(2)}"),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MyReviewPage(username: widget.counsellorId),
+                          ),
+                        );
+                      },
+                      child: Text("Go to My Reviews"),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-  );
-}
+    );
+  }
 }

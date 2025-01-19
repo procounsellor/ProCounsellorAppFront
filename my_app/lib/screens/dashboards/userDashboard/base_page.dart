@@ -27,12 +27,14 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   final List<Widget> _pages = [];
   Timer? _stateChangeTimer; // Timer for debouncing state changes
 
-  String? _photoUrl; // To store the user's photo URL
+  String? _photoUrl;
+  String _fullName = ""; // To store the user's photo URL
   bool _isLoadingPhoto = true; // To track photo loading state
 
   @override
   void initState() {
     super.initState();
+    _fullName = widget.username;
 
     // Add WidgetsBindingObserver to listen for app lifecycle events
     WidgetsBinding.instance.addObserver(this);
@@ -64,7 +66,10 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _photoUrl = data['photo']; // Assuming API returns 'photoUrl'
+          _photoUrl = data['photo'];
+          _fullName = data['firstName'] +
+              " " +
+              data['lastName']; // Assuming API returns 'photoUrl'
           _isLoadingPhoto = false;
         });
       } else {
@@ -171,7 +176,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
                         _photoUrl != null ? NetworkImage(_photoUrl!) : null,
                     child: _isLoadingPhoto || _photoUrl == null
                         ? Text(
-                            widget.username.substring(0, 1).toUpperCase(),
+                            _fullName.substring(0, 1).toUpperCase(),
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -182,7 +187,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    widget.username,
+                    _fullName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
