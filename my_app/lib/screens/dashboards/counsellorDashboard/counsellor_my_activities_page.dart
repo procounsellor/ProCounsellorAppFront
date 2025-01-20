@@ -2,149 +2,211 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/followers_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
 import 'counsellor_chat_page.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class CounsellorMyActivitiesPage extends StatelessWidget {
-  final String username; // User ID passed to this page
+class CounsellorMyActivitiesPage extends StatefulWidget {
+  final String username;
 
   CounsellorMyActivitiesPage({required this.username});
 
   @override
+  _CounsellorMyActivitiesPageState createState() =>
+      _CounsellorMyActivitiesPageState();
+}
+
+class _CounsellorMyActivitiesPageState
+    extends State<CounsellorMyActivitiesPage> {
+  bool isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _simulateLoading();
+  }
+
+  Future<void> _simulateLoading() async {
+    try {
+      await Future.wait([
+        precacheImage(
+            AssetImage("images/my_activity_subscribers.jpg"), context),
+        precacheImage(AssetImage("images/followers.jpg"), context),
+        precacheImage(AssetImage("images/chat.png"), context),
+        precacheImage(AssetImage("images/calls.jpg"), context),
+        precacheImage(AssetImage("images/play.png"), context),
+        precacheImage(AssetImage("images/bookmarking.png"), context),
+        precacheImage(AssetImage("images/article.png"), context),
+        precacheImage(AssetImage("images/community.png"), context),
+      ]);
+    } catch (e) {
+      print("Error during image preloading: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("My Activities"),
-        centerTitle: true,
+      backgroundColor: Colors.white,
+      body: isLoading
+          ? Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.orangeAccent,
+                size: 50,
+              ),
+            )
+          : Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+              child: ListView(
+                children: [
+                  buildActivityRow(
+                    context,
+                    "images/my_activity_counsellor_subs1.jpg",
+                    "My Subscribers",
+                    SubscribersPage(counsellorId: widget.username),
+                    isReversed: false,
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/follow.jpg",
+                    "My Followers",
+                    FollowersPage(counsellorId: widget.username),
+                    isReversed: true,
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/chat.png",
+                    "Chats",
+                    ChatsPage(counsellorId: widget.username),
+                    isReversed: false,
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/calls.jpg",
+                    "Calls (Video/Audio)",
+                    null,
+                    isReversed: true,
+                    routeName: '/calls',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/play.png",
+                    "Liked Videos",
+                    null,
+                    isReversed: false,
+                    routeName: '/liked_videos',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/bookmarking.png",
+                    "Liked Articles",
+                    null,
+                    isReversed: true,
+                    routeName: '/liked_articles',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/article.png",
+                    "Saved Articles",
+                    null,
+                    isReversed: false,
+                    routeName: '/saved_articles',
+                  ),
+                  buildDivider(),
+                  buildActivityRow(
+                    context,
+                    "images/community.png",
+                    "My Community",
+                    null,
+                    isReversed: true,
+                    routeName: '/my_communities',
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget buildActivityRow(
+    BuildContext context,
+    String imageAsset,
+    String title,
+    Widget? nextPage, {
+    required bool isReversed,
+    String? routeName,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment:
+            isReversed ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isReversed)
+            buildImageCard(imageAsset, context, nextPage, routeName),
+          SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: isReversed ? TextAlign.end : TextAlign.start,
+            ),
+          ),
+          if (isReversed) SizedBox(width: 16),
+          if (isReversed)
+            buildImageCard(imageAsset, context, nextPage, routeName),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2, // Number of columns in the grid
-          crossAxisSpacing: 16.0, // Horizontal spacing between items
-          mainAxisSpacing: 16.0, // Vertical spacing between items
-          children: [
-            ActivityBox(
-              icon: Icons.person,
-              title: "Subscribers",
-              onTap: () {
-                // Navigate to SubscribersPage with counsellor ID
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => SubscribersPage(counsellorId: username),
-                  ),
-                );
-              },
-            ),
-            ActivityBox(
-              icon: Icons.person_add_alt_1,
-              title: "Followers",
-              onTap: () {
-                // Navigate to SubscribersPage with counsellor ID
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FollowersPage(counsellorId: username),
-                  ),
-                );
-              },
-            ),
-            ActivityBox(
-              icon: Icons.chat,
-              title: "Chats",
-              onTap: () {
-                // Navigate to ChatsPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatsPage(counsellorId: username),
-                  ),
-                );
-              },
-            ),
-            ActivityBox(
-              icon: Icons.call,
-              title: "Calls (Video/Audio)",
-              onTap: () {
-                // Navigate to Calls Page
-                Navigator.pushNamed(context, '/calls');
-              },
-            ),
-            ActivityBox(
-              icon: Icons.favorite,
-              title: "Liked Videos",
-              onTap: () {
-                // Navigate to Liked Videos Page
-                Navigator.pushNamed(context, '/liked_videos');
-              },
-            ),
-            ActivityBox(
-              icon: Icons.article,
-              title: "Liked Articles",
-              onTap: () {
-                // Navigate to Liked Articles Page
-                Navigator.pushNamed(context, '/liked_articles');
-              },
-            ),
-            ActivityBox(
-              icon: Icons.bookmark,
-              title: "Saved Articles",
-              onTap: () {
-                // Navigate to Saved Articles Page
-                Navigator.pushNamed(context, '/saved_articles');
-              },
-            ),
-            ActivityBox(
-              icon: Icons.groups,
-              title: "My Communities",
-              onTap: () {
-                // Navigate to My Communities Page
-                Navigator.pushNamed(context, '/my_communities');
-              },
+    );
+  }
+
+  Widget buildImageCard(String imageAsset, BuildContext context,
+      Widget? nextPage, String? routeName) {
+    return GestureDetector(
+      onTap: () {
+        if (nextPage != null) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => nextPage));
+        } else if (routeName != null) {
+          Navigator.pushNamed(context, routeName);
+        }
+      },
+      child: Container(
+        height: 120,
+        width: MediaQuery.of(context).size.width * 0.6,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(imageAsset),
+            fit: BoxFit.cover,
+          ),
+          borderRadius: BorderRadius.circular(15.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 8.0,
+              offset: Offset(0, 4),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class ActivityBox extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  ActivityBox({required this.icon, required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 6.0,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40.0, color: Color(0xFFF0BB78)),
-            SizedBox(height: 10.0),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      ),
+  Widget buildDivider() {
+    return Divider(
+      color: Colors.grey[300],
+      thickness: 1,
+      height: 16,
     );
   }
 }

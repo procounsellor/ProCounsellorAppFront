@@ -14,8 +14,8 @@ class SubscribersPage extends StatefulWidget {
 
 class _SubscribersPageState extends State<SubscribersPage> {
   List<dynamic> subscribers = [];
-  List<dynamic> filteredSubscribers = [];
   bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -30,8 +30,7 @@ class _SubscribersPageState extends State<SubscribersPage> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         setState(() {
-          subscribers = json.decode(response.body);
-          filteredSubscribers = subscribers; // Initially, show all subscribers
+          subscribers = json.decode(response.body) ?? [];
           isLoading = false;
         });
       } else {
@@ -52,69 +51,130 @@ class _SubscribersPageState extends State<SubscribersPage> {
     }
   }
 
-  void filterSubscribers(String query) {
-    setState(() {
-      filteredSubscribers = subscribers
-          .where((subscriber) =>
-              "${subscriber['firstName']} ${subscriber['lastName']}"
-                  .toLowerCase()
-                  .contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text("Subscribers"),
+        centerTitle: true,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
                     decoration: InputDecoration(
-                      labelText: "Search Subscribers",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
+                      labelText: 'Search Subscribers',
+                      labelStyle: TextStyle(color: Colors.orange),
+                      prefixIcon: Icon(Icons.search, color: Colors.orange),
+                      fillColor: Color(0xFFFFF3E0),
+                      filled: true,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide(color: Colors.orange),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    onChanged: filterSubscribers,
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: filteredSubscribers.length,
-                    itemBuilder: (context, index) {
-                      final subscriber = filteredSubscribers[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                            subscriber['photo'] ??
-                                'https://via.placeholder.com/150',
-                          ),
-                        ),
-                        title: Text(
-                            "${subscriber['firstName']} ${subscriber['lastName']}"),
-                        subtitle: Text("Email: ${subscriber['email']}"),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ClientDetailsPage(
-                                client: subscriber,
-                                counsellorId: widget.counsellorId,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value.toLowerCase();
+                      });
                     },
                   ),
-                ),
-              ],
+                  SizedBox(height: 16.0),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16.0,
+                        mainAxisSpacing: 16.0,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: subscribers
+                          .where((subscriber) {
+                            final name =
+                                "${subscriber['firstName']} ${subscriber['lastName']}"
+                                    .toLowerCase();
+                            return name.contains(searchQuery);
+                          })
+                          .toList()
+                          .length,
+                      itemBuilder: (context, index) {
+                        final filteredSubscribers =
+                            subscribers.where((subscriber) {
+                          final name =
+                              "${subscriber['firstName']} ${subscriber['lastName']}"
+                                  .toLowerCase();
+                          return name.contains(searchQuery);
+                        }).toList();
+
+                        final subscriber = filteredSubscribers[index];
+                        final name =
+                            "${subscriber['firstName']} ${subscriber['lastName']}";
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ClientDetailsPage(
+                                  client: subscriber,
+                                  counsellorId: widget.counsellorId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 4.0,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(15),
+                                  ),
+                                  child: Image.network(
+                                    subscriber['photo'] ??
+                                        'https://via.placeholder.com/150',
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                    horizontal: 8.0,
+                                  ),
+                                  child: Text(
+                                    name,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 15.0,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
