@@ -27,6 +27,7 @@ class _ChattingPageState extends State<ChattingPage> {
   late String chatId;
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
+  bool showSendButton = false;
 
   @override
   void initState() {
@@ -199,28 +200,51 @@ class _ChattingPageState extends State<ChattingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title: Row(
-          children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(
-                      widget.photo ?? ''), // Fallback to empty string if null
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ClientDetailsPage(
+                  client: {
+                    'firstName': widget.itemName.split(' ')[0],
+                    'lastName': widget.itemName.split(' ').length > 1
+                        ? widget.itemName.split(' ')[1]
+                        : '',
+                    'email': widget.itemName,
+                    'phone': '',
+                    'photo': widget.photo ?? '',
+                    'userName': widget.userId,
+                  },
+                  counsellorId: widget.counsellorId,
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: StreamBuilder<String>(
-                    stream: getUserState(widget.userId),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
+              ),
+            );
+          },
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(widget.photo ?? ''),
+                    radius: 24,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: StreamBuilder<String>(
+                      stream: getUserState(widget.userId),
+                      builder: (context, snapshot) {
                         final state = snapshot.data ?? 'offline';
                         return CircleAvatar(
                           radius: 6,
@@ -231,60 +255,26 @@ class _ChattingPageState extends State<ChattingPage> {
                                 state == 'online' ? Colors.green : Colors.red,
                           ),
                         );
-                      }
-                      return CircleAvatar(
-                        radius: 6,
-                        backgroundColor: Colors.white,
-                        child: CircleAvatar(
-                          radius: 5,
-                          backgroundColor: Colors.grey,
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                widget.itemName.isNotEmpty
-                    ? widget.itemName
-                    : 'Unknown User', // Provide default value
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
+                ],
               ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.info),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ClientDetailsPage(
-                    client: {
-                      'firstName': widget.itemName.split(' ')[0],
-                      'lastName': widget.itemName.split(' ').length > 1
-                          ? widget.itemName.split(' ')[1]
-                          : '',
-                      'email': widget.itemName,
-                      'phone': '',
-                      'photo': widget.photo ?? '',
-                      'userName': widget.userId,
-                    },
-                    counsellorId: widget.counsellorId,
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  widget.itemName.isNotEmpty ? widget.itemName : 'Unknown User',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -315,7 +305,7 @@ class _ChattingPageState extends State<ChattingPage> {
                             decoration: BoxDecoration(
                               color: isUserMessage
                                   ? Colors.grey[300]
-                                  : Colors.blue[100],
+                                  : Colors.orangeAccent.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                             child: Text(
@@ -331,7 +321,8 @@ class _ChattingPageState extends State<ChattingPage> {
                               isCounsellorMessage &&
                               message['isSeen'] == true)
                             Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
+                              padding:
+                                  const EdgeInsets.only(top: 2.0, right: 16.0),
                               child: Text(
                                 'Seen',
                                 style: TextStyle(
@@ -349,19 +340,56 @@ class _ChattingPageState extends State<ChattingPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.add, color: Colors.black54),
+                          onPressed: () {},
+                        ),
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.attach_file, color: Colors.black54),
+                          onPressed: () {},
+                        ),
+                      if (!showSendButton)
+                        IconButton(
+                          icon: Icon(Icons.camera_alt, color: Colors.black54),
+                          onPressed: () {},
+                        ),
                       Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          decoration: InputDecoration(
-                            hintText: "Type a message...",
-                            border: OutlineInputBorder(),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
+                          width: showSendButton
+                              ? MediaQuery.of(context).size.width * 0.8
+                              : MediaQuery.of(context).size.width * 0.65,
+                          child: TextField(
+                            controller: _controller,
+                            onChanged: (text) {
+                              setState(() {
+                                showSendButton = text.isNotEmpty;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Type a message...",
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 15.0,
+                                vertical: 10.0,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[200],
+                            ),
                           ),
-                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.send),
-                        onPressed: _sendMessage,
+                        icon: Icon(
+                          showSendButton ? Icons.send : Icons.mic,
+                          color: Colors.black54,
+                        ),
+                        onPressed: showSendButton ? _sendMessage : () {},
                       ),
                     ],
                   ),
