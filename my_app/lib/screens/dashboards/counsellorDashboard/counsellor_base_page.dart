@@ -93,10 +93,12 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     return Scaffold(
       key: _scaffoldKey, // Use the GlobalKey for the Scaffold
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           "Pro Counsellor",
           style: TextStyle(
-              color: Color(0xFFF0BB78)), // Set the title color to #F0BB78
+              color: Color.fromARGB(
+                  255, 0, 0, 0)), // Set the title color to #F0BB78
         ),
         centerTitle: true,
         leading: IconButton(
@@ -105,17 +107,6 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
             _scaffoldKey.currentState?.openDrawer(); // Open the drawer
           },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              _stateChangeTimer?.cancel(); // Cancel any pending timer
-              _counsellorStateNotifier
-                  .setOffline(); // Explicitly set state to offline on logout
-              widget.onSignOut(); // Call sign-out function
-            },
-          ),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -204,7 +195,8 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Color(0xFFF0BB78), // Color for selected icon
-        unselectedItemColor: Colors.grey, // Color for unselected icons
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white, // Color for unselected icons
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
