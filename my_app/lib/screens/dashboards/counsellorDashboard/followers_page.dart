@@ -14,8 +14,8 @@ class FollowersPage extends StatefulWidget {
 
 class _FollowersPageState extends State<FollowersPage> {
   List<dynamic> followers = [];
-  List<dynamic> filteredFollowers = [];
   bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -30,8 +30,7 @@ class _FollowersPageState extends State<FollowersPage> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         setState(() {
-          followers = json.decode(response.body);
-          filteredFollowers = followers; // Initially, show all followers
+          followers = json.decode(response.body) ?? [];
           isLoading = false;
         });
       } else {
@@ -52,69 +51,118 @@ class _FollowersPageState extends State<FollowersPage> {
     }
   }
 
-  void filterSubscribers(String query) {
-    setState(() {
-      filteredFollowers = followers
-          .where((follower) =>
-              "${follower['firstName']} ${follower['lastName']}"
-                  .toLowerCase()
-                  .contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text("Followers"),
+        centerTitle: true,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
                     decoration: InputDecoration(
-                      labelText: "Search Followers",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
+                      labelText: 'Search Followers',
+                      labelStyle: TextStyle(color: Colors.orange),
+                      prefixIcon: Icon(Icons.search, color: Colors.orange),
+                      fillColor: Color(0xFFFFF3E0),
+                      filled: true,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide(color: Colors.orange),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    onChanged: filterSubscribers,
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: filteredFollowers.length,
-                    itemBuilder: (context, index) {
-                      final follower = filteredFollowers[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                            follower['photo'] ??
-                                'https://via.placeholder.com/150',
-                          ),
-                        ),
-                        title: Text(
-                            "${follower['firstName']} ${follower['lastName']}"),
-                        subtitle: Text("Email: ${follower['email']}"),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ClientDetailsPage(
-                                client: follower,
-                                counsellorId: widget.counsellorId,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value.toLowerCase();
+                      });
                     },
                   ),
-                ),
-              ],
+                  SizedBox(height: 16.0),
+                  Expanded(
+                    child: ListView.separated(
+                      separatorBuilder: (context, index) => Divider(
+                        color: Colors.grey.shade300,
+                        thickness: 1,
+                        indent: 10,
+                        endIndent: 10,
+                      ),
+                      itemCount: followers
+                          .where((follower) {
+                            final name =
+                                "${follower['firstName']} ${follower['lastName']}"
+                                    .toLowerCase();
+                            return name.contains(searchQuery);
+                          })
+                          .toList()
+                          .length,
+                      itemBuilder: (context, index) {
+                        final filteredFollowers = followers.where((follower) {
+                          final name =
+                              "${follower['firstName']} ${follower['lastName']}"
+                                  .toLowerCase();
+                          return name.contains(searchQuery);
+                        }).toList();
+
+                        final follower = filteredFollowers[index];
+                        final name =
+                            "${follower['firstName']} ${follower['lastName']}";
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ClientDetailsPage(
+                                  client: follower,
+                                  counsellorId: widget.counsellorId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    follower['photo'] ??
+                                        'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
