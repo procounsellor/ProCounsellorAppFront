@@ -3,9 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
 import 'dart:convert';
 import 'client_details_page.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class CounsellorDashboard extends StatefulWidget {
   final VoidCallback onSignOut;
+  final double earnings = 150.0;
   final String counsellorId;
 
   CounsellorDashboard({required this.onSignOut, required this.counsellorId});
@@ -20,11 +22,13 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   List<dynamic> filteredClients = [];
   String counsellorName = "";
   double earnings = 150.0;
+  List<Map<String, dynamic>> reviews = [];
 
   @override
   void initState() {
     super.initState();
     fetchDashboardData();
+    fetchReviews();
   }
 
   Future<void> fetchDashboardData() async {
@@ -60,6 +64,23 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
+    }
+  }
+
+  Future<void> fetchReviews() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/reviews/counsellor/${widget.counsellorId}');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          reviews = List<Map<String, dynamic>>.from(json.decode(response.body));
+        });
+      } else {
+        print("Failed to fetch reviews");
+      }
+    } catch (e) {
+      print("Error fetching reviews: $e");
     }
   }
 
@@ -238,29 +259,170 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                       ),
                     ),
                   ),
+                  //earning section
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: Text(
-                          "Withdraw Earnings: \$${earnings.toStringAsFixed(2)}"),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MyReviewPage(username: widget.counsellorId),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Card(
+                          color: Colors.white,
+                          elevation: 4,
+                          shadowColor: Colors.black.withOpacity(0.2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
                           ),
-                        );
-                      },
-                      child: Text("Go to My Reviews"),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Earnings",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.currency_rupee,
+                                            color: Colors.green, size: 24),
+                                        Text(
+                                          widget.earnings.toStringAsFixed(2),
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {},
+                                  child: Text("Withdraw"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.orange.withOpacity(0.9),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Card(
+                          color: Colors.white,
+                          elevation: 4,
+                          shadowColor: Colors.black.withOpacity(0.2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "My Reviews",
+                                  style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 10),
+                                reviews.isEmpty
+                                    ? Center(child: CircularProgressIndicator())
+                                    : CarouselSlider(
+                                        options: CarouselOptions(
+                                            height: 200.0, autoPlay: true),
+                                        items: reviews.map((review) {
+                                          return Card(
+                                            color: Colors.white,
+                                            elevation: 4,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          15.0),
+                                                  child: Image.network(
+                                                    review['userPhotoUrl'],
+                                                    height: 80,
+                                                    width: 80,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children:
+                                                      List.generate(5, (index) {
+                                                    return Icon(
+                                                        index < review['rating']
+                                                            ? Icons.star
+                                                            : Icons.star_border,
+                                                        color: Colors
+                                                            .yellowAccent);
+                                                  }),
+                                                ),
+                                                SizedBox(height: 5),
+                                                Text(
+                                                  (review['reviewText'] ??
+                                                              "No review available.")
+                                                          .split(" ")
+                                                          .take(10)
+                                                          .join(" ") +
+                                                      "...",
+                                                  style: TextStyle(
+                                                      color: Colors.grey),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                SizedBox(height: 20),
+                                Center(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => MyReviewPage(
+                                              username: widget.counsellorId),
+                                        ),
+                                      );
+                                    },
+                                    child: Text("Go to My Reviews"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  // review section
                 ],
               ),
             ),
