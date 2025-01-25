@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:html' as html;
+// import 'dart:html' as html;
 
 class AddNewsPage extends StatefulWidget {
   @override
@@ -19,25 +19,25 @@ class _AddNewsPageState extends State<AddNewsPage> {
 
   // Function to pick an image (Flutter web support)
   Future<void> _pickImage() async {
-    final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
-    uploadInput.accept = 'image/*';
-    uploadInput.click();
+    // final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+    // uploadInput.accept = 'image/*';
+    // uploadInput.click();
 
-    uploadInput.onChange.listen((event) {
-      final files = uploadInput.files;
-      if (files!.isNotEmpty) {
-        final file = files[0];
-        final reader = html.FileReader();
+    // uploadInput.onChange.listen((event) {
+    //   final files = uploadInput.files;
+    //   if (files!.isNotEmpty) {
+    //     final file = files[0];
+    //     final reader = html.FileReader();
 
-        reader.readAsArrayBuffer(file);
-        reader.onLoadEnd.listen((e) {
-          setState(() {
-            _imageBytes = reader.result as Uint8List;
-            _imageName = file.name;
-          });
-        });
-      }
-    });
+    //     reader.readAsArrayBuffer(file);
+    //     reader.onLoadEnd.listen((e) {
+    //       setState(() {
+    //         _imageBytes = reader.result as Uint8List;
+    //         _imageName = file.name;
+    //       });
+    //     });
+    //   }
+    // });
   }
 
   // Function to submit news to backend

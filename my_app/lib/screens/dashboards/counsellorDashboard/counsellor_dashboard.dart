@@ -375,8 +375,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                                         index < review['rating']
                                                             ? Icons.star
                                                             : Icons.star_border,
-                                                        color: Colors
-                                                            .yellowAccent);
+                                                        color: Colors.orange);
                                                   }),
                                                 ),
                                                 SizedBox(height: 5),

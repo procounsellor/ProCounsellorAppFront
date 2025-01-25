@@ -197,6 +197,10 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         selectedItemColor: Color(0xFFF0BB78), // Color for selected icon
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white, // Color for unselected icons
+        type: BottomNavigationBarType
+            .fixed, // Use fixed to keep the white background
+        showSelectedLabels: true, // Show label only for selected item
+        showUnselectedLabels: false, // Hide labels for unselected items
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
