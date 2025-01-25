@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCidO9Sob0vAARTb-JmtXy30MTYOSDI3y0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1000407154647</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.catalyst.ProCounsellor</string>
+	<key>PROJECT_ID</key>
+	<string>procounsellor-71824</string>
+	<key>STORAGE_BUCKET</key>
+	<string>procounsellor-71824.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1000407154647:ios:9b04ad16280d918c33d592</string>
+	<key>DATABASE_URL</key>
+	<string>https://procounsellor-71824-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

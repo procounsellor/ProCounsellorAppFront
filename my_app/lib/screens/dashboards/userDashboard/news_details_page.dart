@@ -11,6 +11,7 @@ class NewsDetailsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text("News Details"),
       ),
       body: SingleChildScrollView(
