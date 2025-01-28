@@ -8,6 +8,8 @@ import 'learn_with_us_page.dart';
 import 'community_page.dart';
 import 'profile_page.dart';
 import 'user_state_notifier.dart'; // Import UserStateNotifier
+import 'package:firebase_database/firebase_database.dart';
+import 'chat_page.dart';
 
 class BasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -30,6 +32,8 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   String? _photoUrl;
   String _fullName = ""; // To store the user's photo URL
   bool _isLoadingPhoto = true; // To track photo loading state
+  int notificationCount = 0;
+  late DatabaseReference chatRef;
 
   @override
   void initState() {
@@ -65,6 +69,9 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final List<String> chatIds = List<String>.from(
+            data['chatIdsCreatedForCounsellor'] ?? ['48xaxCYWJJyPoNs4lgy8']);
+        _listenToNotifications(chatIds);
         setState(() {
           _photoUrl = data['photo'];
           _fullName = data['firstName'] +
@@ -85,6 +92,44 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
       });
       // Handle exception
       print('Error fetching user details: $e');
+    }
+  }
+
+  void _listenToNotifications(List<String> chatIds) {
+    for (String chatId in chatIds) {
+      DatabaseReference chatRef =
+          FirebaseDatabase.instance.ref('chats/$chatId/messages');
+
+      chatRef.onChildAdded.listen((event) {
+        if (event.snapshot.value != null) {
+          final messageData =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+          bool isSeen = messageData['isSeen'] ?? true;
+          String senderId = messageData['senderId'] ?? '';
+
+          if (!isSeen && senderId != widget.username) {
+            setState(() {
+              notificationCount++;
+            });
+          }
+        }
+      });
+
+      chatRef.onChildChanged.listen((event) {
+        if (event.snapshot.value != null) {
+          final messageData =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+          bool isSeen = messageData['isSeen'] ?? true;
+          String senderId = messageData['senderId'] ?? '';
+
+          setState(() {
+            if (isSeen) {
+              notificationCount =
+                  (notificationCount > 0) ? notificationCount - 1 : 0;
+            }
+          });
+        }
+      });
     }
   }
 
@@ -137,6 +182,43 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           "Pro Counsellor",
           style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
         ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                  icon: Icon(Icons.chat),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatPage(userId: widget.username),
+                      ),
+                    );
+                  }),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: notificationCount > 0
+                    ? Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$notificationCount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : Container(),
+              ),
+            ],
+          ),
+        ],
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.menu),
