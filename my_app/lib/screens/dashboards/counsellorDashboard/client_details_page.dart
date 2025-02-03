@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
+import 'package:my_app/services/call_service.dart';
 import 'counsellor_chatting_page.dart';
 
 class ClientDetailsPage extends StatelessWidget {
@@ -6,6 +8,24 @@ class ClientDetailsPage extends StatelessWidget {
   final String counsellorId;
 
   ClientDetailsPage({required this.client, required this.counsellorId});
+
+  void _startCall(BuildContext context) async {
+    final CallService _callService = CallService();
+    String callerId = counsellorId;
+    String receiverId = client['userName'];;
+
+    if (callerId.isEmpty || receiverId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      return;
+    }
+
+    String? callId = await _callService.startCall(callerId, receiverId, "audio");
+    if (callId != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(callId: callId, id: counsellorId, isCaller: true)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Call failed")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,12 +131,7 @@ class ClientDetailsPage extends StatelessWidget {
                       style: TextStyle(color: Colors.black, fontSize: 14),
                     ),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "Calling ${client['firstName'] ?? 'Unknown'}..."),
-                        ),
-                      );
+                      _startCall(context);
                     },
                   ),
                   ElevatedButton.icon(

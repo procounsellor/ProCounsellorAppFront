@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
-import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
-import 'package:my_app/services/firebase_signaling_service.dart';
 import 'dart:convert';
 import 'client_details_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -25,19 +23,12 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   String counsellorName = "";
   double earnings = 150.0;
   List<Map<String, dynamic>> reviews = [];
-  final FirebaseSignalingService _signalingService = FirebaseSignalingService();
-  Map<String, dynamic>? incomingCall;
 
   @override
   void initState() {
     super.initState();
     fetchDashboardData();
     fetchReviews();
-    _signalingService.listenForIncomingCalls(widget.counsellorId, (callData) {
-      setState(() {
-        incomingCall = callData;
-      });
-    });
   }
 
   Future<void> fetchDashboardData() async {
@@ -102,25 +93,6 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
               .contains(query.toLowerCase()))
           .toList();
     });
-  }
-
-  void _acceptCall() {
-    if (incomingCall != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallPage(callId: incomingCall!['callId'], id: widget.counsellorId, isCaller: false),
-        ),
-      );
-      _signalingService.clearIncomingCall(widget.counsellorId);
-    }
-  }
-
-  void _declineCall() {
-    setState(() {
-      incomingCall = null;
-    });
-    _signalingService.clearIncomingCall(widget.counsellorId);
   }
 
   @override
@@ -449,42 +421,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                       ],
                     ),
                   ),
-                  if (incomingCall != null)
-                    Positioned(
-                      bottom: 50,
-                      left: 20,
-                      right: 20,
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text("Incoming Call from ${incomingCall!['callerId']}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: _acceptCall,
-                                  child: Text("Accept"),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                ),
-                                ElevatedButton(
-                                  onPressed: _declineCall,
-                                  child: Text("Decline"),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // review section
                 ],
               ),
             ),

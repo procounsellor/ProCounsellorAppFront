@@ -279,7 +279,7 @@ class _DetailsPageState extends State<DetailsPage> {
       return;
     }
 
-    String? callId = await _callService.startCallFromUserToCounsellor(callerId, receiverId, "audio");
+    String? callId = await _callService.startCall(callerId, receiverId, "audio");
     if (callId != null) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(callId: callId, id: widget.userId, isCaller: true)));
     } else {

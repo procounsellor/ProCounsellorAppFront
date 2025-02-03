@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/services/call_service.dart';
@@ -27,6 +25,9 @@ class _CallPageState extends State<CallPage> {
   void initState() {
     super.initState();
     _initWebRTC();
+
+    // Listen for call end
+  _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
   }
 
 Future<void> _initWebRTC() async {
@@ -135,12 +136,18 @@ Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
   }
 }
 
+  void _handleCallEnd() {
+    if (mounted) {
+      _peerConnection?.close();
+      Navigator.pop(context);
+    }
+  }
+
   void _endCall() {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
-    Navigator.pop(context);
   }
-
+  
   @override
   void dispose() {
     _peerConnection?.dispose();

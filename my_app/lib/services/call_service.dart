@@ -6,12 +6,12 @@ import 'package:http/http.dart' as http;
 class CallService {
   static const String baseUrl = "http://localhost:8080/calls"; 
 
-  Future<String?> startCallFromUserToCounsellor(String userId, String counsellorId, String callType) async {
+  Future<String?> startCall(String callerId, String receiverId, String callType) async {
     final response = await http.post(
       Uri.parse("$baseUrl/start"),
       body: {
-        "callerId": userId,
-        "receiverId": counsellorId,
+        "callerId": callerId,
+        "receiverId": receiverId,
         "callType": callType
       },
     );
