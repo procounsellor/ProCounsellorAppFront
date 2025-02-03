@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import the http package
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
+import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
+import 'package:my_app/services/call_service.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import 'chatting_page.dart';
 
@@ -31,6 +33,7 @@ class _DetailsPageState extends State<DetailsPage> {
   Map<String, dynamic>? counsellorDetails; // Store fetched counsellor details
   List<dynamic> reviews = [];
   Map<String, bool> showComments = {};
+  final CallService _callService = CallService();
 
   @override
   void initState() {
@@ -264,6 +267,23 @@ class _DetailsPageState extends State<DetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
+    }
+  }
+
+  void _startCall() async {
+    String callerId = widget.userId;
+    String receiverId = widget.counsellorId;
+
+    if (callerId.isEmpty || receiverId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      return;
+    }
+
+    String? callId = await _callService.startCallFromUserToCounsellor(callerId, receiverId, "audio");
+    if (callId != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(callId: callId, id: widget.userId, isCaller: true)));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Call failed")));
     }
   }
 
@@ -763,12 +783,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                   ElevatedButton.icon(
                                     onPressed: isSubscribed
                                         ? () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "Calling ${counsellorDetails?['firstName']}...")),
-                                            );
+                                            _startCall();
                                           }
                                         : null, // Disable button if not subscribed
                                     icon: Icon(Icons.call, size: 16),
