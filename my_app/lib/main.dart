@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:my_app/screens/dashboards/call_layover_manager.dart';
+import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
+import 'package:my_app/services/firebase_signaling_service.dart';
+import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
-// Initialize secure storage with platform-specific options
+// Initialize secure storage
 final storage = FlutterSecureStorage(
   aOptions: AndroidOptions(encryptedSharedPreferences: true),
   iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
@@ -17,11 +20,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Ensure Firebase is initialized only once using generated options file
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     }
   } catch (e) {
     debugPrint("Firebase initialization failed: $e");
@@ -56,12 +56,42 @@ class _AppRootState extends State<AppRoot> {
       debugPrint("JWT Token: $jwtToken");
       debugPrint("User ID: $userId");
       debugPrint("User Role: $role");
+
+      if (userId != null && (role == "user" || role == "counsellor")) {
+        _startListeningForCalls();
+      }
     } catch (e) {
       debugPrint("Error reading secure storage: $e");
     }
 
     setState(() {
       isLoading = false;
+    });
+  }
+
+  // 🔹 Listen for incoming calls globally
+  void _startListeningForCalls() {
+    final FirebaseSignalingService _signalingService = FirebaseSignalingService();
+    _signalingService.listenForIncomingCalls(userId!, (callData) {
+      CallOverlayManager.showIncomingCall(
+        callData,
+        () {
+          Navigator.push(
+            CallOverlayManager.navigatorKey.currentContext!,
+            MaterialPageRoute(
+              builder: (context) => CallPage(
+                callId: callData['callId'],
+                id: userId!,
+                isCaller: false,
+              ),
+            ),
+          );
+          _signalingService.clearIncomingCall(userId!);
+        },
+        () {
+          _signalingService.clearIncomingCall(userId!);
+        },
+      );
     });
   }
 
@@ -86,40 +116,30 @@ class _AppRootState extends State<AppRoot> {
     }
 
     if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
-      // Show login page if token or userId is not present
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: NewSignInPage(
-          onSignOut: restartApp,
-        ),
+        navigatorKey: CallOverlayManager.navigatorKey,
+        home: NewSignInPage(onSignOut: restartApp),
       );
     }
 
-    // Navigate based on role
     switch (role?.toLowerCase()) {
       case "user":
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: BasePage(
-            username: userId!,
-            onSignOut: restartApp,
-          ),
+          navigatorKey: CallOverlayManager.navigatorKey,
+          home: BasePage(username: userId!, onSignOut: restartApp),
         );
       case "counsellor":
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: CounsellorBasePage(
-            onSignOut: restartApp,
-            counsellorId: userId!,
-          ),
+          navigatorKey: CallOverlayManager.navigatorKey,
+          home: CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
         );
       case "admin":
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: AdminBasePage(
-            onSignOut: restartApp,
-            adminId: userId!,
-          ),
+          home: AdminBasePage(onSignOut: restartApp, adminId: userId!),
         );
       default:
         return MaterialApp(

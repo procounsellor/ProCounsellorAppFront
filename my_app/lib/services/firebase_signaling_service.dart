@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -24,7 +26,7 @@ class FirebaseSignalingService {
 }
 
 
-  void listenForAnswer(String callId, RTCPeerConnection peerConnection, Function(String) onAnswerReceived) {
+  void listenForAnswer(String callId, RTCPeerConnection? peerConnection, Function(String) onAnswerReceived) {
     _dbRef.child(callId).child("answer").onValue.listen((event) async {
       if (event.snapshot.value != null) {
         try {
@@ -62,8 +64,8 @@ class FirebaseSignalingService {
   });
 }
 
-void listenForIncomingCalls(String counsellorId, Function(Map<String, dynamic>) onCallReceived) {
-    _dbRefUserCalls.child(counsellorId).child("incoming_calls").onValue.listen((event) {
+void listenForIncomingCalls(String id, Function(Map<String, dynamic>) onCallReceived) {
+    _dbRefUserCalls.child(id).child("incoming_calls").onValue.listen((event) {
       if (event.snapshot.value != null) {
         try {
           Map<String, dynamic> callData = Map<String, dynamic>.from(event.snapshot.value as Map);
@@ -77,5 +79,17 @@ void listenForIncomingCalls(String counsellorId, Function(Map<String, dynamic>) 
 
   void clearIncomingCall(String counsellorId) {
     _dbRefUserCalls.child(counsellorId).child("incoming_calls").remove();
+  }
+
+  // Listen for Call End Events
+  void listenForCallEnd(String callId, VoidCallback onCallEnd) {
+    _dbRef.child(callId).onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic> callData = event.snapshot.value as Map<dynamic, dynamic>;
+        if (callData["status"] == "completed") {
+          onCallEnd();
+        }
+      }
+    });
   }
 }
