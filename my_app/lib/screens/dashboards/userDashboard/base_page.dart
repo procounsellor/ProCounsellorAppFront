@@ -69,8 +69,8 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<String> chatIds = List<String>.from(
-            data['chatIdsCreatedForCounsellor'] ?? ['48xaxCYWJJyPoNs4lgy8']);
+        final List<String> chatIds =
+            List<String>.from(data['chatIdsCreatedForUser'] ?? []);
         _listenToNotifications(chatIds);
         setState(() {
           _photoUrl = data['photo'];
