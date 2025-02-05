@@ -7,7 +7,11 @@ import 'counsellor_dashboard.dart';
 import 'counsellor_my_activities_page.dart'; // Import My Activities Page
 import 'counsellor_transactions_page.dart'; // Import Transactions Page
 import 'counsellor_profile_page.dart';
+import 'ActivityPage.dart';
 import 'counsellor_state_notifier.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'counsellor_chat_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CounsellorBasePage extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -30,10 +34,16 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   final List<Widget> _pages = [];
   String? _photoUrl; // To store the counsellor's photo URL
   bool _isLoadingPhoto = true; // To track photo loading state
+  int notificationCount = 0;
+  int subscriberNotificationCount = 0;
+  List<String> activityLogs = [];
+
+  late DatabaseReference chatRef;
 
   @override
   void initState() {
     super.initState();
+    // _listenToNotifications();
 
     // Add WidgetsBindingObserver to listen for app lifecycle events
     WidgetsBinding.instance.addObserver(this);
@@ -43,6 +53,8 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
 
     // Fetch counsellor details
     _fetchCounsellorDetails();
+    _listenToSubscriberChanges();
+    _listenToFollowerChanges();
 
     // Set counsellor state to "online" when BasePage is created
     _setOnlineWithDebounce();
@@ -59,6 +71,44 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         CounsellorProfilePage(username: widget.counsellorId)); // Profile Page
   }
 
+  void _listenToNotifications(List<String> chatIds) {
+    for (String chatId in chatIds) {
+      DatabaseReference chatRef =
+          FirebaseDatabase.instance.ref('chats/$chatId/messages');
+
+      chatRef.onChildAdded.listen((event) {
+        if (event.snapshot.value != null) {
+          final messageData =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+          bool isSeen = messageData['isSeen'] ?? true;
+          String senderId = messageData['senderId'] ?? '';
+
+          if (!isSeen && senderId != widget.counsellorId) {
+            setState(() {
+              notificationCount++;
+            });
+          }
+        }
+      });
+
+      chatRef.onChildChanged.listen((event) {
+        if (event.snapshot.value != null) {
+          final messageData =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+          bool isSeen = messageData['isSeen'] ?? true;
+          //String senderId = messageData['senderId'] ?? '';
+
+          setState(() {
+            if (isSeen) {
+              notificationCount =
+                  (notificationCount > 0) ? notificationCount - 1 : 0;
+            }
+          });
+        }
+      });
+    }
+  }
+
   Future<void> _fetchCounsellorDetails() async {
     try {
       final response = await http.get(
@@ -68,6 +118,9 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final List<String> chatIds =
+            List<String>.from(data['chatIdsCreatedForCounsellor'] ?? []);
+        _listenToNotifications(chatIds);
         setState(() {
           _photoUrl = data['photoUrl']; // Assuming API returns 'photoUrl'
           _isLoadingPhoto = false;
@@ -86,6 +139,60 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
       // Handle exception
       print('Error fetching counsellor details: $e');
     }
+  }
+
+  void _listenToSubscriberChanges() {
+    DatabaseReference subscriberRef = FirebaseDatabase.instance
+        .ref('realtimeSubscribers/${widget.counsellorId}');
+
+    subscriberRef.onChildAdded.listen((event) {
+      if (event.snapshot.value == false) {
+        // Notify only if value is false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("New subscriber: ${event.snapshot.key}");
+        });
+        print("New subscriber added with false value: ${event.snapshot.key}");
+      }
+    });
+
+    subscriberRef.onChildChanged.listen((event) {
+      if (event.snapshot.value == false) {
+        // Ensure it is still false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("Updated subscriber: ${event.snapshot.key}");
+        });
+        print("Updated subscriber still false: ${event.snapshot.key}");
+      }
+    });
+  }
+
+  void _listenToFollowerChanges() {
+    DatabaseReference followerRef = FirebaseDatabase.instance
+        .ref('realtimeFollowers/${widget.counsellorId}');
+
+    followerRef.onChildAdded.listen((event) {
+      if (event.snapshot.value == false) {
+        // Notify only if value is false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("New follower: ${event.snapshot.key}");
+        });
+        print("New follower added with false value: ${event.snapshot.key}");
+      }
+    });
+
+    followerRef.onChildChanged.listen((event) {
+      if (event.snapshot.value == false) {
+        // Ensure it is still false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("Updated follower: ${event.snapshot.key}");
+        });
+        print("Updated follower still false: ${event.snapshot.key}");
+      }
+    });
   }
 
   @override
@@ -107,6 +214,92 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
             _scaffoldKey.currentState?.openDrawer(); // Open the drawer
           },
         ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                  icon: Icon(Icons.chat),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ChatsPage(counsellorId: widget.counsellorId),
+                      ),
+                    );
+                  }),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: notificationCount > 0
+                    ? Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$notificationCount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : Container(),
+              ),
+            ],
+          ),
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.notifications),
+                onPressed: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setInt(
+                      'seenSubscriberCount_${widget.counsellorId}',
+                      subscriberNotificationCount);
+
+                  setState(() {
+                    subscriberNotificationCount = 0;
+                  });
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ActivityPage(
+                        activityLogs: activityLogs,
+                        counsellorId: widget.counsellorId,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (subscriberNotificationCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$subscriberNotificationCount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -225,6 +418,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     // Set counsellor state to "offline" when BasePage is destroyed
     _counsellorStateNotifier.setOffline();
     super.dispose();
+    chatRef.onDisconnect();
   }
 
   @override

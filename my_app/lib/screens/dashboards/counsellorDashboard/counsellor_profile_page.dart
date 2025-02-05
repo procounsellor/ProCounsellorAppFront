@@ -108,20 +108,9 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$title: ",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Expanded(
-            child: Text(
-              value.toString(),
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
+      child: Text(
+        value.toString(),
+        style: TextStyle(color: Colors.black87, fontSize: 16),
       ),
     );
   }
@@ -129,10 +118,7 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Profile"),
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.white,
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : profileData == null
@@ -140,52 +126,74 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
               : SingleChildScrollView(
                   padding: EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Profile Picture
                       GestureDetector(
                         onTap: _pickImage,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey[300],
-                          backgroundImage: _profileImageBytes != null
-                              ? MemoryImage(_profileImageBytes!)
-                              : (profileData!["photoUrl"] != null
-                                  ? NetworkImage(profileData!["photoUrl"])
-                                  : null) as ImageProvider?,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16.0),
+                            color: Colors.grey[300],
+                            image: _profileImageBytes != null
+                                ? DecorationImage(
+                                    image: MemoryImage(_profileImageBytes!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : (profileData!["photoUrl"] != null
+                                    ? DecorationImage(
+                                        image: NetworkImage(
+                                            profileData!["photoUrl"]),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null),
+                          ),
                           child: _profileImageBytes == null &&
                                   profileData!["photoUrl"] == null
                               ? Icon(Icons.person,
-                                  size: 50, color: Colors.white)
+                                  size: 60, color: Colors.white)
                               : null,
                         ),
                       ),
-                      SizedBox(height: 16),
-
-                      // User Info
-                      _buildListItem("Username", profileData!["userName"]),
-                      _buildListItem("First Name", profileData!["firstName"]),
-                      _buildListItem("Last Name", profileData!["lastName"]),
-                      _buildListItem(
-                          "Phone Number", profileData!["phoneNumber"]),
-                      _buildListItem("Email", profileData!["email"]),
-                      _buildListItem("Balance", profileData!["balance"]),
-                      _buildListItem("Address", profileData!["address"]),
-                      _buildListItem("Degree Type", profileData!["degreeType"]),
-                      _buildListItem("Stream", profileData!["stream"]),
-                      _buildListItem("Interested Degree",
-                          profileData!["interestedDegree"]),
-                      _buildListItem("Interested Colleges",
-                          profileData!["interestedColleges"]),
-                      _buildListItem("Interested Locations",
-                          profileData!["interestedLocationsForCollege"]),
-                      _buildListItem("Subscribed Counsellors",
-                          profileData!["subscribedCounsellorIds"]),
-                      _buildListItem("Followed Counsellors",
-                          profileData!["followedCounsellorsIds"]),
-                      _buildListItem("Converted", profileData!["converted"]),
-
-                      SizedBox(height: 16),
+                      SizedBox(height: 10),
+                      Text(
+                        "${profileData!["firstName"]} ${profileData!["lastName"]}",
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Card(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        elevation: 2,
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildListItem(
+                                  "Phone Number", profileData!["phoneNumber"]),
+                              _buildListItem("Email", profileData!["email"]),
+                              _buildListItem("Organisation Name",
+                                  profileData!["organisationName"]),
+                              _buildListItem(
+                                  "Experience", profileData!["experience"]),
+                              _buildListItem("State of Counsellor",
+                                  profileData!["stateOfCounsellor"]),
+                              _buildListItem(
+                                  "Expertise", profileData!["expertise"]),
+                              _buildListItem(
+                                  "Rate Per Year", profileData!["ratePerYear"]),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
