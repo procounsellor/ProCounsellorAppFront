@@ -12,6 +12,8 @@ import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
 
+import 'services/call_service.dart';
+
 // Initialize secure storage
 final storage = FlutterSecureStorage(
   aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -76,6 +78,7 @@ class _AppRootState extends State<AppRoot> {
   void _startListeningForCalls(BuildContext context) {
     final FirebaseSignalingService _signalingService =
         FirebaseSignalingService();
+    final CallService _callService = CallService();
 
     _signalingService.listenForIncomingCalls(userId!, (callData) {
       CallOverlayManager.showIncomingCall(
@@ -106,9 +109,15 @@ class _AppRootState extends State<AppRoot> {
         },
         () {
           _signalingService.clearIncomingCall(userId!);
+          _callService.endCall(callData['callId']);
+          _signalingService.listenForCallEnd(callData['callId'], _handleCallEnd);
         },
       );
     });
+  }
+
+  void _handleCallEnd() {
+    Navigator.pop(context);
   }
 
   Future<void> restartApp() async {
