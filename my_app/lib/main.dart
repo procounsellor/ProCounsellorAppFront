@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:my_app/screens/dashboards/call_layover_manager.dart';
 import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
+import 'package:my_app/screens/dashboards/userDashboard/video_call_page.dart';
+
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
@@ -21,7 +23,8 @@ void main() async {
 
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
     }
   } catch (e) {
     debugPrint("Firebase initialization failed: $e");
@@ -58,7 +61,7 @@ class _AppRootState extends State<AppRoot> {
       debugPrint("User Role: $role");
 
       if (userId != null && (role == "user" || role == "counsellor")) {
-        _startListeningForCalls();
+        _startListeningForCalls(context); // ✅ Pass the context correctly
       }
     } catch (e) {
       debugPrint("Error reading secure storage: $e");
@@ -70,22 +73,35 @@ class _AppRootState extends State<AppRoot> {
   }
 
   // 🔹 Listen for incoming calls globally
-  void _startListeningForCalls() {
-    final FirebaseSignalingService _signalingService = FirebaseSignalingService();
+  void _startListeningForCalls(BuildContext context) {
+    final FirebaseSignalingService _signalingService =
+        FirebaseSignalingService();
+
     _signalingService.listenForIncomingCalls(userId!, (callData) {
       CallOverlayManager.showIncomingCall(
         callData,
+        context, // ✅ Pass the correct context from the overlay manager
         () {
+          bool isVideoCall = callData['callType'] == 'video';
+
           Navigator.push(
-            CallOverlayManager.navigatorKey.currentContext!,
+            CallOverlayManager.navigatorKey.currentState!
+                .context, // ✅ Fix: Use Navigator key context
             MaterialPageRoute(
-              builder: (context) => CallPage(
-                callId: callData['callId'],
-                id: userId!,
-                isCaller: false,
-              ),
+              builder: (context) => isVideoCall
+                  ? VideoCallPage(
+                      callId: callData['callId'],
+                      id: userId!,
+                      isCaller: false,
+                    )
+                  : CallPage(
+                      callId: callData['callId'],
+                      id: userId!,
+                      isCaller: false,
+                    ),
             ),
           );
+
           _signalingService.clearIncomingCall(userId!);
         },
         () {
@@ -134,7 +150,8 @@ class _AppRootState extends State<AppRoot> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: CallOverlayManager.navigatorKey,
-          home: CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
+          home:
+              CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
         );
       case "admin":
         return MaterialApp(
@@ -159,7 +176,8 @@ class _AppRootState extends State<AppRoot> {
                     onPressed: restartApp,
                     child: Text("Go to Login"),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
                   ),
                 ],

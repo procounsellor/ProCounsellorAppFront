@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -9,6 +8,35 @@ class FirebaseSignalingService {
   final DatabaseReference _dbRefUserCalls =
       FirebaseDatabase.instance.ref().child("callsByUser");
 
+  RTCPeerConnection? _peerConnection;
+  MediaStream? _localStream;
+  Function(MediaStream)? onRemoteStream;
+
+  Future<void> initialize() async {
+    Map<String, dynamic> config = {
+      "iceServers": [
+        {"urls": "stun:stun.l.google.com:19302"},
+      ]
+    };
+
+    _peerConnection = await createPeerConnection(config);
+
+    _peerConnection!.onTrack = (RTCTrackEvent event) {
+      if (event.streams.isNotEmpty) {
+        onRemoteStream?.call(event.streams[0]);
+      }
+    };
+
+    _localStream = await navigator.mediaDevices.getUserMedia({
+      "video": true,
+      "audio": true,
+    });
+
+    for (var track in _localStream!.getTracks()) {
+      _peerConnection!.addTrack(track, _localStream!);
+    }
+  }
+
   void listenForOffer(String callId, Function(String) onOfferReceived) {
     _dbRef.child(callId).child("offer").onValue.listen((event) {
       if (event.snapshot.value != null) {
@@ -16,7 +44,7 @@ class FirebaseSignalingService {
           var offer = event.snapshot.value;
 
           if (offer is String) {
-            onOfferReceived(offer); // Directly pass the SDP string
+            onOfferReceived(offer);
           } else {
             print("Invalid offer format received: $offer");
           }
@@ -27,8 +55,7 @@ class FirebaseSignalingService {
     });
   }
 
-  void listenForAnswer(String callId, RTCPeerConnection? peerConnection,
-      Function(String) onAnswerReceived) {
+  void listenForAnswer(String callId, Function(String) onAnswerReceived) {
     _dbRef.child(callId).child("answer").onValue.listen((event) async {
       if (event.snapshot.value != null) {
         try {
@@ -37,8 +64,8 @@ class FirebaseSignalingService {
 
           RTCSessionDescription answer = RTCSessionDescription(sdp, "answer");
 
-          if (peerConnection != null) {
-            await peerConnection.setRemoteDescription(answer);
+          if (_peerConnection != null) {
+            await _peerConnection!.setRemoteDescription(answer);
             print("Remote description set successfully.");
           } else {
             print("Peer connection is null when setting remote description.");
@@ -52,17 +79,22 @@ class FirebaseSignalingService {
     });
   }
 
-  void listenForIceCandidates(
-      String callId, Function(Map<String, dynamic>) onCandidateReceived) {
+  void listenForIceCandidates(String callId) {
     _dbRef.child(callId).child("ice_candidates").onChildAdded.listen((event) {
       if (event.snapshot.value != null) {
         try {
-          // Parse the candidate data as a Map
-          Map<String, dynamic> candidate =
+          Map<String, dynamic> candidateData =
               Map<String, dynamic>.from(event.snapshot.value as Map);
-          onCandidateReceived(candidate);
+
+          RTCIceCandidate candidate = RTCIceCandidate(
+            candidateData["candidate"],
+            candidateData["sdpMid"],
+            candidateData["sdpMLineIndex"],
+          );
+
+          _peerConnection!.addCandidate(candidate);
         } catch (e) {
-          print("Error parsing candidate: $e");
+          print("Error parsing ICE candidate: $e");
         }
       }
     });
