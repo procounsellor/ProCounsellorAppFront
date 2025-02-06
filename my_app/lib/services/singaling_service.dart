@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class FirebaseSignalingService {
+    final DatabaseReference _dbRefCall =
+      FirebaseDatabase.instance.ref().child("calls");
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref().child("call_signaling");
   final DatabaseReference _dbRefUserCalls =
@@ -121,7 +123,7 @@ class FirebaseSignalingService {
 
   // Listen for Call End Events
   void listenForCallEnd(String callId, VoidCallback onCallEnd) {
-    _dbRef.child(callId).onValue.listen((event) {
+    _dbRefCall.child(callId).onValue.listen((event) {
       if (event.snapshot.value != null) {
         Map<dynamic, dynamic> callData =
             event.snapshot.value as Map<dynamic, dynamic>;

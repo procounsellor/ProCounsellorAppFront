@@ -25,9 +25,7 @@ class _CallPageState extends State<CallPage> {
   void initState() {
     super.initState();
     _initWebRTC();
-
-    // Listen for call end
-  _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
+    _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
   }
 
 Future<void> _initWebRTC() async {
@@ -146,6 +144,7 @@ Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
   void _endCall() {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
+    Navigator.pop(context);
   }
   
   @override
