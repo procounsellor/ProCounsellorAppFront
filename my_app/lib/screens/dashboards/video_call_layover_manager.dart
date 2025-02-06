@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
-import '../dashboards/userDashboard/video_call_page.dart';
-import '../dashboards/userDashboard/call_page.dart';
 
-class CallOverlayManager {
+class VideoCallOverlayManager {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
   static OverlayEntry? _overlayEntry;
 
-  static void showIncomingCall(Map<String, dynamic> callData,
-      BuildContext context, VoidCallback onAccept, VoidCallback onDecline) {
+  static void showIncomingVideoCall(Map<String, dynamic> callData,
+      VoidCallback onAccept, VoidCallback onDecline) {
     if (_overlayEntry != null) return; // Prevent multiple overlays
-
-    bool isVideoCall = callData['callType'] == 'video';
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
+          // Semi-transparent background
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.5),
             ),
           ),
+          // Call UI
           Center(
             child: Material(
               color: Colors.transparent,
@@ -35,16 +33,10 @@ class CallOverlayManager {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      isVideoCall ? Icons.videocam : Icons.call,
-                      size: 60,
-                      color: isVideoCall ? Colors.blueAccent : Colors.green,
-                    ),
+                    Icon(Icons.videocam, size: 60, color: Colors.blueAccent),
                     SizedBox(height: 16),
                     Text(
-                      isVideoCall
-                          ? "Incoming Video Call"
-                          : "Incoming Audio Call",
+                      "Incoming Video Call",
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),

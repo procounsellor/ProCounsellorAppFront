@@ -4,8 +4,10 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews
 import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
 import 'package:my_app/services/call_service.dart';
+import 'package:my_app/services/video_call_service.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import 'chatting_page.dart';
+import 'video_call_page.dart';
 
 class DetailsPage extends StatefulWidget {
   final String itemName;
@@ -275,15 +277,52 @@ class _DetailsPageState extends State<DetailsPage> {
     String receiverId = widget.counsellorId;
 
     if (callerId.isEmpty || receiverId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
       return;
     }
 
-    String? callId = await _callService.startCall(callerId, receiverId, "audio");
+    String? callId =
+        await _callService.startCall(callerId, receiverId, "audio");
     if (callId != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(callId: callId, id: widget.userId, isCaller: true)));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  CallPage(callId: callId, id: widget.userId, isCaller: true)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Call failed")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Call failed")));
+    }
+  }
+
+  void _startVideoCall(BuildContext context) async {
+    final VideoCallService _callService = VideoCallService();
+    String callerId = widget.userId;
+    String receiverId = widget.counsellorId;
+
+    if (callerId.isEmpty || receiverId.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      return;
+    }
+
+    String? callId =
+        await _callService.startCall(callerId, receiverId, "video");
+    if (callId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VideoCallPage(
+            callId: callId,
+            id: widget.counsellorId,
+            isCaller: true,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Call failed")));
     }
   }
 
@@ -837,12 +876,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                   ElevatedButton.icon(
                                     onPressed: isSubscribed
                                         ? () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "Video calling ${counsellorDetails?['firstName']}...")),
-                                            );
+                                            _startVideoCall(context);
                                           }
                                         : null, // Disable button if not subscribed
                                     icon: Icon(Icons.video_call, size: 16),
@@ -1087,9 +1121,9 @@ class _DetailsPageState extends State<DetailsPage> {
                                                               : null,
                                                       radius: 15,
                                                     ),
-                                                    title: Text(
-                                                        comment['userFullName'] ??
-                                                            comment['userName']),
+                                                    title: Text(comment[
+                                                            'userFullName'] ??
+                                                        comment['userName']),
                                                     subtitle: Text(comment[
                                                             'commentText'] ??
                                                         ""),

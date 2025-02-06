@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
 import 'package:my_app/services/call_service.dart';
 import 'counsellor_chatting_page.dart';
+import '../userDashboard/video_call_page.dart';
+import '../../../services/video_call_service.dart';
 
 class ClientDetailsPage extends StatelessWidget {
   final Map<String, dynamic> client;
@@ -12,18 +14,55 @@ class ClientDetailsPage extends StatelessWidget {
   void _startCall(BuildContext context) async {
     final CallService _callService = CallService();
     String callerId = counsellorId;
-    String receiverId = client['userName'];;
+    String receiverId = client['userName'];
 
     if (callerId.isEmpty || receiverId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
       return;
     }
 
-    String? callId = await _callService.startCall(callerId, receiverId, "audio");
+    String? callId =
+        await _callService.startCall(callerId, receiverId, "audio");
     if (callId != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => CallPage(callId: callId, id: counsellorId, isCaller: true)));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  CallPage(callId: callId, id: counsellorId, isCaller: true)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Call failed")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Call failed")));
+    }
+  }
+
+  void _startVideoCall(BuildContext context) async {
+    final VideoCallService _callService = VideoCallService();
+    String callerId = counsellorId;
+    String receiverId = client['userName'];
+
+    if (callerId.isEmpty || receiverId.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
+      return;
+    }
+
+    String? callId =
+        await _callService.startCall(callerId, receiverId, "video");
+    if (callId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VideoCallPage(
+            callId: callId,
+            id: counsellorId,
+            isCaller: true,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Call failed")));
     }
   }
 
@@ -150,12 +189,7 @@ class ClientDetailsPage extends StatelessWidget {
                       style: TextStyle(color: Colors.black, fontSize: 14),
                     ),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "Starting video call with ${client['firstName'] ?? 'Unknown'}..."),
-                        ),
-                      );
+                      _startVideoCall(context);
                     },
                   ),
                 ],
