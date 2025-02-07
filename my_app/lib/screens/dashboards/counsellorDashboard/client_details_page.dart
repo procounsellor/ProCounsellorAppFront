@@ -28,8 +28,11 @@ class ClientDetailsPage extends StatelessWidget {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  CallPage(callId: callId, id: counsellorId, isCaller: true)));
+              builder: (context) => CallPage(
+                  callId: callId,
+                  id: counsellorId,
+                  callInitiatorId: receiverId,
+                  isCaller: true)));
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Call failed")));

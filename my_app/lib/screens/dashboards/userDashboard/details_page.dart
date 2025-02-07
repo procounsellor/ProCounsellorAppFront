@@ -288,8 +288,11 @@ class _DetailsPageState extends State<DetailsPage> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  CallPage(callId: callId, id: widget.userId, isCaller: true)));
+              builder: (context) => CallPage(
+                  callId: callId,
+                  id: widget.userId,
+                  isCaller: true,
+                  callInitiatorId: widget.counsellorId)));
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Call failed")));
