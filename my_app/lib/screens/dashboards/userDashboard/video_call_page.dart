@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:my_app/services/video_call_service.dart';
+import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
 
 class VideoCallPage extends StatefulWidget {
@@ -12,12 +12,12 @@ class VideoCallPage extends StatefulWidget {
       {required this.callId, required this.id, required this.isCaller});
 
   @override
-  _VideoCallPageState createState() => _VideoCallPageState();
+  _CallPageState createState() => _CallPageState();
 }
 
-class _VideoCallPageState extends State<VideoCallPage> {
+class _CallPageState extends State<VideoCallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
-  final VideoCallService _callService = VideoCallService();
+  final CallService _callService = CallService();
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
@@ -27,9 +27,11 @@ class _VideoCallPageState extends State<VideoCallPage> {
     super.initState();
     _initWebRTC();
     _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
+    print(widget.id);
   }
 
   Future<void> _initWebRTC() async {
+    print(widget.callId);
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
 
@@ -42,21 +44,24 @@ class _VideoCallPageState extends State<VideoCallPage> {
     _peerConnection = await createPeerConnection(config);
 
     _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
-      _callService.sendIceCandidate(widget.callId, candidate, widget.id);
+      _callService.sendIceCandidate(
+          widget.callId, candidate.toMap(), widget.id);
     };
 
     _peerConnection!.onTrack = (RTCTrackEvent event) {
       if (event.streams.isNotEmpty) {
-        _remoteRenderer.srcObject = event.streams[0];
+        print("🔹 Remote video/audio track received!");
+        _remoteRenderer.srcObject = event.streams[0]; // ✅ Assign remote stream
       }
     };
 
+    // ✅ Request both video & audio
     MediaStream localStream = await navigator.mediaDevices.getUserMedia({
       'video': true,
       'audio': true,
     });
 
-    _localRenderer.srcObject = localStream;
+    _localRenderer.srcObject = localStream; // ✅ Assign local stream
 
     for (var track in localStream.getTracks()) {
       _peerConnection!.addTrack(track, localStream);
@@ -73,29 +78,71 @@ class _VideoCallPageState extends State<VideoCallPage> {
               .setRemoteDescription(RTCSessionDescription(offer, "offer"));
           RTCSessionDescription answer = await _peerConnection!.createAnswer();
           await _peerConnection!.setLocalDescription(answer);
-          _callService.sendAnswer(widget.callId, answer);
+          _callService.sendAnswer(widget.callId, answer.sdp);
         }
       });
     }
 
     _signalingService.listenForAnswer(widget.callId, _peerConnection!,
         (answerString) async {
-      RTCSessionDescription answer =
-          RTCSessionDescription(answerString, "answer");
-      if (_peerConnection != null) {
-        await _peerConnection!.setRemoteDescription(answer);
+      try {
+        RTCSessionDescription answer =
+            RTCSessionDescription(answerString, "answer");
+        RTCSessionDescription? remoteDesc =
+            await _peerConnection!.getRemoteDescription();
+
+        if (remoteDesc == null) {
+          await _peerConnection!.setRemoteDescription(answer);
+          print("✅ Remote answer SDP set successfully.");
+        } else {
+          print("⚠️ Skipping redundant remote SDP set.");
+        }
+      } catch (e) {
+        print("❌ Error setting remote description: $e");
       }
     });
 
     _signalingService.listenForIceCandidates(widget.callId, (candidate) async {
-      if (_peerConnection != null) {
-        await _peerConnection!.addCandidate(RTCIceCandidate(
-          candidate["candidate"],
-          candidate["sdpMid"],
-          candidate["sdpMLineIndex"],
-        ));
+      if (_peerConnection == null) {
+        print("Peer connection is null. Cannot add ICE candidate.");
+        return;
       }
+
+      RTCSessionDescription? remoteDesc =
+          await _peerConnection!.getRemoteDescription();
+      if (remoteDesc == null) {
+        print("Remote description is null. Storing ICE candidate for later.");
+        Future.delayed(Duration(seconds: 1), () async {
+          RTCSessionDescription? updatedRemoteDesc =
+              await _peerConnection!.getRemoteDescription();
+          if (updatedRemoteDesc != null) {
+            await _addIceCandidate(candidate);
+          } else {
+            print("Remote description is still null. Skipping ICE candidate.");
+          }
+        });
+        return;
+      }
+
+      await _addIceCandidate(candidate);
     });
+  }
+
+// Helper function to add ICE candidates
+  Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
+    if (candidate.containsKey("candidate") &&
+        candidate.containsKey("sdpMid") &&
+        candidate.containsKey("sdpMLineIndex")) {
+      RTCIceCandidate iceCandidate = RTCIceCandidate(
+        candidate["candidate"] as String,
+        candidate["sdpMid"] as String,
+        candidate["sdpMLineIndex"] as int,
+      );
+      print("Adding ICE Candidate: $candidate");
+      await _peerConnection!.addCandidate(iceCandidate);
+    } else {
+      print("Invalid ICE candidate format: $candidate");
+    }
   }
 
   void _handleCallEnd() {
@@ -108,6 +155,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
   void _endCall() {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
+    Navigator.pop(context);
   }
 
   @override

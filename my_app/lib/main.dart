@@ -101,6 +101,8 @@ class _AppRootState extends State<AppRoot> {
                       callId: callData['callId'],
                       id: userId!,
                       isCaller: false,
+                      callInitiatorId:
+                          callData['senderId'] ?? callData['callerId'],
                     ),
             ),
           );
@@ -110,7 +112,8 @@ class _AppRootState extends State<AppRoot> {
         () {
           _signalingService.clearIncomingCall(userId!);
           _callService.endCall(callData['callId']);
-          _signalingService.listenForCallEnd(callData['callId'], _handleCallEnd);
+          _signalingService.listenForCallEnd(
+              callData['callId'], _handleCallEnd);
         },
       );
     });
