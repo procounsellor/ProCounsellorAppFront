@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'counsellor_chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class ChatsPage extends StatefulWidget {
@@ -274,8 +273,8 @@ class _ChatsPageState extends State<ChatsPage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 35,
-                                    backgroundImage:
-                                        CachedNetworkImageProvider(photoUrl),
+                                    backgroundColor: Colors.grey[300], // Placeholder color
+                                    backgroundImage: NetworkImage(photoUrl),
                                   ),
                                   SizedBox(width: 16),
                                   Expanded(

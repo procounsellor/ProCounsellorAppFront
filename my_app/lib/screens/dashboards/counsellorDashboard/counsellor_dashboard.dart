@@ -43,7 +43,6 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
 
       if (clientResponse.statusCode == 200 &&
           detailsResponse.statusCode == 200) {
-        final detailsData = json.decode(detailsResponse.body);
         setState(() {
           clients = json.decode(clientResponse.body);
           filteredClients = clients;

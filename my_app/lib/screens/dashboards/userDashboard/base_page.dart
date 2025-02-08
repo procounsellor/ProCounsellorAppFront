@@ -120,7 +120,6 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           final messageData =
               Map<String, dynamic>.from(event.snapshot.value as Map);
           bool isSeen = messageData['isSeen'] ?? true;
-          String senderId = messageData['senderId'] ?? '';
 
           setState(() {
             if (isSeen) {

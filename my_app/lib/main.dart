@@ -40,7 +40,8 @@ class AppRoot extends StatefulWidget {
   _AppRootState createState() => _AppRootState();
 }
 
-class _AppRootState extends State<AppRoot> {
+class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
+  final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   String? jwtToken;
   String? userId;
   String? role;
@@ -49,7 +50,22 @@ class _AppRootState extends State<AppRoot> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this); 
     _initializeApp();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // ✅ Detect App Lifecycle Changes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && userId != null) {
+      _signalingService.clearIncomingCall(userId!);
+    }
   }
 
   Future<void> _initializeApp() async {
@@ -76,14 +92,12 @@ class _AppRootState extends State<AppRoot> {
 
   // 🔹 Listen for incoming calls globally
   void _startListeningForCalls(BuildContext context) {
-    final FirebaseSignalingService _signalingService =
-        FirebaseSignalingService();
     final CallService _callService = CallService();
 
     _signalingService.listenForIncomingCalls(userId!, (callData) {
       CallOverlayManager.showIncomingCall(
         callData,
-        context, // ✅ Pass the correct context from the overlay manager
+        context,
         () {
           bool isVideoCall = callData['callType'] == 'video';
 
@@ -96,6 +110,8 @@ class _AppRootState extends State<AppRoot> {
                       callId: callData['callId'],
                       id: userId!,
                       isCaller: false,
+                      callInitiatorId:
+                          callData['senderId'] ?? callData['callerId'],
                     )
                   : CallPage(
                       callId: callData['callId'],
@@ -106,7 +122,6 @@ class _AppRootState extends State<AppRoot> {
                     ),
             ),
           );
-
           _signalingService.clearIncomingCall(userId!);
         },
         () {
