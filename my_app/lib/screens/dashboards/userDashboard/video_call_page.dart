@@ -7,9 +7,10 @@ class VideoCallPage extends StatefulWidget {
   final String callId;
   final String id;
   final bool isCaller;
+  final String callInitiatorId;
 
   VideoCallPage(
-      {required this.callId, required this.id, required this.isCaller});
+      {required this.callId, required this.id, required this.isCaller, required this.callInitiatorId});
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -170,6 +171,7 @@ class _CallPageState extends State<VideoCallPage> {
   void _endCall() {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
+    _signalingService.clearIncomingCall(widget.callInitiatorId);
     Navigator.pop(context);
   }
 

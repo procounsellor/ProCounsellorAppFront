@@ -10,7 +10,7 @@ class CallPage extends StatefulWidget {
   final String callId;
   final String id;
   final bool isCaller;
-  final String? callInitiatorId;
+  final String callInitiatorId;
 
   CallPage(
       {required this.callId,
@@ -214,8 +214,6 @@ class _CallPageState extends State<CallPage> {
               _isSpeaking =
                   level > 0.01; // Adjust this threshold for sensitivity
             });
-
-            print("🎤 Voice Activity Detected: $_isSpeaking (Level: $level)");
           }
         }
       }
@@ -232,6 +230,7 @@ class _CallPageState extends State<CallPage> {
   void _endCall() {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
+    _signalingService.clearIncomingCall(widget.callInitiatorId);
     Navigator.pop(context);
   }
 

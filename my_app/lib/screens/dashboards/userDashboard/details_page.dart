@@ -320,6 +320,7 @@ class _DetailsPageState extends State<DetailsPage> {
             callId: callId,
             id: widget.counsellorId,
             isCaller: true,
+            callInitiatorId: widget.counsellorId,
           ),
         ),
       );

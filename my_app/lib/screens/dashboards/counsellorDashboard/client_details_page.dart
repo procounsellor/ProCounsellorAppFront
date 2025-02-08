@@ -60,6 +60,7 @@ class ClientDetailsPage extends StatelessWidget {
             callId: callId,
             id: counsellorId,
             isCaller: true,
+            callInitiatorId: receiverId,
           ),
         ),
       );
