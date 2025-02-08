@@ -38,6 +38,21 @@ class _CallPageState extends State<VideoCallPage> {
     Map<String, dynamic> config = {
       "iceServers": [
         {"urls": "stun:stun.l.google.com:19302"},
+        {
+          "urls": "turn:relay.metered.ca:80",
+          "username": "open",
+          "credential": "open"
+        },
+        {
+          "urls": "turn:relay.metered.ca:443",
+          "username": "open",
+          "credential": "open"
+        },
+        {
+          "urls": "turn:relay.metered.ca:443?transport=tcp",
+          "username": "open",
+          "credential": "open"
+        }
       ]
     };
 
