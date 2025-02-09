@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/services/call_service.dart';
@@ -25,12 +26,19 @@ class CallPage extends StatefulWidget {
 class _CallPageState extends State<CallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   final CallService _callService = CallService();
+  final AudioPlayer _audioPlayer = AudioPlayer(); // ✅ Ringer player
+
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  MediaStream? _localStream;
+
   String? callerName;
   String? callerPhoto;
+  bool isMuted = false; // ✅ Track mute/unmute state
   bool _isSpeaking = false;
+  bool _callAnswered = false; // ✅ Track if call is answered
+  Timer? _ringingTimer;
 
   @override
   void initState() {
@@ -39,6 +47,10 @@ class _CallPageState extends State<CallPage> {
 
     _initWebRTC();
     _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
+
+    if (widget.isCaller) {
+      _startRinging(); // ✅ Start ringing if initiating call
+    }
   }
 
   Future<void> _fetchCallerDetails() async {
@@ -106,6 +118,7 @@ class _CallPageState extends State<CallPage> {
       if (event.streams.isNotEmpty) {
         print("🔹 Remote track received!");
         _remoteRenderer.srcObject = event.streams[0]; // ✅ Assign remote stream
+        _stopRinging(); // ✅ Stop ringing when remote track arrives (call answered)
       }
     };
 
@@ -136,6 +149,7 @@ class _CallPageState extends State<CallPage> {
         if (_peerConnection != null) {
           await _peerConnection!.setRemoteDescription(answer);
           print("✅ Remote description set successfully.");
+          _stopRinging(); // ✅ Stop ringing when answer received
         } else {
           print("⚠️ Peer connection is null when setting remote description.");
         }
@@ -214,15 +228,54 @@ class _CallPageState extends State<CallPage> {
               _isSpeaking =
                   level > 0.01; // Adjust this threshold for sensitivity
             });
+            print("🎤 Voice Activity Detected: $_isSpeaking (Level: $level)");
           }
         }
       }
     });
   }
 
+   // ✅ Mute/Unmute Toggle Function
+  void _toggleMute() {
+    setState(() {
+      isMuted = !isMuted;
+    });
+
+    _localStream?.getAudioTracks().forEach((track) {
+      track.enabled = !isMuted;
+    });
+  }
+
+  // ✅ Start Ringer with Auto-Stop After 1 Minute
+  void _startRinging() async {
+    print("🔔 Starting Ringer...");
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('sounds/ringtone.mp3'));
+
+    // 🔹 Auto stop ringer after 1 minute if call is not answered
+    _ringingTimer = Timer(Duration(minutes: 1), () {
+      if (!_callAnswered) {
+        print("⏳ Call not answered. Stopping ringer after 1 minute.");
+        _stopRinging();
+      }
+    });
+  }
+
+  // ✅ Stop Ringer
+  void _stopRinging() {
+    if (!_callAnswered) {
+      print("🔕 Stopping Ringer...");
+      _callAnswered = true;
+      _audioPlayer.stop();
+      _ringingTimer?.cancel();
+    }
+  }
+
+
   void _handleCallEnd() {
     if (mounted) {
       _peerConnection?.close();
+      _stopRinging();
       Navigator.pop(context);
     }
   }
@@ -231,6 +284,7 @@ class _CallPageState extends State<CallPage> {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
     _signalingService.clearIncomingCall(widget.callInitiatorId);
+    _stopRinging();
     Navigator.pop(context);
   }
 
@@ -239,6 +293,8 @@ class _CallPageState extends State<CallPage> {
     _peerConnection?.dispose();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
+    _audioPlayer.dispose();
+    _ringingTimer?.cancel();
     super.dispose();
   }
 
@@ -291,6 +347,12 @@ class _CallPageState extends State<CallPage> {
                   fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 30),
+
+            IconButton(
+              onPressed: _toggleMute,
+              icon: Icon(isMuted ? Icons.mic_off : Icons.mic, color: isMuted ? Colors.red : Colors.white, size: 32),
+            ),
+
             ElevatedButton(
               onPressed: _endCall,
               child: Padding(
