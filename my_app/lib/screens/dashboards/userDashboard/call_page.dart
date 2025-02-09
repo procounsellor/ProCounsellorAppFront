@@ -26,16 +26,14 @@ class CallPage extends StatefulWidget {
 class _CallPageState extends State<CallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   final CallService _callService = CallService();
-  final AudioPlayer _audioPlayer = AudioPlayer(); // ✅ Ringer player
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  MediaStream? _localStream;
 
   String? callerName;
   String? callerPhoto;
-  bool isMuted = false; // ✅ Track mute/unmute state
   bool _isSpeaking = false;
   bool _callAnswered = false; // ✅ Track if call is answered
   Timer? _ringingTimer;
@@ -54,7 +52,6 @@ class _CallPageState extends State<CallPage> {
   }
 
   Future<void> _fetchCallerDetails() async {
-    if (widget.callInitiatorId == null) return;
     String baseUrl = "http://localhost:8080/api";
     String userUrl = "$baseUrl/user/${widget.callInitiatorId}";
     String counsellorUrl = "$baseUrl/counsellor/${widget.callInitiatorId}";
@@ -116,9 +113,9 @@ class _CallPageState extends State<CallPage> {
 
     _peerConnection!.onTrack = (RTCTrackEvent event) {
       if (event.streams.isNotEmpty) {
+        _stopRinging(); // ✅ Stop ringing when remote track arrives (call answered)
         print("🔹 Remote track received!");
         _remoteRenderer.srcObject = event.streams[0]; // ✅ Assign remote stream
-        _stopRinging(); // ✅ Stop ringing when remote track arrives (call answered)
       }
     };
 
@@ -228,21 +225,10 @@ class _CallPageState extends State<CallPage> {
               _isSpeaking =
                   level > 0.01; // Adjust this threshold for sensitivity
             });
-            print("🎤 Voice Activity Detected: $_isSpeaking (Level: $level)");
+            //print("🎤 Voice Activity Detected: $_isSpeaking (Level: $level)");
           }
         }
       }
-    });
-  }
-
-   // ✅ Mute/Unmute Toggle Function
-  void _toggleMute() {
-    setState(() {
-      isMuted = !isMuted;
-    });
-
-    _localStream?.getAudioTracks().forEach((track) {
-      track.enabled = !isMuted;
     });
   }
 
@@ -255,8 +241,8 @@ class _CallPageState extends State<CallPage> {
     // 🔹 Auto stop ringer after 1 minute if call is not answered
     _ringingTimer = Timer(Duration(minutes: 1), () {
       if (!_callAnswered) {
-        print("⏳ Call not answered. Stopping ringer after 1 minute.");
-        _stopRinging();
+        print("⏳ Call not answered. Stopping ringer and cutting the call after 1 minute.");
+        _endCall();
       }
     });
   }
@@ -347,12 +333,6 @@ class _CallPageState extends State<CallPage> {
                   fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 30),
-
-            IconButton(
-              onPressed: _toggleMute,
-              icon: Icon(isMuted ? Icons.mic_off : Icons.mic, color: isMuted ? Colors.red : Colors.white, size: 32),
-            ),
-
             ElevatedButton(
               onPressed: _endCall,
               child: Padding(
