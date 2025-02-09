@@ -11,7 +11,7 @@ final storage = FlutterSecureStorage();
 class CounsellorSignInScreen extends StatefulWidget {
   final Future<void> Function() onSignOut;
 
-    CounsellorSignInScreen({required this.onSignOut});
+  CounsellorSignInScreen({required this.onSignOut});
   @override
   _CounsellorSignInScreenState createState() => _CounsellorSignInScreenState();
 }
@@ -26,9 +26,10 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
     super.initState();
   }
 
-    Future<void> _handleVerification() async {
+  Future<void> _handleVerification() async {
     try {
-      final response = await _apiService.counsellorSignIn(_usernameController.text, _passwordController.text);
+      final response = await _apiService.counsellorSignIn(
+          _usernameController.text, _passwordController.text);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> body = jsonDecode(response.body);
@@ -38,31 +39,31 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
         String role = "counsellor";
 
         if (response.statusCode == 200) {
-            // Save role, JWT and userId in secure storage when signed in
-            await storage.write(key: "role", value: role);
-            await storage.write(key: "jwtToken", value: jwtToken);
-            await storage.write(key: "userId", value: userId);
+          // Save role, JWT and userId in secure storage when signed in
+          await storage.write(key: "role", value: role);
+          await storage.write(key: "jwtToken", value: jwtToken);
+          await storage.write(key: "userId", value: userId);
 
-            // Authenticate with Firebase using the custom token
-            await FirebaseAuth.instance
-                .signInWithCustomToken(firebaseCustomToken);
-            User? user = FirebaseAuth.instance.currentUser;
-            if (user != null) {
-              print("Authenticated user: ${user.uid}");
-            } else {
-              print("Authentication failed.");
-            }
+          // Authenticate with Firebase using the custom token
+          await FirebaseAuth.instance
+              .signInWithCustomToken(firebaseCustomToken);
+          User? user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            print("Authenticated user: ${user.uid}");
+          } else {
+            print("Authentication failed.");
+          }
 
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CounsellorBasePage(
-                  onSignOut: widget.onSignOut,
-                  counsellorId: userId,
-                ),
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CounsellorBasePage(
+                onSignOut: widget.onSignOut,
+                counsellorId: userId,
               ),
-              (route) => false,
-            );
+            ),
+            (route) => false,
+          );
         }
       } else {
         showErrorDialog('Invalid Credentials. Please try again.');
@@ -73,7 +74,7 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
     }
   }
 
-    void showErrorDialog(String message) {
+  void showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -92,15 +93,17 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFFFFE4B5),
-        title: Text(
-          "Counsellor Sign In",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
-        centerTitle: true,
       ),
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -108,61 +111,109 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: "Email/Phone Number",
-                    labelStyle: TextStyle(color: Color(0xFFFAAF84)),
-                    filled: true,
-                    fillColor: Color(0xFFFFF8EE),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Color(0xFFFAAF84)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Color(0xFFFAAF84), width: 2),
-                    ),
-                  ),
+                Image.asset(
+                  'assets/images/login_illustration.png',
+                  height: 200,
                 ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    labelStyle: TextStyle(color: Color(0xFFFAAF84)),
-                    filled: true,
-                    fillColor: Color(0xFFFFF8EE),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Color(0xFFFAAF84)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Color(0xFFFAAF84), width: 2),
-                    ),
+                SizedBox(height: 10),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  obscureText: true,
-                ),
-                SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFFAAF84),
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    onPressed: _handleVerification,
-                    child: Text(
-                      "Sign In",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  elevation: 5,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: Icon(Icons.g_mobiledata),
+                              label: Text("Google"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: Icon(Icons.facebook),
+                              label: Text("Facebook"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+                        TextField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            labelText: "Email",
+                            prefixIcon: Icon(Icons.email, color: Colors.orange),
+                            filled: true,
+                            fillColor: Colors.orange.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            prefixIcon: Icon(Icons.lock, color: Colors.orange),
+                            filled: true,
+                            fillColor: Colors.orange.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {},
+                            child: Text("Forgot Password?"),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            onPressed: _handleVerification,
+                            child: Text(
+                              "Sign In",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text("Not registered? ",
+                            style: TextStyle(color: Colors.black54)),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text("Create Account",
+                              style: TextStyle(color: Colors.orange)),
+                        ),
+                      ],
                     ),
                   ),
                 ),

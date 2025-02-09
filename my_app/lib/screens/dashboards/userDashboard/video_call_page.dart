@@ -10,7 +10,10 @@ class VideoCallPage extends StatefulWidget {
   final String callInitiatorId;
 
   VideoCallPage(
-      {required this.callId, required this.id, required this.isCaller, required this.callInitiatorId});
+      {required this.callId,
+      required this.id,
+      required this.isCaller,
+      required this.callInitiatorId});
 
   @override
   _CallPageState createState() => _CallPageState();
