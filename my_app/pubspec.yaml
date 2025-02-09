@@ -54,6 +54,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   flutter_webrtc: ^0.12.7
   uuid: ^4.0.0
+  audioplayers: ^6.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,6 +82,7 @@ flutter:
     - assets/images/
     - assets/images/no_results.png
     - assets/images/c1.png
+    - assets/sounds/ringtone.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
