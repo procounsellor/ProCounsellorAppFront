@@ -1,217 +1,357 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/screens/dashboards/call_layover_manager.dart';
-import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
-import 'package:my_app/screens/dashboards/userDashboard/video_call_page.dart';
-
+import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
-import 'firebase_options.dart';
-import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
-import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
-import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
-import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 
-import 'services/call_service.dart';
+class CallPage extends StatefulWidget {
+  final String callId;
+  final String id;
+  final bool isCaller;
+  final String callInitiatorId;
 
-// Initialize secure storage
-final storage = FlutterSecureStorage(
-  aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-);
+  CallPage(
+      {required this.callId,
+      required this.id,
+      required this.isCaller,
+      required this.callInitiatorId});
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform);
-    }
-  } catch (e) {
-    debugPrint("Firebase initialization failed: $e");
-  }
-
-  runApp(AppRoot());
-}
-
-class AppRoot extends StatefulWidget {
   @override
-  _AppRootState createState() => _AppRootState();
+  _CallPageState createState() => _CallPageState();
 }
 
-class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
+class _CallPageState extends State<CallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
-  String? jwtToken;
-  String? userId;
-  String? role;
-  bool isLoading = true;
+  final CallService _callService = CallService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  RTCPeerConnection? _peerConnection;
+  RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+
+  String? callerName;
+  String? callerPhoto;
+  bool _isSpeaking = false;
+  bool _callAnswered = false; // ✅ Track if call is answered
+  Timer? _ringingTimer;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); 
-    _initializeApp();
+    _fetchCallerDetails();
+
+    _initWebRTC();
+    _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
+
+    if (widget.isCaller) {
+      _startRinging(); // ✅ Start ringing if initiating call
+    }
+  }
+
+  Future<void> _fetchCallerDetails() async {
+    String baseUrl = "http://localhost:8080/api";
+    String userUrl = "$baseUrl/user/${widget.callInitiatorId}";
+    String counsellorUrl = "$baseUrl/counsellor/${widget.callInitiatorId}";
+
+    try {
+      final userResponse = await http.get(Uri.parse(userUrl));
+      if (userResponse.statusCode == 200 && userResponse.body.isNotEmpty) {
+        final data = json.decode(userResponse.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+          callerPhoto = data['photo'];
+        });
+        return;
+      }
+
+      final counsellorResponse = await http.get(Uri.parse(counsellorUrl));
+      if (counsellorResponse.statusCode == 200 &&
+          counsellorResponse.body.isNotEmpty) {
+        final data = json.decode(counsellorResponse.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+          callerPhoto = data['photoUrl'];
+        });
+      }
+    } catch (e) {
+      print("Error fetching caller details: $e");
+    }
+  }
+
+  Future<void> _initWebRTC() async {
+    print(widget.callId);
+    print("I am getting a call from : " + widget.callInitiatorId.toString());
+    print(widget.id);
+    await _localRenderer.initialize();
+    await _remoteRenderer.initialize();
+
+    Map<String, dynamic> config = {
+      "iceServers": [
+        {"urls": "stun:stun.l.google.com:19302"},
+      ]
+    };
+
+    _peerConnection = await createPeerConnection(config);
+
+    // ✅ Request both audio & video if needed
+    MediaStream localStream = await navigator.mediaDevices
+        .getUserMedia({'audio': true, 'video': false});
+
+    _localRenderer.srcObject = localStream; // Assign local stream
+
+    for (var track in localStream.getTracks()) {
+      _peerConnection!.addTrack(track, localStream);
+    }
+
+    _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+      _callService.sendIceCandidate(
+          widget.callId, candidate.toMap(), widget.id);
+    };
+
+    _peerConnection!.onTrack = (RTCTrackEvent event) {
+      if (event.streams.isNotEmpty) {
+        _stopRinging(); // ✅ Stop ringing when remote track arrives (call answered)
+        print("🔹 Remote track received!");
+        _remoteRenderer.srcObject = event.streams[0]; // ✅ Assign remote stream
+      }
+    };
+
+    if (widget.isCaller) {
+      RTCSessionDescription offer = await _peerConnection!.createOffer();
+      await _peerConnection!.setLocalDescription(offer);
+      _callService.sendOffer(widget.callId, offer);
+    } else {
+      _signalingService.listenForOffer(widget.callId, (offer) async {
+        if (offer.isNotEmpty) {
+          await _peerConnection!
+              .setRemoteDescription(RTCSessionDescription(offer, "offer"));
+          RTCSessionDescription answer = await _peerConnection!.createAnswer();
+          await _peerConnection!.setLocalDescription(answer);
+          _callService.sendAnswer(widget.callId, answer.sdp);
+        } else {
+          print("Received an empty offer");
+        }
+      });
+    }
+
+    _signalingService.listenForAnswer(widget.callId, _peerConnection!,
+        (answerString) async {
+      try {
+        RTCSessionDescription answer =
+            RTCSessionDescription(answerString, "answer");
+
+        if (_peerConnection != null) {
+          await _peerConnection!.setRemoteDescription(answer);
+          print("✅ Remote description set successfully.");
+          _stopRinging(); // ✅ Stop ringing when answer received
+        } else {
+          print("⚠️ Peer connection is null when setting remote description.");
+        }
+      } catch (e) {
+        print("❌ Error setting remote description: $e");
+      }
+    });
+
+    _signalingService.listenForIceCandidates(widget.callId, (candidate) async {
+      if (_peerConnection == null) {
+        print("Peer connection is null. Cannot add ICE candidate.");
+        return;
+      }
+
+      RTCSessionDescription? remoteDesc =
+          await _peerConnection!.getRemoteDescription();
+      if (remoteDesc == null) {
+        print("Remote description is null. Storing ICE candidate for later.");
+
+        // Delay adding ICE candidates until remote description is set
+        Future.delayed(Duration(seconds: 1), () async {
+          RTCSessionDescription? updatedRemoteDesc =
+              await _peerConnection!.getRemoteDescription();
+          if (updatedRemoteDesc != null) {
+            await _addIceCandidate(candidate);
+          } else {
+            print("Remote description is still null. Skipping ICE candidate.");
+          }
+        });
+        return;
+      }
+
+      await _addIceCandidate(candidate);
+    });
+
+    // ✅ Start real-time voice detection after WebRTC setup
+    _startVoiceDetection();
+  }
+
+  // Helper function to add ICE candidates
+  Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
+    if (candidate.containsKey("candidate") &&
+        candidate.containsKey("sdpMid") &&
+        candidate.containsKey("sdpMLineIndex")) {
+      RTCIceCandidate iceCandidate = RTCIceCandidate(
+        candidate["candidate"] as String,
+        candidate["sdpMid"] as String,
+        candidate["sdpMLineIndex"] as int,
+      );
+      print("Adding ICE Candidate: $candidate");
+      await _peerConnection!.addCandidate(iceCandidate);
+    } else {
+      print("Invalid ICE candidate format: $candidate");
+    }
+  }
+
+  void _startVoiceDetection() {
+    Timer.periodic(Duration(milliseconds: 500), (timer) async {
+      if (_peerConnection == null) {
+        timer.cancel();
+        return;
+      }
+
+      var stats = await _peerConnection!.getStats();
+
+      for (var report in stats) {
+        if (report.type == 'media-source' || report.type == 'ssrc') {
+          var audioLevel =
+              report.values['audioInputLevel'] ?? report.values['audioLevel'];
+
+          if (audioLevel != null) {
+            double level = double.tryParse(audioLevel.toString()) ?? 0.0;
+
+            // ✅ If audio level is above threshold, mark as speaking
+            setState(() {
+              _isSpeaking =
+                  level > 0.01; // Adjust this threshold for sensitivity
+            });
+            //print("🎤 Voice Activity Detected: $_isSpeaking (Level: $level)");
+          }
+        }
+      }
+    });
+  }
+
+  // ✅ Start Ringer with Auto-Stop After 1 Minute
+  void _startRinging() async {
+    print("🔔 Starting Ringer...");
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('sounds/ringtone.mp3'));
+
+    // 🔹 Auto stop ringer after 1 minute if call is not answered
+    _ringingTimer = Timer(Duration(minutes: 1), () {
+      if (!_callAnswered) {
+        print("⏳ Call not answered. Stopping ringer and cutting the call after 1 minute.");
+        _endCall();
+      }
+    });
+  }
+
+  // ✅ Stop Ringer
+  void _stopRinging() {
+    if (!_callAnswered) {
+      print("🔕 Stopping Ringer...");
+      _callAnswered = true;
+      _audioPlayer.stop();
+      _ringingTimer?.cancel();
+    }
+  }
+
+
+  void _handleCallEnd() {
+    if (mounted) {
+      _peerConnection?.close();
+      _stopRinging();
+      Navigator.pop(context);
+    }
+  }
+
+  void _endCall() {
+    _peerConnection?.close();
+    _callService.endCall(widget.callId);
+    _signalingService.clearIncomingCall(widget.callInitiatorId);
+    _stopRinging();
+     // ✅ Use Global Navigator Key to ensure correct pop
+    CallOverlayManager.navigatorKey.currentState?.maybePop();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _peerConnection?.dispose();
+    _localRenderer.dispose();
+    _remoteRenderer.dispose();
+    _audioPlayer.dispose();
+    _ringingTimer?.cancel();
     super.dispose();
-  }
-
-  // ✅ Detect App Lifecycle Changes
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && userId != null) {
-      _signalingService.clearIncomingCall(userId!);
-    }
-  }
-
-  Future<void> _initializeApp() async {
-    try {
-      jwtToken = await storage.read(key: "jwtToken");
-      userId = await storage.read(key: "userId");
-      role = await storage.read(key: "role");
-
-      debugPrint("JWT Token: $jwtToken");
-      debugPrint("User ID: $userId");
-      debugPrint("User Role: $role");
-
-      if (userId != null && (role == "user" || role == "counsellor")) {
-        _startListeningForCalls(context); // ✅ Pass the context correctly
-      }
-    } catch (e) {
-      debugPrint("Error reading secure storage: $e");
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  // 🔹 Listen for incoming calls globally
-  void _startListeningForCalls(BuildContext context) {
-    final CallService _callService = CallService();
-
-    _signalingService.listenForIncomingCalls(userId!, (callData) {
-      CallOverlayManager.showIncomingCall(
-        callData,
-        context,
-        () {
-          bool isVideoCall = callData['callType'] == 'video';
-
-          Navigator.push(
-            CallOverlayManager.navigatorKey.currentState!
-                .context, // ✅ Fix: Use Navigator key context
-            MaterialPageRoute(
-              builder: (context) => isVideoCall
-                  ? VideoCallPage(
-                      callId: callData['callId'],
-                      id: userId!,
-                      isCaller: false,
-                      callInitiatorId:
-                          callData['senderId'] ?? callData['callerId'],
-                    )
-                  : CallPage(
-                      callId: callData['callId'],
-                      id: userId!,
-                      isCaller: false,
-                      callInitiatorId:
-                          callData['senderId'] ?? callData['callerId'],
-                    ),
-            ),
-          );
-          _signalingService.clearIncomingCall(userId!);
-        },
-        () {
-          _signalingService.clearIncomingCall(userId!);
-          _callService.endCall(callData['callId']);
-          _signalingService.listenForCallEnd(
-              callData['callId'], _handleCallEnd);
-        },
-      );
-    });
-  }
-
-  void _handleCallEnd() {
-    Navigator.pop(context);
-  }
-
-  Future<void> restartApp() async {
-    await storage.deleteAll();
-    setState(() {
-      jwtToken = null;
-      userId = null;
-      role = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
-    if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorKey: CallOverlayManager.navigatorKey,
-        home: NewSignInPage(onSignOut: restartApp),
-      );
-    }
-
-    switch (role?.toLowerCase()) {
-      case "user":
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: CallOverlayManager.navigatorKey,
-          home: BasePage(username: userId!, onSignOut: restartApp),
-        );
-      case "counsellor":
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: CallOverlayManager.navigatorKey,
-          home:
-              CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
-        );
-      case "admin":
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: AdminBasePage(onSignOut: restartApp, adminId: userId!),
-        );
-      default:
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Invalid Role. Please contact support.",
-                    style: TextStyle(fontSize: 18, color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: restartApp,
-                    child: Text("Go to Login"),
-                    style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 1.0, end: _isSpeaking ? 1.3 : 1.0),
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent
+                              .withOpacity(_isSpeaking ? 0.7 : 0.0),
+                          blurRadius: _isSpeaking ? 30 : 0,
+                          spreadRadius: _isSpeaking ? 10 : 0,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: callerPhoto != null
+                          ? NetworkImage(callerPhoto!)
+                          : null,
+                      child: callerPhoto == null
+                          ? Icon(Icons.person, size: 60, color: Colors.white)
+                          : null,
                     ),
                   ),
-                ],
+                );
+              },
+            ),
+            SizedBox(height: 20),
+            Text(
+              callerName ?? "Unknown Caller",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: _endCall,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Text("End Call",
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
             ),
-          ),
-        );
-    }
+          ],
+        ),
+      ),
+    );
   }
 }
