@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:my_app/screens/dashboards/call_layover_manager.dart';
 
 class FirebaseSignalingService {
   final DatabaseReference _dbRefCall =
@@ -87,6 +88,7 @@ class FirebaseSignalingService {
 
   void clearIncomingCall(String id) {
     _dbRefUserCalls.child(id).child("incoming_calls").remove();
+    CallOverlayManager.removeOverlay(); // ✅ Remove overlay
   }
 
   // Listen for Call End Events
