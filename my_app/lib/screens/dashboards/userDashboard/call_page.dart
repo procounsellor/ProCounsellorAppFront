@@ -187,7 +187,7 @@ class _CallPageState extends State<CallPage> {
     _startVoiceDetection();
   }
 
-// Helper function to add ICE candidates
+  // Helper function to add ICE candidates
   Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
     if (candidate.containsKey("candidate") &&
         candidate.containsKey("sdpMid") &&
