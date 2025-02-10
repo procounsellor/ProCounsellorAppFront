@@ -122,7 +122,7 @@ class _CounsellorSignUpStep3State extends State<CounsellorSignUpStep3> {
                               widget.signUpData.phoneNumber!,
                               widget.signUpData.email!,
                               widget.signUpData.password!,
-                              widget.signUpData.ratePerYear,
+                              widget.signUpData.ratePerYear as double,
                               widget.signUpData.expertise,
                               widget.signUpData.stateOfCounsellor!,
                             );
