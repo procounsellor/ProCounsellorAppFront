@@ -1,7 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:my_app/screens/dashboards/call_layover_manager.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'package:http/http.dart' as http;
@@ -187,7 +186,7 @@ class _CallPageState extends State<CallPage> {
     _startVoiceDetection();
   }
 
-  // Helper function to add ICE candidates
+// Helper function to add ICE candidates
   Future<void> _addIceCandidate(Map<String, dynamic> candidate) async {
     if (candidate.containsKey("candidate") &&
         candidate.containsKey("sdpMid") &&
@@ -272,8 +271,7 @@ class _CallPageState extends State<CallPage> {
     _callService.endCall(widget.callId);
     _signalingService.clearIncomingCall(widget.callInitiatorId);
     _stopRinging();
-     // ✅ Use Global Navigator Key to ensure correct pop
-    CallOverlayManager.navigatorKey.currentState?.maybePop();
+    Navigator.pop(context);
   }
 
   @override
