@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:my_app/screens/dashboards/call_layover_manager.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'package:http/http.dart' as http;
@@ -271,7 +272,8 @@ class _CallPageState extends State<CallPage> {
     _callService.endCall(widget.callId);
     _signalingService.clearIncomingCall(widget.callInitiatorId);
     _stopRinging();
-    Navigator.pop(context);
+     // ✅ Use Global Navigator Key to ensure correct pop
+    CallOverlayManager.navigatorKey.currentState?.maybePop();
   }
 
   @override
