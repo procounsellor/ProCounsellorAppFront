@@ -62,8 +62,7 @@ class _ChatsPageState extends State<ChatsPage> {
                 );
 
                 if (messagesResponse.statusCode == 200) {
-                  final messages =
-                      json.decode(messagesResponse.body) as List<dynamic>;
+                  final messages = json.decode(messagesResponse.body) as List<dynamic>;
 
                   String lastMessage = 'No messages yet';
                   String timestamp = 'N/A';
@@ -71,13 +70,27 @@ class _ChatsPageState extends State<ChatsPage> {
                   String senderId = '';
 
                   if (messages.isNotEmpty) {
-                    lastMessage = messages.last['text'] ?? 'No message';
+                    var lastMsg = messages.last;
+                    senderId = lastMsg['senderId'] ?? '';
+
+                    if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+                      lastMessage = lastMsg['text'];
+                    } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+                      String fileType = lastMsg['fileType'] ?? 'unknown';
+
+                      if (fileType.startsWith('image/')) {
+                        lastMessage = "📷 Image";
+                      } else if (fileType.startsWith('video/')) {
+                        lastMessage = "🎥 Video";
+                      } else {
+                        lastMessage = "📄 File";
+                      }
+                    }
+
                     timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-                      DateTime.fromMillisecondsSinceEpoch(
-                          messages.last['timestamp']),
+                      DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
                     );
-                    isSeen = messages.last['isSeen'] ?? true;
-                    senderId = messages.last['senderId'] ?? '';
+                    isSeen = lastMsg['isSeen'] ?? true;
                   }
 
                   return {
@@ -129,17 +142,12 @@ class _ChatsPageState extends State<ChatsPage> {
         final updatedChatData =
             Map<String, dynamic>.from(event.snapshot.value as Map);
 
-        print("🔥 Firebase Update Received for Chat ID: $chatId");
-        print("Data: $updatedChatData");
-
         if (chatId != null && updatedChatData.containsKey('messages')) {
           final messages =
               Map<String, dynamic>.from(updatedChatData['messages']);
           if (messages.isNotEmpty) {
             final lastMessageKey = messages.keys.last;
             final lastMessageData = messages[lastMessageKey];
-
-            print("📝 Last Message Data: $lastMessageData");
 
             final index = chats.indexWhere((chat) => chat['id'] == chatId);
             if (index != -1) {
@@ -158,8 +166,6 @@ class _ChatsPageState extends State<ChatsPage> {
                 chats.insert(0, updatedChat);
                 filteredChats = List.from(chats);
               });
-
-              print("✅ UI Updated for Chat ID: $chatId");
             } else {
               print("⚠️ Chat ID Not Found in List: $chatId");
             }
