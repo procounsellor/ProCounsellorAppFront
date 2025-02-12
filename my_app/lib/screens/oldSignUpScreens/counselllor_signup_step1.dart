@@ -18,156 +18,162 @@ class _CounsellorSignUpStep1State extends State<CounsellorSignUpStep1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Plain white background
+      backgroundColor: Colors.white, // Soft background color
       appBar: AppBar(
-        backgroundColor: Color(0xFFFFE4B5),
-        title: Text(
-          "Sign Up",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Welcome!",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFFAAF84),
-              ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            SizedBox(height: 10),
-            Text(
-              "Let’s get you started",
-              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 30),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _buildTextField(
-                    label: "First Name",
-                    initialValue: widget.signUpData.firstName,
-                    onSave: (value) => widget.signUpData.firstName = value,
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    label: "Last Name",
-                    initialValue: widget.signUpData.lastName,
-                    onSave: (value) => widget.signUpData.lastName = value,
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(right: 8),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFFF8EE),
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: Color(0xFFFAAF84),
-                          ),
-                        ),
-                        child: Text(
-                          "+91",
-                          style: TextStyle(
-                            color: Color(0xFFFAAF84),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+            elevation: 5,
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Create an Account",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
                       ),
-                      Expanded(
-                        child: _buildTextField(
-                          label: "Phone Number",
-                          initialValue: widget.signUpData.phoneNumber,
-                          keyboardType: TextInputType.phone,
-                          onSave: (value) => widget.signUpData.phoneNumber =
-                              "+91$value",
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    label: "Email",
-                    initialValue: widget.signUpData.email,
-                    keyboardType: TextInputType.emailAddress,
-                    onSave: (value) => widget.signUpData.email = value,
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    label: "Password",
-                    initialValue: widget.signUpData.password,
-                    obscureText: !isPasswordVisible,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Color(0xFFFAAF84),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isPasswordVisible = !isPasswordVisible;
-                        });
-                      },
                     ),
-                    onSave: (value) => widget.signUpData.password = value,
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
-                    label: "Rate per Year",
-                    initialValue: widget.signUpData.ratePerYear?.toString(),
-                    keyboardType: TextInputType.number,
-                    onSave: (value) => widget.signUpData.ratePerYear =
-                        value != null ? double.tryParse(value) : null,
-                  ),
-                  SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFAAF84),
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CounsellorSignUpStep2(
-                                signUpData: widget.signUpData,
-                              ),
+                    SizedBox(height: 5),
+                    Text(
+                      "Let’s get started with your details",
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      label: "First Name",
+                      initialValue: widget.signUpData.firstName,
+                      onSave: (value) => widget.signUpData.firstName = value,
+                    ),
+                    SizedBox(height: 15),
+                    _buildTextField(
+                      label: "Last Name",
+                      initialValue: widget.signUpData.lastName,
+                      onSave: (value) => widget.signUpData.lastName = value,
+                    ),
+                    SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.only(right: 8),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFFF8EE),
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: Colors.orange),
+                          ),
+                          child: Text(
+                            "+91",
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        "Next",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildTextField(
+                            label: "Phone Number",
+                            initialValue: widget.signUpData.phoneNumber,
+                            keyboardType: TextInputType.phone,
+                            onSave: (value) =>
+                                widget.signUpData.phoneNumber = "+91$value",
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
+                    _buildTextField(
+                      label: "Email",
+                      initialValue: widget.signUpData.email,
+                      keyboardType: TextInputType.emailAddress,
+                      onSave: (value) => widget.signUpData.email = value,
+                    ),
+                    SizedBox(height: 15),
+                    _buildTextField(
+                      label: "Password",
+                      initialValue: widget.signUpData.password,
+                      obscureText: !isPasswordVisible,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.orange,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isPasswordVisible = !isPasswordVisible;
+                          });
+                        },
+                      ),
+                      onSave: (value) => widget.signUpData.password = value,
+                    ),
+                    SizedBox(height: 15),
+                    _buildTextField(
+                      label: "Rate per Year",
+                      initialValue: widget.signUpData.ratePerYear?.toString(),
+                      keyboardType: TextInputType.number,
+                      onSave: (value) => widget.signUpData.ratePerYear =
+                          value != null ? double.tryParse(value) : null,
+                    ),
+                    SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CounsellorSignUpStep2(
+                                  signUpData: widget.signUpData,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          "Next",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -185,16 +191,16 @@ class _CounsellorSignUpStep1State extends State<CounsellorSignUpStep1> {
     return TextFormField(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Color(0xFFFAAF84)),
+        labelStyle: TextStyle(color: Colors.grey),
         filled: true,
-        fillColor: Color(0xFFFFF8EE),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Color(0xFFFAAF84)),
+          borderSide: BorderSide(color: Colors.orange),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Color(0xFFFAAF84), width: 2),
+          borderSide: BorderSide(color: Colors.orange, width: 2),
         ),
         suffixIcon: suffixIcon,
       ),

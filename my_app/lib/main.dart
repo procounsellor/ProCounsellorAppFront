@@ -40,7 +40,7 @@ class AppRoot extends StatefulWidget {
   _AppRootState createState() => _AppRootState();
 }
 
-class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
+class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   String? jwtToken;
   String? userId;
@@ -50,7 +50,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); 
+    WidgetsBinding.instance.addObserver(this);
     _initializeApp();
   }
 
@@ -92,51 +92,56 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
 
   // 🔹 Listen for incoming calls globally
   void _startListeningForCalls(BuildContext context) {
-  final CallService _callService = CallService();
+    final CallService _callService = CallService();
 
-  _signalingService.listenForIncomingCalls(userId!, (callData) {
-    CallOverlayManager.showIncomingCall(
-      callData,
-      context,
-      () {
-        bool isVideoCall = callData['callType'] == 'video';
+    _signalingService.listenForIncomingCalls(userId!, (callData) {
+      CallOverlayManager.showIncomingCall(
+        callData,
+        context,
+        () {
+          bool isVideoCall = callData['callType'] == 'video';
 
-        CallOverlayManager.removeOverlay(); // ✅ Remove overlay before navigating
+          CallOverlayManager
+              .removeOverlay(); // ✅ Remove overlay before navigating
 
-        // ✅ Use the global navigator key for safe navigation
-        CallOverlayManager.navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => isVideoCall
-                ? VideoCallPage(
-                    callId: callData['callId'],
-                    id: userId!,
-                    isCaller: false,
-                    callInitiatorId: callData['senderId'] ?? callData['callerId'],
-                  )
-                : CallPage(
-                    callId: callData['callId'],
-                    id: userId!,
-                    isCaller: false,
-                    callInitiatorId: callData['senderId'] ?? callData['callerId'],
-                  ),
-          ),
-        );
+          // ✅ Use the global navigator key for safe navigation
+          CallOverlayManager.navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => isVideoCall
+                  ? VideoCallPage(
+                      callId: callData['callId'],
+                      id: userId!,
+                      isCaller: false,
+                      callInitiatorId:
+                          callData['senderId'] ?? callData['callerId'],
+                    )
+                  : CallPage(
+                      callId: callData['callId'],
+                      id: userId!,
+                      isCaller: false,
+                      callInitiatorId:
+                          callData['senderId'] ?? callData['callerId'],
+                    ),
+            ),
+          );
 
-        _signalingService.clearIncomingCall(userId!);
-      },
-      () {
-        _signalingService.clearIncomingCall(userId!);
-        _callService.endCall(callData['callId']);
-        _signalingService.listenForCallEnd(callData['callId'], _handleCallEnd);
-      },
-    );
-    // ✅ Listen for Call Cancellation (Fixes the issue)
-    _signalingService.listenForCallEnd(callData['callId'], () {
-      print("🚨 Call was canceled before being answered!");
-      CallOverlayManager.removeOverlay(); // ✅ Automatically remove overlay if call is canceled
+          _signalingService.clearIncomingCall(userId!);
+        },
+        () {
+          _signalingService.clearIncomingCall(userId!);
+          _callService.endCall(callData['callId']);
+          _signalingService.listenForCallEnd(
+              callData['callId'], _handleCallEnd);
+        },
+      );
+      // ✅ Listen for Call Cancellation (Fixes the issue)
+      _signalingService.listenForCallEnd(callData['callId'], () {
+        print("🚨 Call was canceled before being answered!");
+        CallOverlayManager
+            .removeOverlay(); // ✅ Automatically remove overlay if call is canceled
+      });
     });
-  });
-}
+  }
 
   void _handleCallEnd() {
     Navigator.pop(context);
@@ -158,6 +163,10 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver{
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(child: CircularProgressIndicator()),
+        ),
+        theme: ThemeData(
+          scaffoldBackgroundColor:
+              Colors.white, // Sets default background to white
         ),
       );
     }
