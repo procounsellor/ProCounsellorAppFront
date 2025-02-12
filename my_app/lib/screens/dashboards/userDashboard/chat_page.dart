@@ -75,14 +75,28 @@ class _ChatPageState extends State<ChatPage> {
                   String senderId = '';
 
                   if (messages.isNotEmpty) {
-                    lastMessage = messages.last['text'] ?? 'No message';
-                    timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-                      DateTime.fromMillisecondsSinceEpoch(
-                          messages.last['timestamp']),
-                    );
-                    isSeen = messages.last['isSeen'] ?? true;
-                    senderId = messages.last['senderId'] ?? '';
-                  }
+                    var lastMsg = messages.last;
+                    senderId = lastMsg['senderId'] ?? '';
+
+                    if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+                      lastMessage = lastMsg['text'];
+                    } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+                      String fileType = lastMsg['fileType'] ?? 'unknown';
+
+                      if (fileType.startsWith('image/')) {
+                        lastMessage = "📷 Image";
+                      } else if (fileType.startsWith('video/')) {
+                        lastMessage = "🎥 Video";
+                      } else {
+                        lastMessage = "📄 File";
+                      }
+                    }
+
+                  timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
+                    DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
+                  );
+                  isSeen = lastMsg['isSeen'] ?? true;
+                }
 
                   chatDetails.add({
                     'id': chatId,

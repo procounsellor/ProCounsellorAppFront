@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:my_app/screens/dashboards/video_player_widget.dart';
-import 'chat_service.dart';
+import '../../../services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert'; // For JSON decoding
 import 'details_page.dart'; // Import CounsellorDetailsPage
@@ -238,7 +238,6 @@ class _ChattingPageState extends State<ChattingPage> {
       }
         showSendButton = true;
     });
-    print("Selected File: $selectedFileName");
   }
 }
 
@@ -304,9 +303,6 @@ class _ChattingPageState extends State<ChattingPage> {
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
         );
-
-        print("✅ File uploaded successfully!");
-
         // Fetch updated messages from backend and replace the temporary message
         _loadMessages(); // Refresh messages immediately
       } catch (e) {
@@ -319,7 +315,6 @@ class _ChattingPageState extends State<ChattingPage> {
       }
     }
 }
-
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -486,9 +481,6 @@ void _launchURL(String url) async {
 
  void _downloadFile(String url) async {
   Uri uri = Uri.parse(url); // Convert string to Uri
-
-  print("Downloading file from: $url");
-
   if (await canLaunchUrl(uri)) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   } else {

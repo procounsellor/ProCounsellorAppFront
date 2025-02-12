@@ -117,8 +117,6 @@ class ChatService {
         ));
       }
 
-      print("📂 Uploading file: $fileName with type: $mimeType");
-
       var response = await request.send();
       if (response.statusCode == 201) {
         print("✅ File sent successfully!");
@@ -157,7 +155,7 @@ class ChatService {
   }
 
 
-  // Listen for real-time updates to messages
+  // Listen for real-time updates to messages, including files
   void listenForNewMessages(
       String chatId, Function(List<Map<String, dynamic>>) onNewMessages) {
     FirebaseDatabase database = FirebaseDatabase.instance;
@@ -168,14 +166,18 @@ class ChatService {
       List<Map<String, dynamic>> newMessages = [];
 
       if (event.snapshot.value is Map) {
-        var messageData =
-            Map<String, dynamic>.from(event.snapshot.value as Map);
+        var messageData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        
+        // Check if it's a text or file message
         newMessages.add({
           'id': event.snapshot.key ?? '',
           'senderId': messageData['senderId'] ?? 'Unknown',
-          'text': messageData['text'] ?? 'No message',
-          'isSeen':
-              messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+          'text': messageData.containsKey('text') ? messageData['text'] : null,
+          'fileUrl': messageData.containsKey('fileUrl') ? messageData['fileUrl'] : null,
+          'fileName': messageData.containsKey('fileName') ? messageData['fileName'] : null,
+          'fileType': messageData.containsKey('fileType') ? messageData['fileType'] : null,
+          'isSeen': messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+          'timestamp': messageData['timestamp'] ?? 0, // Ensure correct ordering
         });
       }
 
@@ -187,14 +189,18 @@ class ChatService {
       List<Map<String, dynamic>> updatedMessages = [];
 
       if (event.snapshot.value is Map) {
-        var messageData =
-            Map<String, dynamic>.from(event.snapshot.value as Map);
+        var messageData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        
+        // Check if it's a text or file message
         updatedMessages.add({
           'id': event.snapshot.key ?? '',
           'senderId': messageData['senderId'] ?? 'Unknown',
-          'text': messageData['text'] ?? 'No message',
-          'isSeen':
-              messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+          'text': messageData.containsKey('text') ? messageData['text'] : null,
+          'fileUrl': messageData.containsKey('fileUrl') ? messageData['fileUrl'] : null,
+          'fileName': messageData.containsKey('fileName') ? messageData['fileName'] : null,
+          'fileType': messageData.containsKey('fileType') ? messageData['fileType'] : null,
+          'isSeen': messageData['isSeen'] ?? false, // Ensure 'isSeen' is included
+          'timestamp': messageData['timestamp'] ?? 0, // Ensure correct ordering
         });
       }
 
