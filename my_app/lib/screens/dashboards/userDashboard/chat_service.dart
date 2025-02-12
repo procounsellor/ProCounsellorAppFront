@@ -1,7 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 class MessageRequest {
   final String senderId;
@@ -77,9 +82,56 @@ class ChatService {
     }
   }
 
+   static Future<void> sendFileMessage({
+    required String chatId,
+    required String senderId,
+    required File? file,
+    required Uint8List? webFileBytes,
+    required String fileName,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://localhost:8080/api/chats/$chatId/files'),
+      );
+
+      request.fields['senderId'] = senderId;
+
+      // Determine file MIME type
+      String? mimeType;
+
+      if (kIsWeb && webFileBytes != null) {
+        mimeType = lookupMimeType(fileName); // Detect MIME type for Web
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          webFileBytes,
+          filename: fileName,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ));
+      } else if (file != null) {
+        mimeType = lookupMimeType(file.path); // Detect MIME type for Mobile/Desktop
+        request.files.add(await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ));
+      }
+
+      print("📂 Uploading file: $fileName with type: $mimeType");
+
+      var response = await request.send();
+      if (response.statusCode == 201) {
+        print("✅ File sent successfully!");
+      } else {
+        print("❌ Failed to send file: ${response.reasonPhrase}");
+      }
+    } catch (e) {
+      print("❌ Error sending file: $e");
+    }
+  }
+
   // Get chat messages
   Future<List<Map<String, dynamic>>> getChatMessages(String chatId) async {
-    print(chatId);
     final response = await http.get(
       Uri.parse('$baseUrl/$chatId/messages'),
     );
@@ -87,19 +139,23 @@ class ChatService {
     if (response.statusCode == 200) {
       var responseBody = jsonDecode(response.body);
 
-      // Parse response without timestamp
       return (responseBody as List<dynamic>).map((msg) {
         return {
           'id': msg['id'] ?? '',
           'senderId': msg['senderId'] ?? 'Unknown',
-          'text': msg['text'] ?? 'No message',
-          'isSeen': msg['isSeen'] ?? false, // Add the 'isSeen' field here
+          'text': msg.containsKey('text') ? msg['text'] : null, // Handle text messages
+          'fileUrl': msg.containsKey('fileUrl') ? msg['fileUrl'] : null, // Handle media
+          'fileName': msg.containsKey('fileName') ? msg['fileName'] : null,
+          'fileType': msg.containsKey('fileType') ? msg['fileType'] : null,
+          'isSeen': msg['isSeen'] ?? false,
+          'timestamp': msg['timestamp'] ?? 0,
         };
       }).toList();
     } else {
       throw Exception('Failed to fetch messages: ${response.body}');
     }
   }
+
 
   // Listen for real-time updates to messages
   void listenForNewMessages(
