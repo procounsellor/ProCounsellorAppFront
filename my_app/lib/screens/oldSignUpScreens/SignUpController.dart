@@ -11,7 +11,8 @@ class CounsellorSignUpStepper extends StatefulWidget {
 
 class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
   int _currentStep = 0;
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(); // Ensure it's initialized
   CounsellorSignUpData signUpData = CounsellorSignUpData();
   bool isPasswordVisible = false;
   List<String> selectedExpertise = [];
@@ -46,7 +47,15 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
 
   Future<void> _submitSignUp() async {
     try {
+      print("Sign Up function started!");
+
+      if (_formKey.currentState == null) {
+        print("Error: Form key is null before validation!");
+        throw Exception("Form key is not initialized properly.");
+      }
+
       if (!_formKey.currentState!.validate()) {
+        print("Validation failed.");
         throw Exception(
             "Please fill in all required fields before submitting.");
       }
@@ -55,35 +64,55 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
       signUpData.expertise = selectedExpertise;
       signUpData.stateOfCounsellor = selectedState;
 
+      print("First Name: ${signUpData.firstName}");
+      print("Last Name: ${signUpData.lastName}");
+      print("Phone Number: ${signUpData.phoneNumber}");
+      print("Email: ${signUpData.email}");
+      print("Password: ${signUpData.password}");
+      print("Rate Per Year: ${signUpData.ratePerYear}");
+      print("Expertise: ${signUpData.expertise}");
+      print("State: ${signUpData.stateOfCounsellor}");
+
       if (signUpData.stateOfCounsellor == null ||
           signUpData.stateOfCounsellor!.isEmpty) {
+        print("Error: State is null or empty.");
         throw Exception("Please select a state before submitting.");
       }
+
       if (signUpData.expertise.isEmpty) {
+        print("Error: Expertise list is empty.");
         throw Exception(
             "Please select at least one expertise before submitting.");
       }
 
+      double ratePerYear = signUpData.ratePerYear ?? 0.0;
+      print("Final Rate Per Year: $ratePerYear");
+
+      print("Sending API request...");
       String? result = await AuthService.counsellorSignUp(
-        signUpData.firstName!,
-        signUpData.lastName!,
-        signUpData.phoneNumber!,
-        signUpData.email!,
-        signUpData.password!,
-        signUpData.ratePerYear,
-        signUpData.expertise,
-        signUpData.stateOfCounsellor!,
+        signUpData.firstName ?? "",
+        signUpData.lastName ?? "",
+        signUpData.phoneNumber ?? "",
+        signUpData.email ?? "",
+        signUpData.password ?? "",
+        ratePerYear,
+        signUpData.expertise.isNotEmpty ? signUpData.expertise : [""],
+        signUpData.stateOfCounsellor ?? "",
       );
 
       if (result == null || result.isEmpty) {
+        print("Error: Received null or empty response from server.");
         throw Exception(
             "Sign Up Failed: Received null or empty response from server.");
       }
+
+      print("Sign Up Successful!");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Sign Up Successful!")),
       );
     } catch (e) {
+      print("Sign Up Failed: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Sign Up Failed: $e")),
       );
@@ -98,51 +127,54 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
         title: Text("Counsellor Sign Up"),
         backgroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          Container(
-            height: 100, // Defined height to prevent unbounded height error
-            decoration: BoxDecoration(color: Colors.white),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints:
-                    BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
-                child: Stepper(
-                  type: StepperType.horizontal,
-                  currentStep: _currentStep,
-                  onStepContinue: _nextStep,
-                  onStepCancel: _previousStep,
-                  steps: [
-                    Step(
-                        title: Text("Basic"),
-                        content: SizedBox.shrink(),
-                        isActive: _currentStep >= 0),
-                    Step(
-                        title: Text("Expertise"),
-                        content: SizedBox.shrink(),
-                        isActive: _currentStep >= 1),
-                    Step(
-                        title: Text("State"),
-                        content: SizedBox.shrink(),
-                        isActive: _currentStep >= 2),
-                  ],
+      body: Form(
+        key: _formKey, // Assigning the form key at the parent level
+        child: Column(
+          children: [
+            Container(
+              height: 100,
+              decoration: BoxDecoration(color: Colors.white),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width),
+                  child: Stepper(
+                    type: StepperType.horizontal,
+                    currentStep: _currentStep,
+                    onStepContinue: _nextStep,
+                    onStepCancel: _previousStep,
+                    steps: [
+                      Step(
+                          title: Text("Basic"),
+                          content: SizedBox.shrink(),
+                          isActive: _currentStep >= 0),
+                      Step(
+                          title: Text("Expertise"),
+                          content: SizedBox.shrink(),
+                          isActive: _currentStep >= 1),
+                      Step(
+                          title: Text("State"),
+                          content: SizedBox.shrink(),
+                          isActive: _currentStep >= 2),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: NeverScrollableScrollPhysics(),
-              children: [
-                _buildStep1(),
-                _buildStep2(),
-                _buildStep3(),
-              ],
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: NeverScrollableScrollPhysics(),
+                children: [
+                  _buildStep1(),
+                  _buildStep2(),
+                  _buildStep3(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -156,7 +188,6 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
           child: Column(
             children: [
               _buildTextField(
@@ -197,7 +228,7 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
                   keyboardType: TextInputType.phone,
                   onChanged: (value) {
                     if (!value.startsWith("+91")) {
-                      signUpData.phoneNumber = "+91$value";
+                      signUpData.phoneNumber = "+91" + value;
                     } else {
                       signUpData.phoneNumber = value;
                     }
