@@ -6,11 +6,12 @@ import 'package:my_app/screens/newSignUpScreens/verification_page.dart';
 import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
 import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
 import 'package:my_app/screens/oldSignUpScreens/counsellor_signin.dart';
+import 'package:my_app/screens/oldSignUpScreens/SignUpController.dart';
 
 class NewSignInPage extends StatefulWidget {
-    final Future<void> Function() onSignOut;
+  final Future<void> Function() onSignOut;
 
-    NewSignInPage({required this.onSignOut});
+  NewSignInPage({required this.onSignOut});
 
   @override
   _NewSignInPageState createState() => _NewSignInPageState();
@@ -140,9 +141,13 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                   onPressed: () {
                                     Navigator.push(
                                       context,
+                                      // MaterialPageRoute(
+                                      //   builder: (_) => CounsellorSignUpStep1(
+                                      //       signUpData: CounsellorSignUpData()),
+                                      // ),
                                       MaterialPageRoute(
-                                        builder: (_) => CounsellorSignUpStep1(
-                                            signUpData: CounsellorSignUpData()),
+                                        builder: (_) =>
+                                            CounsellorSignUpStepper(),
                                       ),
                                     );
                                   },
@@ -155,7 +160,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                   child: Text(
                                     'Sign up',
                                     style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
+                                        color: Colors.white, fontSize: 14),
                                   ),
                                 ),
                                 ElevatedButton(
@@ -163,7 +168,8 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => CounsellorSignInScreen(onSignOut: widget.onSignOut),
+                                        builder: (_) => CounsellorSignInScreen(
+                                            onSignOut: widget.onSignOut),
                                       ),
                                     );
                                   },
@@ -176,16 +182,16 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                   child: Text(
                                     'Sign in',
                                     style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
+                                        color: Colors.white, fontSize: 14),
                                   ),
                                 ),
-
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => AdminSignInScreen(onSignOut: widget.onSignOut),
+                                        builder: (_) => AdminSignInScreen(
+                                            onSignOut: widget.onSignOut),
                                       ),
                                     );
                                   },
@@ -198,10 +204,9 @@ class _NewSignInPageState extends State<NewSignInPage> {
                                   child: Text(
                                     'Admin Sign in',
                                     style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
+                                        color: Colors.white, fontSize: 14),
                                   ),
                                 ),
-                                
                               ],
                             ),
                           ],
@@ -239,7 +244,8 @@ class _NewSignInPageState extends State<NewSignInPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => VerificationPage(phoneNumber: phoneNumber, onSignOut: widget.onSignOut),
+            builder: (context) => VerificationPage(
+                phoneNumber: phoneNumber, onSignOut: widget.onSignOut),
           ),
         );
       } else {
