@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
+import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/services/call_service.dart';
 import 'counsellor_chatting_page.dart';
-import '../userDashboard/video_call_page.dart';
+import '../../callingScreens/video_call_page.dart';
 import '../../../services/video_call_service.dart';
 
 class ClientDetailsPage extends StatelessWidget {

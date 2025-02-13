@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart'; // For Firebase Realtime Database
 import 'package:http/http.dart' as http; // For API calls
-import 'package:my_app/screens/dashboards/video_player_widget.dart';
+import 'package:my_app/screens/customWidgets/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/chat_service.dart';
 import 'client_details_page.dart'; // Import the Client Details Page

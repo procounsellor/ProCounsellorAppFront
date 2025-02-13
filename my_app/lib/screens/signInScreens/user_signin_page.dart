@@ -1,23 +1,25 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/adminDashboard/admin_signin.dart';
+import 'package:my_app/screens/signInScreens/get_help.dart';
+import 'package:my_app/screens/signInScreens/privacy_page.dart';
+import 'package:my_app/screens/signInScreens/terms_page.dart';
 
-import 'package:my_app/screens/newSignUpScreens/verification_page.dart';
-import 'package:my_app/screens/oldSignUpScreens/counselllor_signup_step1.dart';
-import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
-import 'package:my_app/screens/oldSignUpScreens/counsellor_signin.dart';
-import 'package:my_app/screens/oldSignUpScreens/SignUpController.dart';
+import 'package:my_app/screens/signInScreens/verification_page.dart';
+import 'package:my_app/screens/signInScreens/counsellor_signin.dart';
+import 'package:my_app/screens/signInScreens/counsellor_signup.dart';
 
-class NewSignInPage extends StatefulWidget {
+class UserSignInPage extends StatefulWidget {
   final Future<void> Function() onSignOut;
 
-  NewSignInPage({required this.onSignOut});
+  UserSignInPage({required this.onSignOut});
 
   @override
-  _NewSignInPageState createState() => _NewSignInPageState();
+  _UserSignInPageState createState() => _UserSignInPageState();
 }
 
-class _NewSignInPageState extends State<NewSignInPage> {
+class _UserSignInPageState extends State<UserSignInPage> {
   final TextEditingController _phoneController = TextEditingController();
   String selectedCountryCode = '+91';
   bool isButtonEnabled = false;
@@ -131,15 +133,33 @@ class _NewSignInPageState extends State<NewSignInPage> {
                 children: [
                   TextSpan(text: 'By continuing, I agree to the '),
                   TextSpan(
-                    text: 'Terms of Use',
+                    text: 'Terms and Conditions',
                     style: TextStyle(
-                        color: Colors.orange, fontWeight: FontWeight.bold),
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TermsPage()),
+                        );
+                      },
                   ),
                   TextSpan(text: ' & '),
                   TextSpan(
                     text: 'Privacy Policy',
                     style: TextStyle(
-                        color: Colors.orange, fontWeight: FontWeight.bold),
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PrivacyPage()),
+                        );
+                      },
                   ),
                 ],
               ),
@@ -169,11 +189,20 @@ class _NewSignInPageState extends State<NewSignInPage> {
               text: TextSpan(
                 style: TextStyle(fontSize: 14, color: Colors.grey),
                 children: [
-                  TextSpan(text: 'Having trouble logging in ? '),
+                  TextSpan(text: 'Facing issues logging in ? '),
                   TextSpan(
                     text: 'Get Help',
                     style: TextStyle(
-                        color: Colors.orange, fontWeight: FontWeight.bold),
+                      color: Colors.orange, 
+                      fontWeight: FontWeight.bold,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => GetHelp()),
+                        );
+                      },
                   ),
                 ],
               ),

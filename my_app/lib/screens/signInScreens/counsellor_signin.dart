@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
+import 'package:my_app/screens/signInScreens/counsellor_signup.dart';
+import 'package:my_app/screens/signInScreens/forgot_password_page.dart';
 import '../../services/auth_service.dart';
 
 final storage = FlutterSecureStorage();
@@ -154,7 +156,7 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                         TextField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: "Email",
+                            labelText: "Email/Phone Number",
                             prefixIcon: Icon(Icons.email, color: Colors.orange),
                             filled: true,
                             fillColor: Colors.orange.shade50,
@@ -180,7 +182,12 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                            );
+                            },
                             child: Text("Forgot Password?"),
                           ),
                         ),
@@ -209,7 +216,12 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                         Text("Not registered? ",
                             style: TextStyle(color: Colors.black54)),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CounsellorSignUpStepper()),
+                            );
+                          },
                           child: Text("Create Account",
                               style: TextStyle(color: Colors.orange)),
                         ),
