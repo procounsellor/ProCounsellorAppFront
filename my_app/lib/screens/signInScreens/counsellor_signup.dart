@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/oldSignUpScreens/counsellor_signup_data.dart';
+import 'package:my_app/screens/signInScreens/counsellor_signup_data.dart';
 import 'package:my_app/services/auth_service.dart';
 
 class CounsellorSignUpStepper extends StatefulWidget {
@@ -156,6 +155,12 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width),
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      canvasColor: Colors.white, // Background behind Stepper
+                      shadowColor: Colors.transparent,
+                      cardColor: Colors.white, // Stepper card color
+                    ),
                   child: Stepper(
                     type: StepperType.horizontal,
                     currentStep: _currentStep,
@@ -178,6 +183,7 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
                   ),
                 ),
               ),
+            ),
             ),
             Expanded(
               child: PageView(

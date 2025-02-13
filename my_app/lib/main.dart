@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:my_app/screens/dashboards/call_layover_manager.dart';
-import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
-import 'package:my_app/screens/dashboards/userDashboard/video_call_page.dart';
+import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
+import 'package:my_app/screens/callingScreens/call_page.dart';
+import 'package:my_app/screens/callingScreens/video_call_page.dart';
+import 'package:my_app/screens/signInScreens/user_signin_page.dart';
 
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
-import 'package:my_app/screens/newSignUpScreens/new_signin_page.dart';
 
 import 'services/call_service.dart';
 
@@ -175,7 +175,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         navigatorKey: CallOverlayManager.navigatorKey,
-        home: NewSignInPage(onSignOut: restartApp),
+        home: UserSignInPage(onSignOut: restartApp),
       );
     }
 

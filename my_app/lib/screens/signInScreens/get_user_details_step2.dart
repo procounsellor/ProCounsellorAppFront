@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/newSignUpScreens/signup_complete.dart';
-import 'package:my_app/screens/newSignUpScreens/user_details.dart';
+import 'package:my_app/screens/signInScreens/user_signup_complete.dart';
+import 'package:my_app/screens/signInScreens/user_details.dart';
 import 'package:my_app/services/auth_service.dart';
 
 class GetUserDetailsStep2 extends StatefulWidget {

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import the http package
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
-import 'package:my_app/screens/dashboards/userDashboard/call_page.dart';
+import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/video_call_service.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import 'chatting_page.dart';
-import 'video_call_page.dart';
+import '../../callingScreens/video_call_page.dart';
 
 class DetailsPage extends StatefulWidget {
   final String itemName;

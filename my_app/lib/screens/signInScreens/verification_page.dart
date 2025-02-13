@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
-import 'package:my_app/screens/newSignUpScreens/get_user_details_step1.dart';
+import 'package:my_app/screens/signInScreens/get_user_details_step1.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:my_app/screens/newSignUpScreens/user_details.dart';
+import 'package:my_app/screens/signInScreens/user_details.dart';
 import 'package:my_app/services/auth_service.dart';
 import 'dart:convert';
 
