@@ -27,7 +27,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
     super.initState();
     _phoneController.addListener(() {
       setState(() {
-        isButtonEnabled = _phoneController.text.isNotEmpty;
+        isButtonEnabled = _phoneController.text.length == 10;
       });
     });
   }
@@ -39,22 +39,49 @@ class _NewSignInPageState extends State<NewSignInPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Spacer(),
-            Text(
-              'Pro Counsellor',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'assets/images/banner.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            SizedBox(height: 4),
-            Text(
-              'Your Counselling Expert',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+            SizedBox(height: 20),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Login',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '  or  ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Signup',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 24),
@@ -97,7 +124,27 @@ class _NewSignInPageState extends State<NewSignInPage> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 24),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                children: [
+                  TextSpan(text: 'By continuing, I agree to the '),
+                  TextSpan(
+                    text: 'Terms of Use',
+                    style: TextStyle(
+                        color: Colors.orange, fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: ' & '),
+                  TextSpan(
+                    text: 'Privacy Policy',
+                    style: TextStyle(
+                        color: Colors.orange, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: isButtonEnabled
                   ? () {
@@ -107,15 +154,35 @@ class _NewSignInPageState extends State<NewSignInPage> {
                     }
                   : null,
               style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
                 backgroundColor:
-                    isButtonEnabled ? Colors.orange.shade300 : Colors.grey,
+                    isButtonEnabled ? Colors.green[300] : Colors.grey[400],
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(2),
                 ),
+                minimumSize: Size(double.infinity, 48),
               ),
               child: Text('Get verification code'),
             ),
+            SizedBox(height: 24),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                children: [
+                  TextSpan(text: 'Having trouble logging in ? '),
+                  TextSpan(
+                    text: 'Get Help',
+                    style: TextStyle(
+                        color: Colors.orange, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
             Spacer(),
+            Image.asset(
+              'assets/images/c3.png',
+              height: 100,
+            ),
             GestureDetector(
               onTap: () {
                 showModalBottomSheet(
@@ -219,7 +286,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
               child: Text(
                 'SignIn as counsellor',
                 style: TextStyle(
-                  color: Colors.blue.shade300,
+                  color: Colors.orange,
                   fontSize: 16,
                 ),
               ),
@@ -234,7 +301,7 @@ class _NewSignInPageState extends State<NewSignInPage> {
   void generateOtp(String phoneNumber) async {
     try {
       //random code
-
+      print("Phone number " + phoneNumber);
       //
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/auth/generateOtp'),
