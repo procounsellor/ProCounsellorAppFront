@@ -923,9 +923,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                 // Post Review Button
                                 ElevatedButton(
                                   onPressed: isSubscribed
-                                      ? () {
-                                          // Navigate to the Post Review Page
-                                          Navigator.push(
+                                      ? () async {
+                                          final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (_) => PostUserReview(
@@ -935,6 +934,9 @@ class _DetailsPageState extends State<DetailsPage> {
                                               ),
                                             ),
                                           );
+                                          if (result == true) {
+                                            fetchReviews(); // Reload reviews on return
+                                          }
                                         }
                                       : null, // Disabled if not subscribed
                                   child: Text("Post Review"),
@@ -1140,25 +1142,85 @@ class _DetailsPageState extends State<DetailsPage> {
                                               controller: _commentController,
                                               decoration: InputDecoration(
                                                 hintText: "Add a comment...",
-                                                border: OutlineInputBorder(),
+                                                hintStyle: TextStyle(
+                                                    color: Colors.grey[500]),
+                                                filled: true,
+                                                fillColor: Colors.grey[100],
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 12),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  borderSide: BorderSide.none,
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.orange,
+                                                      width: 1.5),
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[300]!),
+                                                ),
+                                                suffixIcon: IconButton(
+                                                  icon: Icon(Icons.send,
+                                                      color: Colors.orange),
+                                                  onPressed: () {
+                                                    if (_commentController
+                                                        .text.isNotEmpty) {
+                                                      addComment(
+                                                          reviewId,
+                                                          _commentController
+                                                              .text,
+                                                          widget.userId);
+                                                      _commentController
+                                                          .clear();
+                                                    }
+                                                  },
+                                                ),
                                               ),
+                                              textInputAction:
+                                                  TextInputAction.done,
+                                              onSubmitted: (value) {
+                                                if (value.isNotEmpty) {
+                                                  addComment(reviewId, value,
+                                                      widget.userId);
+                                                  _commentController.clear();
+                                                }
+                                              },
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.black),
+                                              cursorColor: Colors.orange,
+                                              maxLines: 3,
+                                              minLines: 1,
+                                              keyboardType:
+                                                  TextInputType.multiline,
                                             ),
-                                            Align(
-                                              alignment: Alignment.centerRight,
-                                              child: TextButton(
-                                                onPressed: () {
-                                                  if (_commentController
-                                                      .text.isNotEmpty) {
-                                                    addComment(
-                                                        reviewId,
-                                                        _commentController.text,
-                                                        widget.userId);
-                                                    _commentController.clear();
-                                                  }
-                                                },
-                                                child: Text("Post Comment"),
-                                              ),
-                                            ),
+                                            // Align(
+                                            //   alignment: Alignment.centerRight,
+                                            //   child: TextButton(
+                                            //     onPressed: () {
+                                            //       if (_commentController
+                                            //           .text.isNotEmpty) {
+                                            //         addComment(
+                                            //             reviewId,
+                                            //             _commentController.text,
+                                            //             widget.userId);
+                                            //         _commentController.clear();
+                                            //       }
+                                            //     },
+                                            //     child: Text("Post Comment"),
+                                            //   ),
+                                            // ),
                                           ],
                                         ],
                                       ),

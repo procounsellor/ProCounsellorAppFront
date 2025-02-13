@@ -106,11 +106,28 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
             "Sign Up Failed: Received null or empty response from server.");
       }
 
-      print("Sign Up Successful!");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sign Up Successful!")),
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.asset('assets/images/success.gif'),
+                ),
+                SizedBox(height: 16),
+                Text("Sign Up Successful!"),
+              ],
+            ),
+          );
+        },
       );
+
+      await Future.delayed(Duration(seconds: 3));
+      Navigator.of(context).pop(); // Close dialog
     } catch (e) {
       print("Sign Up Failed: $e");
       ScaffoldMessenger.of(context).showSnackBar(
