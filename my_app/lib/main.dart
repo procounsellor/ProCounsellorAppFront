@@ -5,6 +5,7 @@ import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
 import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/screens/callingScreens/video_call_page.dart';
 import 'package:my_app/screens/signInScreens/user_signin_page.dart';
+import 'package:my_app/screens/signInScreens/counsellor_sucess_signup.dart';
 
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'firebase_options.dart';
@@ -176,6 +177,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         navigatorKey: CallOverlayManager.navigatorKey,
         home: UserSignInPage(onSignOut: restartApp),
+        //home: SignUpSuccessPage(),
       );
     }
 

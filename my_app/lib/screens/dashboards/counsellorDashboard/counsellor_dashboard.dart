@@ -339,7 +339,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                 ),
                                 SizedBox(height: 10),
                                 reviews.isEmpty
-                                    ? Center(child: CircularProgressIndicator())
+                                    ? Center(child: Text("No reviews for Now!"))
                                     : CarouselSlider(
                                         options: CarouselOptions(
                                             height: 200.0, autoPlay: true),
@@ -397,15 +397,19 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                 SizedBox(height: 20),
                                 Center(
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MyReviewPage(
-                                              username: widget.counsellorId),
-                                        ),
-                                      );
-                                    },
+                                    onPressed: reviews.isEmpty
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    MyReviewPage(
+                                                        username: widget
+                                                            .counsellorId),
+                                              ),
+                                            );
+                                          },
                                     child: Text("Go to My Reviews"),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.orange,

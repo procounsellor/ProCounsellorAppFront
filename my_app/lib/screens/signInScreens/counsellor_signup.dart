@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/signInScreens/counsellor_signup_data.dart';
 import 'package:my_app/services/auth_service.dart';
+import 'counsellor_sucess_signup.dart';
 
 class CounsellorSignUpStepper extends StatefulWidget {
   @override
@@ -104,29 +105,9 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
         throw Exception(
             "Sign Up Failed: Received null or empty response from server.");
       }
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.asset('assets/images/success.gif'),
-                ),
-                SizedBox(height: 16),
-                Text("Sign Up Successful!"),
-              ],
-            ),
-          );
-        },
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const SignUpSuccessPage()),
       );
-
-      await Future.delayed(Duration(seconds: 3));
-      Navigator.of(context).pop(); // Close dialog
     } catch (e) {
       print("Sign Up Failed: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,29 +142,29 @@ class _CounsellorSignUpStepperState extends State<CounsellorSignUpStepper> {
                       shadowColor: Colors.transparent,
                       cardColor: Colors.white, // Stepper card color
                     ),
-                  child: Stepper(
-                    type: StepperType.horizontal,
-                    currentStep: _currentStep,
-                    onStepContinue: _nextStep,
-                    onStepCancel: _previousStep,
-                    steps: [
-                      Step(
-                          title: Text("Basic"),
-                          content: SizedBox.shrink(),
-                          isActive: _currentStep >= 0),
-                      Step(
-                          title: Text("Expertise"),
-                          content: SizedBox.shrink(),
-                          isActive: _currentStep >= 1),
-                      Step(
-                          title: Text("State"),
-                          content: SizedBox.shrink(),
-                          isActive: _currentStep >= 2),
-                    ],
+                    child: Stepper(
+                      type: StepperType.horizontal,
+                      currentStep: _currentStep,
+                      onStepContinue: _nextStep,
+                      onStepCancel: _previousStep,
+                      steps: [
+                        Step(
+                            title: Text("Basic"),
+                            content: SizedBox.shrink(),
+                            isActive: _currentStep >= 0),
+                        Step(
+                            title: Text("Expertise"),
+                            content: SizedBox.shrink(),
+                            isActive: _currentStep >= 1),
+                        Step(
+                            title: Text("State"),
+                            content: SizedBox.shrink(),
+                            isActive: _currentStep >= 2),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
             ),
             Expanded(
               child: PageView(
