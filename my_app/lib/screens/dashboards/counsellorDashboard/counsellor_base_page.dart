@@ -32,7 +32,8 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
 
   // Define the pages that can be navigated to
   final List<Widget> _pages = [];
-  String? _photoUrl; // To store the counsellor's photo URL
+  String? _photoUrl;
+  String _fullName = ""; // To store the counsellor's photo URL
   bool _isLoadingPhoto = true; // To track photo loading state
   int notificationCount = 0;
   int subscriberNotificationCount = 0;
@@ -122,7 +123,9 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
             List<String>.from(data['chatIdsCreatedForCounsellor'] ?? []);
         _listenToNotifications(chatIds);
         setState(() {
-          _photoUrl = data['photoUrl']; // Assuming API returns 'photoUrl'
+          _photoUrl = data['photoUrl'];
+          _fullName = data['firstName'] + " " + data['lastName'];
+          // Assuming API returns 'photoUrl'
           _isLoadingPhoto = false;
         });
       } else {
@@ -198,6 +201,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       key: _scaffoldKey, // Use the GlobalKey for the Scaffold
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -302,6 +306,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Colors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -324,7 +329,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                   ),
                   SizedBox(height: 10),
                   Text(
-                    widget.counsellorId,
+                    _fullName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
