@@ -68,6 +68,7 @@ class _VerificationPageState extends State<VerificationPage> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
+          SizedBox(height: 36),
           buildBanner(),
           Expanded(
             child: Padding(

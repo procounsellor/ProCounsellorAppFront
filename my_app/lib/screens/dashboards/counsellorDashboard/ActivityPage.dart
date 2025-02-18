@@ -2,46 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import 'client_details_page.dart';
 
 class ActivityPage extends StatefulWidget {
-  final List<String> activityLogs;
   final String counsellorId;
+  final List<String> activityLogs;
 
-  ActivityPage({required this.activityLogs, required this.counsellorId});
+  ActivityPage({required this.counsellorId, required this.activityLogs});
 
   @override
   _ActivityPageState createState() => _ActivityPageState();
 }
 
 class _ActivityPageState extends State<ActivityPage> {
-  List<Map<String, dynamic>> userDetails = [];
+  List<String> activityLogs = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchUserDetails();
+    _fetchActivityLogs();
     _markAllAsSeen();
   }
 
-  Future<void> _fetchUserDetails() async {
-    List<Map<String, dynamic>> fetchedUsers = [];
-    for (String log in widget.activityLogs) {
-      String userId = log.split(": ")[1];
-      final response =
-          await http.get(Uri.parse('http://localhost:8080/api/user/$userId'));
+  Future<void> _fetchActivityLogs() async {
+    final url = Uri.parse(
+        'http://localhost:8080/api/counsellor/${widget.counsellorId}');
+    try {
+      final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        fetchedUsers.add({
-          'firstName': data['firstName'] ?? 'Unknown',
-          'lastName': data['lastName'] ?? '',
-          'photo': data['photo'] ?? '',
-          'activity': log.split(": ")[0],
-        });
+        if (data['activityLog'] != null) {
+          setState(() {
+            activityLogs = List<String>.from(data['activityLog']);
+          });
+        }
+      } else {
+        print('Failed to fetch activity logs');
       }
+    } catch (e) {
+      print('Error fetching activity logs: $e');
     }
-    setState(() {
-      userDetails = fetchedUsers;
-    });
   }
 
   void _markAllAsSeen() {
@@ -73,35 +73,145 @@ class _ActivityPageState extends State<ActivityPage> {
 
   @override
   Widget build(BuildContext context) {
+    Map<String, String> photoCache = {};
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Activity Log"),
+        backgroundColor: Colors.white,
+        title: const Text("Activity Log"),
         centerTitle: true,
       ),
-      body: userDetails.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: userDetails.length,
+      body: activityLogs.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.separated(
+              itemCount: activityLogs.length,
+              separatorBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: const Divider(color: Colors.grey, thickness: 0.5),
+              ),
               itemBuilder: (context, index) {
-                final user = userDetails[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  elevation: 3,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: user['photo'].isNotEmpty
-                          ? NetworkImage(user['photo'])
-                          : AssetImage('assets/default_avatar.png')
-                              as ImageProvider,
+                final log = activityLogs[index];
+                final name = log.split('(')[0].trim();
+                final activity = log.split(')')[1].trim();
+                final phoneNumber = log.contains('(') && log.contains(')')
+                    ? log.substring(log.indexOf('(') + 1, log.indexOf(')'))
+                    : '';
+
+                if (photoCache.containsKey(phoneNumber)) {
+                  final photoUrl = photoCache[phoneNumber]!;
+                  return ListTile(
+                    leading: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ClientDetailsPage(
+                              client: {
+                                'firstName': name.split(' ')[0],
+                                'lastName': name.split(' ').length > 1
+                                    ? name.split(' ')[1]
+                                    : '',
+                                'email': name,
+                                'phone': phoneNumber,
+                                'photo': photoUrl,
+                                'userName': phoneNumber,
+                              },
+                              counsellorId: widget.counsellorId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        backgroundImage:
+                            photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                        backgroundColor: Colors.blueAccent,
+                        child: photoUrl.isEmpty
+                            ? Text(name[0],
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold))
+                            : null,
+                      ),
                     ),
-                    title: Text(
-                      "${user['firstName']} ${user['lastName']}",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(user['activity']),
-                  ),
-                );
+                    title: Text("$name - $activity",
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  );
+                } else {
+                  return FutureBuilder<http.Response>(
+                    future: http.get(Uri.parse(
+                        'http://localhost:8080/api/user/$phoneNumber')),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.blueAccent,
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text('Loading...'),
+                        );
+                      }
+                      if (snapshot.hasError ||
+                          snapshot.data?.statusCode != 200) {
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.blueAccent,
+                            child: Text(name[0],
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          title: Text("$name - $activity",
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                        );
+                      }
+                      final userData = json.decode(snapshot.data!.body);
+                      final photoUrl = userData['photo'] ?? '';
+                      photoCache[phoneNumber] = photoUrl;
+
+                      return ListTile(
+                        leading: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ClientDetailsPage(
+                                  client: {
+                                    'firstName': userData['firstName'],
+                                    'lastName': userData['lastName'],
+                                    'email': userData['email'],
+                                    'phone': phoneNumber,
+                                    'photo': photoUrl,
+                                    'userName': phoneNumber,
+                                  },
+                                  counsellorId: widget.counsellorId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            backgroundImage: photoUrl.isNotEmpty
+                                ? NetworkImage(photoUrl)
+                                : null,
+                            backgroundColor: Colors.blueAccent,
+                            child: photoUrl.isEmpty
+                                ? Text(name[0],
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold))
+                                : null,
+                          ),
+                        ),
+                        title: Text(
+                            "${userData['firstName']} ${userData['lastName']} has $activity",
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.normal)),
+                      );
+                    },
+                  );
+                }
               },
             ),
     );

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -19,11 +20,13 @@ class _ChatPageState extends State<ChatPage> {
   List<Map<String, dynamic>> filteredChats = [];
   bool isLoading = true;
   String searchQuery = '';
+  late DatabaseReference chatRef;
 
   @override
   void initState() {
     super.initState();
     fetchChats();
+    _listenToRealtimeMessages();
   }
 
   Future<void> fetchChats() async {
@@ -78,9 +81,11 @@ class _ChatPageState extends State<ChatPage> {
                     var lastMsg = messages.last;
                     senderId = lastMsg['senderId'] ?? '';
 
-                    if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+                    if (lastMsg.containsKey('text') &&
+                        lastMsg['text'] != null) {
                       lastMessage = lastMsg['text'];
-                    } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+                    } else if (lastMsg.containsKey('fileUrl') &&
+                        lastMsg['fileUrl'] != null) {
                       String fileType = lastMsg['fileType'] ?? 'unknown';
 
                       if (fileType.startsWith('image/')) {
@@ -92,11 +97,11 @@ class _ChatPageState extends State<ChatPage> {
                       }
                     }
 
-                  timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-                    DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
-                  );
-                  isSeen = lastMsg['isSeen'] ?? true;
-                }
+                    timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
+                      DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
+                    );
+                    isSeen = lastMsg['isSeen'] ?? true;
+                  }
 
                   chatDetails.add({
                     'id': chatId,
@@ -116,6 +121,7 @@ class _ChatPageState extends State<ChatPage> {
 
         setState(() {
           chats = chatDetails;
+          chats.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
           filteredChats = chatDetails;
           isLoading = false;
         });
@@ -130,6 +136,50 @@ class _ChatPageState extends State<ChatPage> {
         SnackBar(content: Text("Error: $e")),
       );
     }
+  }
+
+  void _listenToRealtimeMessages() {
+    chatRef = FirebaseDatabase.instance.ref('chats');
+
+    chatRef.onChildChanged.listen((event) {
+      if (event.snapshot.value != null) {
+        final chatId = event.snapshot.key;
+        final updatedChatData =
+            Map<String, dynamic>.from(event.snapshot.value as Map);
+
+        if (chatId != null && updatedChatData.containsKey('messages')) {
+          final messages =
+              Map<String, dynamic>.from(updatedChatData['messages']);
+          if (messages.isNotEmpty) {
+            final lastMessageKey = messages.keys.last;
+            final lastMessageData = messages[lastMessageKey];
+
+            final index = chats.indexWhere((chat) => chat['id'] == chatId);
+            if (index != -1) {
+              setState(() {
+                chats[index]['lastMessage'] =
+                    lastMessageData['text'] ?? 'No message';
+                chats[index]['timestamp'] =
+                    DateFormat('dd MMM yyyy, h:mm a').format(
+                  DateTime.fromMillisecondsSinceEpoch(
+                      lastMessageData['timestamp']),
+                );
+                chats[index]['isSeen'] = lastMessageData['isSeen'] ?? true;
+                chats[index]['senderId'] = lastMessageData['senderId'] ?? '';
+                // Move updated chat to the top
+                final updatedChat = chats.removeAt(index);
+                chats.insert(0, updatedChat);
+                filteredChats = List.from(chats);
+              });
+            } else {
+              print("⚠️ Chat ID Not Found in List: $chatId");
+            }
+          } else {
+            print("⚠️ No messages found in Chat ID: $chatId");
+          }
+        }
+      }
+    });
   }
 
   void filterChats(String query) {
