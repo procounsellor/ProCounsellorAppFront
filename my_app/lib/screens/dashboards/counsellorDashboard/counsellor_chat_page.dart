@@ -62,7 +62,8 @@ class _ChatsPageState extends State<ChatsPage> {
                 );
 
                 if (messagesResponse.statusCode == 200) {
-                  final messages = json.decode(messagesResponse.body) as List<dynamic>;
+                  final messages =
+                      json.decode(messagesResponse.body) as List<dynamic>;
 
                   String lastMessage = 'No messages yet';
                   String timestamp = 'N/A';
@@ -73,9 +74,11 @@ class _ChatsPageState extends State<ChatsPage> {
                     var lastMsg = messages.last;
                     senderId = lastMsg['senderId'] ?? '';
 
-                    if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+                    if (lastMsg.containsKey('text') &&
+                        lastMsg['text'] != null) {
                       lastMessage = lastMsg['text'];
-                    } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+                    } else if (lastMsg.containsKey('fileUrl') &&
+                        lastMsg['fileUrl'] != null) {
                       String fileType = lastMsg['fileType'] ?? 'unknown';
 
                       if (fileType.startsWith('image/')) {
@@ -279,7 +282,8 @@ class _ChatsPageState extends State<ChatsPage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 35,
-                                    backgroundColor: Colors.grey[300], // Placeholder color
+                                    backgroundColor:
+                                        Colors.grey[300], // Placeholder color
                                     backgroundImage: NetworkImage(photoUrl),
                                   ),
                                   SizedBox(width: 16),

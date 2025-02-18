@@ -43,6 +43,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 32),
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -157,7 +158,8 @@ class _UserSignInPageState extends State<UserSignInPage> {
                       ..onTap = () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => PrivacyPage()),
+                          MaterialPageRoute(
+                              builder: (context) => PrivacyPage()),
                         );
                       },
                   ),
@@ -193,7 +195,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
                   TextSpan(
                     text: 'Get Help',
                     style: TextStyle(
-                      color: Colors.orange, 
+                      color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
                     recognizer: TapGestureRecognizer()
@@ -334,6 +336,8 @@ class _UserSignInPageState extends State<UserSignInPage> {
       //
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/auth/generateOtp'),
+        //Uri.parse('http://10.0.2.2:8080/api/auth/generateOtp'),
+
         body: {'phoneNumber': phoneNumber},
       );
       if (response.statusCode == 200) {
