@@ -12,7 +12,9 @@ class CallOverlayManager {
     bool isVideoCall = callData['callType'] == 'video';
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
+      builder: (context) => 
+      SafeArea(
+        child:Stack(
         children: [
           Positioned.fill(
             child: Container(
@@ -89,9 +91,13 @@ class CallOverlayManager {
           ),
         ],
       ),
+      ),
     );
 
-    navigatorKey.currentState?.overlay?.insert(_overlayEntry!);
+    // Ensure the overlay is added AFTER the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navigatorKey.currentState?.overlay?.insert(_overlayEntry!);
+    });
   }
 
   static void removeOverlay() {

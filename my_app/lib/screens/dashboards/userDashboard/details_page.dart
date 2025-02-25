@@ -1312,22 +1312,4 @@ class _DetailsPageState extends State<DetailsPage> {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
     return "${date.hour}:${date.minute} ${date.day}/${date.month}/${date.year}";
   }
-
-  Future<String> fetchUserFullName(String userName) async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/reviews/user/fullname/$userName'),
-      );
-
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        print('Error fetching counsellor full name: ${response.body}');
-        return "Unknown";
-      }
-    } catch (e) {
-      print('Error: $e');
-      return "Unknown";
-    }
-  }
 }

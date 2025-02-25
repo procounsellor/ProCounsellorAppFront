@@ -77,8 +77,10 @@ class _CallPageState extends State<VideoCallPage> {
 
     // ✅ Request both video & audio
     MediaStream localStream = await navigator.mediaDevices.getUserMedia({
-      'video': true,
       'audio': true,
+      'video': {
+        'facingMode': 'user',
+      }
     });
 
     _localRenderer.srcObject = localStream; // ✅ Assign local stream
