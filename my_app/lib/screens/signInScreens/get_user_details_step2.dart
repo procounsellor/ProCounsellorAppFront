@@ -24,10 +24,10 @@ class GetUserDetailsStep2 extends StatefulWidget {
 
 class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
   final List<Map<String, String>> allowedStates = [
-    {'name': 'KARNATAKA', 'image': 'assets/images/karnataka.jpg'},
-    {'name': 'MAHARASHTRA', 'image': 'assets/images/maharashtra.png'},
-    {'name': 'TAMILNADU', 'image': 'assets/images/tamilnadu.png'},
-    {'name': 'OTHERS', 'image': 'assets/images/india.png'}
+    {'name': 'KARNATAKA', 'image': 'assets/images/kar.png'},
+    {'name': 'MAHARASHTRA', 'image': 'assets/images/maha.png'},
+    {'name': 'TAMILNADU', 'image': 'assets/images/tamil.png'},
+    {'name': 'OTHERS', 'image': 'assets/images/indian.png'}
   ];
 
   @override
@@ -39,13 +39,29 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              SizedBox(height: 20),
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/banner4.png',
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
               Center(
                 child: Text(
                   "Select Interested States",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
                     color: Colors.black, // Heading color set to black
                   ),
                 ),
@@ -75,20 +91,12 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                       });
                     },
                     child: Column(
-                      // mainAxisSize:
-                      //     MainAxisSize.min, // Prevent overflow in Column
                       children: [
-                        // Card for the image
-                        // AspectRatio(
-                        //   aspectRatio: 1, // Ensures the card is a square
-                        // child:
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
-                              color: isSelected
-                                  ? Colors.green
-                                  : Colors.grey.shade300,
+                              color: isSelected ? Colors.white : Colors.white,
                               width: 2,
                             ),
                           ),
@@ -98,21 +106,27 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                               state['image']!,
                               fit: BoxFit
                                   .cover, // Ensures the image fills the card
-                              width: MediaQuery.sizeOf(context).width / 2 -
-                                  50, // Fills the horizontal space
-                              height: MediaQuery.sizeOf(context).width / 2 - 61,
-                              // Fills the horizontal space
+                              width: MediaQuery.sizeOf(context).width / 2 - 58,
+                              height: MediaQuery.sizeOf(context).width / 2 - 70,
                             ),
                           ),
                         ),
-                        //),
+                        SizedBox(height: 10),
+                        Container(
+                          height: 2,
+                          width: double.infinity,
+                          color: isSelected
+                              ? Colors.orangeAccent
+                              : Colors.grey.shade300,
+                        ),
                         SizedBox(height: 8), // Space between card and text
                         Text(
                           state['name']!,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.green : Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                            color:
+                                isSelected ? Colors.orangeAccent : Colors.black,
                           ),
                         ),
                         SizedBox(height: 20), // Extra spacing below each item
@@ -121,16 +135,16 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                   );
                 }).toList(),
               ),
-              SizedBox(height: 40),
+              SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        Colors.green, // Submit button color set to green
+                        Colors.green[300], // Submit button color set to green
                     padding: EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   onPressed: () async {

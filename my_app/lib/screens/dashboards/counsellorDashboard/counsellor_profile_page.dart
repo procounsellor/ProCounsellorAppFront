@@ -34,8 +34,9 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
         setState(() {
-          profileData = json.decode(response.body);
+          profileData = data;
           isLoading = false;
         });
       } else {
@@ -126,46 +127,97 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
               : SingleChildScrollView(
                   padding: EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16.0),
-                            color: Colors.grey[300],
-                            image: _profileImageBytes != null
-                                ? DecorationImage(
-                                    image: MemoryImage(_profileImageBytes!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : (profileData!["photoUrl"] != null
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Profile Image
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16.0),
+                                color: Colors.grey[300],
+                                image: _profileImageBytes != null
                                     ? DecorationImage(
-                                        image: NetworkImage(
-                                            profileData!["photoUrl"]),
+                                        image: MemoryImage(_profileImageBytes!),
                                         fit: BoxFit.cover,
                                       )
-                                    : null),
+                                    : (profileData!["photoUrl"] != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(
+                                                profileData!["photoUrl"]),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null),
+                              ),
+                              child: _profileImageBytes == null &&
+                                      profileData!["photoUrl"] == null
+                                  ? Icon(Icons.person,
+                                      size: 60, color: Colors.white)
+                                  : null,
+                            ),
                           ),
-                          child: _profileImageBytes == null &&
-                                  profileData!["photoUrl"] == null
-                              ? Icon(Icons.person,
-                                  size: 60, color: Colors.white)
-                              : null,
-                        ),
+                          SizedBox(width: 16),
+                          // Name and Stats
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Name
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    "${profileData!["firstName"]} ${profileData!["lastName"]}",
+                                    style: TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                // Stats
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    SizedBox(width: 10),
+                                    _buildStatColumn("Clients",
+                                        profileData!["clientIds"]?.length ?? 0),
+                                    SizedBox(width: 20),
+                                    _buildStatColumn(
+                                        "Followers",
+                                        profileData!["followerIds"]?.length ??
+                                            0),
+                                    SizedBox(width: 20),
+                                    _buildStatColumn(
+                                        "Posts", 12), // Temporary value
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        "${profileData!["firstName"]} ${profileData!["lastName"]}",
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                      SizedBox(height: 15),
+                      // Counsellor Description
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          profileData!['description'],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       SizedBox(height: 20),
+                      // Profile Details
                       Card(
                         color: Colors.white,
                         shape: RoundedRectangleBorder(
@@ -197,6 +249,22 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                     ],
                   ),
                 ),
+    );
+  }
+
+// Helper Widget for Stats
+  Widget _buildStatColumn(String label, int value) {
+    return Column(
+      children: [
+        Text(
+          value.toString(),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+      ],
     );
   }
 }
