@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
+import 'package:http/http.dart' as http;
 
 class VideoCallPage extends StatefulWidget {
   final String callId;
@@ -23,16 +28,55 @@ class VideoCallPage extends StatefulWidget {
 class _CallPageState extends State<VideoCallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   final CallService _callService = CallService();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
+  String? callerName;
+  bool _callAnswered = false; // ✅ Track if call is answered
+  Timer? _ringingTimer;
+
   @override
   void initState() {
     super.initState();
+    _fetchCallerDetails();
+
     _initWebRTC();
     _signalingService.listenForCallEnd(widget.callId, _handleCallEnd);
-    print(widget.id);
+
+     if (widget.isCaller) {
+      _startRinging(); // ✅ Start ringing if initiating call
+    }
+  }
+
+  Future<void> _fetchCallerDetails() async {
+    String baseUrl = "http://localhost:8080/api";
+    String userUrl = "$baseUrl/user/${widget.callInitiatorId}";
+    String counsellorUrl = "$baseUrl/counsellor/${widget.callInitiatorId}";
+
+    try {
+      final userResponse = await http.get(Uri.parse(userUrl));
+      if (userResponse.statusCode == 200 && userResponse.body.isNotEmpty) {
+        final data = json.decode(userResponse.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+        });
+        return;
+      }
+
+      final counsellorResponse = await http.get(Uri.parse(counsellorUrl));
+      if (counsellorResponse.statusCode == 200 &&
+          counsellorResponse.body.isNotEmpty) {
+        final data = json.decode(counsellorResponse.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+        });
+      }
+    } catch (e) {
+      print("Error fetching caller details: $e");
+    }
   }
 
   Future<void> _initWebRTC() async {
@@ -70,6 +114,7 @@ class _CallPageState extends State<VideoCallPage> {
 
     _peerConnection!.onTrack = (RTCTrackEvent event) {
       if (event.streams.isNotEmpty) {
+        _stopRinging(); // ✅ Stop ringing when remote track arrives (call answered)
         print("🔹 Remote video/audio track received!");
         _remoteRenderer.srcObject = event.streams[0]; // ✅ Assign remote stream
       }
@@ -116,6 +161,7 @@ class _CallPageState extends State<VideoCallPage> {
         if (remoteDesc == null) {
           await _peerConnection!.setRemoteDescription(answer);
           print("✅ Remote answer SDP set successfully.");
+          _stopRinging(); // ✅ Stop ringing when answer received
         } else {
           print("⚠️ Skipping redundant remote SDP set.");
         }
@@ -167,9 +213,34 @@ class _CallPageState extends State<VideoCallPage> {
     }
   }
 
+  void _startRinging() async {
+    print("🔔 Starting Ringer...");
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('sounds/ringtone.mp3'));
+
+    // 🔹 Auto stop ringer after 1 minute if call is not answered
+    _ringingTimer = Timer(Duration(minutes: 1), () {
+      if (!_callAnswered) {
+        print("⏳ Call not answered. Stopping ringer and cutting the call after 1 minute.");
+        _endCall();
+      }
+    });
+  }
+
+  // ✅ Stop Ringer
+  void _stopRinging() {
+    if (!_callAnswered) {
+      print("🔕 Stopping Ringer...");
+      _callAnswered = true;
+      _audioPlayer.stop();
+      _ringingTimer?.cancel();
+    }
+  }
+
   void _handleCallEnd() {
     if (mounted) {
       _peerConnection?.close();
+      _stopRinging();
       Navigator.pop(context);
     }
   }
@@ -178,8 +249,11 @@ class _CallPageState extends State<VideoCallPage> {
     _peerConnection?.close();
     _callService.endCall(widget.callId);
     _signalingService.clearIncomingCall(widget.callInitiatorId);
+    _stopRinging();
      // ✅ Use Global Navigator Key to ensure correct pop
-    CallOverlayManager.navigatorKey.currentState?.maybePop();
+    if (CallOverlayManager.navigatorKey.currentState?.canPop() ?? false) {
+      CallOverlayManager.navigatorKey.currentState?.pop();
+    }
   }
 
   @override
@@ -187,42 +261,58 @@ class _CallPageState extends State<VideoCallPage> {
     _peerConnection?.dispose();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
+    _audioPlayer.dispose();
+    _ringingTimer?.cancel();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: RTCVideoView(_remoteRenderer, mirror: true),
-          ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: Container(
-              width: 120,
-              height: 160,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: RTCVideoView(_localRenderer, mirror: true),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    body: Stack(
+      children: [
+        Positioned.fill(
+          child: RTCVideoView(_remoteRenderer, mirror: true),
+        ),
+        Positioned(
+          top: 40, // Adjusted to keep space for status bar
+          left: 20,
+          right: 20,
+          child: Text(
+            callerName ?? "Unknown Caller",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Positioned(
-            bottom: 40,
-            left: 20,
-            child: ElevatedButton(
-              onPressed: _endCall,
-              child: Text("End Call", style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        ),
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: Container(
+            width: 120,
+            height: 160,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white, width: 2),
             ),
+            child: RTCVideoView(_localRenderer, mirror: true),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        Positioned(
+          bottom: 40,
+          left: 20,
+          child: ElevatedButton(
+            onPressed: _endCall,
+            child: Text("End Call", style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
