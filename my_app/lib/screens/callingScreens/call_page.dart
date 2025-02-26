@@ -29,6 +29,9 @@ class _CallPageState extends State<CallPage> {
   final CallService _callService = CallService();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  bool _isMuted = false;
+  bool _isSpeakerOn = false;
+
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
@@ -288,72 +291,142 @@ class _CallPageState extends State<CallPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 1.0, end: _isSpeaking ? 1.3 : 1.0),
-              duration: Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              builder: (context, scale, child) {
-                return Transform.scale(
-                  scale: scale,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueAccent
-                              .withOpacity(_isSpeaking ? 0.7 : 0.0),
-                          blurRadius: _isSpeaking ? 30 : 0,
-                          spreadRadius: _isSpeaking ? 10 : 0,
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: callerPhoto != null
-                          ? NetworkImage(callerPhoto!)
-                          : null,
-                      child: callerPhoto == null
-                          ? Icon(Icons.person, size: 60, color: Colors.white)
-                          : null,
-                    ),
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 20),
-            Text(
-              callerName ?? "Unknown Caller",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _endCall,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: Text("End Call",
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+Future<void> _toggleMute() async {
+  setState(() {
+    _isMuted = !_isMuted;
+  });
+
+  if (_peerConnection != null) {
+    List<RTCRtpSender> senders = await _peerConnection!.getSenders();
+    for (var sender in senders) {
+      if (sender.track != null && sender.track!.kind == 'audio') {
+        sender.track!.enabled = !_isMuted;
+      }
+    }
   }
+
+  print(_isMuted ? "🎤 Microphone Muted" : "🎤 Microphone Unmuted");
+}
+
+
+
+void _toggleSpeaker() async {
+  setState(() {
+    _isSpeakerOn = !_isSpeakerOn;
+  });
+
+  try {
+    // Ensure the correct audio output is set
+    if (_isSpeakerOn) {
+      // 🔊 Enable Speaker Mode
+      await Helper.setSpeakerphoneOn(true);
+    } else {
+      // 📞 Switch to Earpiece Mode (Normal Call)
+      await Helper.setSpeakerphoneOn(false);
+    }
+  } catch (e) {
+    print("Error toggling speaker: $e");
+  }
+
+  print(_isSpeakerOn ? "🔊 Speaker Mode ON" : "📞 Normal Call Mode ON");
+}
+
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 1.0, end: _isSpeaking ? 1.3 : 1.0),
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            builder: (context, scale, child) {
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blueAccent
+                            .withOpacity(_isSpeaking ? 0.7 : 0.0),
+                        blurRadius: _isSpeaking ? 30 : 0,
+                        spreadRadius: _isSpeaking ? 10 : 0,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundImage: callerPhoto != null
+                        ? NetworkImage(callerPhoto!)
+                        : null,
+                    child: callerPhoto == null
+                        ? Icon(Icons.person, size: 60, color: Colors.white)
+                        : null,
+                  ),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 20),
+          Text(
+            callerName ?? "Unknown Caller",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 30),
+
+          // Buttons Row: Mute & Speaker
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Mute Button
+              IconButton(
+                icon: Icon(
+                  _isMuted ? Icons.mic_off : Icons.mic,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: _toggleMute,
+              ),
+              SizedBox(width: 40), // Spacing
+              // Speaker Button
+              IconButton(
+                icon: Icon(
+                  _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: _toggleSpeaker,
+              ),
+            ],
+          ),
+
+          SizedBox(height: 20),
+
+          // End Call Button
+          ElevatedButton(
+            onPressed: _endCall,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Text("End Call",
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }
