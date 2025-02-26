@@ -273,7 +273,9 @@ class _CallPageState extends State<CallPage> {
     _signalingService.clearIncomingCall(widget.callInitiatorId);
     _stopRinging();
      // ✅ Use Global Navigator Key to ensure correct pop
-    CallOverlayManager.navigatorKey.currentState?.maybePop();
+    if (CallOverlayManager.navigatorKey.currentState?.canPop() ?? false) {
+      CallOverlayManager.navigatorKey.currentState?.pop();
+    }
   }
 
   @override
