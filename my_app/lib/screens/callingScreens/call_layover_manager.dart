@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class CallOverlayManager {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
   static OverlayEntry? _overlayEntry;
+  static final AudioPlayer _audioPlayer = AudioPlayer();
 
-  static void showIncomingCall(Map<String, dynamic> callData,
-      BuildContext context, VoidCallback onAccept, VoidCallback onDecline) {
-    if (_overlayEntry != null) return; // Prevent multiple overlays
+  static void showIncomingCall(
+      Map<String, dynamic> callData,
+      BuildContext context,
+      VoidCallback onAccept,
+      VoidCallback onDecline) async {
+    if (_overlayEntry != null) return;
 
     bool isVideoCall = callData['callType'] == 'video';
+
+    // Start playing ringtone
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('sounds/ringer.mp3'));
 
     _overlayEntry = OverlayEntry(
       builder: (context) => 
@@ -17,69 +26,73 @@ class CallOverlayManager {
         child:Stack(
         children: [
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.5),
-            ),
+            child: Container(color: Colors.black.withOpacity(0.5)),
           ),
-          Center(
+          Positioned(
+            top: 30,
+            left: MediaQuery.of(context).size.width * 0.05,
+            right: MediaQuery.of(context).size.width * 0.05,
             child: Material(
               color: Colors.transparent,
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [BoxShadow(blurRadius: 4, color: Colors.black26)],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
-                      isVideoCall ? Icons.videocam : Icons.call,
-                      size: 60,
-                      color: isVideoCall ? Colors.blueAccent : Colors.green,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      isVideoCall
-                          ? "Incoming Video Call"
-                          : "Incoming Audio Call",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      "From: ${callData['callerId']}",
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ElevatedButton(
-                          onPressed: () {
+                        Icon(
+                          isVideoCall ? Icons.videocam : Icons.call,
+                          size: 28,
+                          color: isVideoCall ? Colors.blueAccent : Colors.green,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          isVideoCall ? 'Video Call' : 'Audio Call',
+                          style: TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: Text(
+                        "${callData['callerId']}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
                             removeOverlay();
                             onAccept();
                           },
-                          child: Text("Accept", style: TextStyle(fontSize: 16)),
-                          style: ElevatedButton.styleFrom(
+                          child: CircleAvatar(
+                            radius: 18,
                             backgroundColor: Colors.green,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                            child:
+                                Icon(Icons.call, color: Colors.white, size: 18),
                           ),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
+                        SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
                             removeOverlay();
                             onDecline();
                           },
-                          child:
-                              Text("Decline", style: TextStyle(fontSize: 16)),
-                          style: ElevatedButton.styleFrom(
+                          child: CircleAvatar(
+                            radius: 18,
                             backgroundColor: Colors.red,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                            child: Icon(Icons.call_end,
+                                color: Colors.white, size: 18),
                           ),
                         ),
                       ],
@@ -101,6 +114,7 @@ class CallOverlayManager {
   }
 
   static void removeOverlay() {
+    _audioPlayer.stop();
     _overlayEntry?.remove();
     _overlayEntry = null;
   }

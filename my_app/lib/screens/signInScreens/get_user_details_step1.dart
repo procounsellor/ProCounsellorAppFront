@@ -29,49 +29,64 @@ class _GetUserDetailsStep1State extends State<GetUserDetailsStep1> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Set entire background to white
-      body: SingleChildScrollView(
+      body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              SizedBox(height: 40),
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/banner3.png',
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: 30),
               Text(
-                "Choose Your Interested Course",
+                "Which course are you interested in ?",
                 style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
                   color: Colors.black,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 20),
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+              SizedBox(height: 30),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
                 children: [
-                  _buildOption("HSC", Icons.school, "HSC"),
-                  _buildOption("ENGINEERING", Icons.engineering, "ENGINEERING"),
-                  _buildOption("MEDICAL", Icons.local_hospital, "MEDICAL"),
-                  _buildOption("MBA", Icons.business, "MBA"),
-                  _buildOption("OTHERS", Icons.more_horiz, "OTHERS"),
+                  _buildPill("HSC"),
+                  _buildPill("ENGINEERING"),
+                  _buildPill("MEDICAL"),
+                  _buildPill("MBA"),
+                  _buildPill("OTHERS"),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
               SizedBox(
-                width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _selectedCourse != null
-                        ? Colors.green[300] // Light orange for enabled button
-                        : Colors.grey, // Grey for disabled button
+                        ? Colors.green[300] // Enabled button
+                        : Colors.grey, // Disabled button
                     padding: EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    minimumSize: Size(double.infinity, 48),
                   ),
                   onPressed: _selectedCourse != null
                       ? () {
@@ -100,6 +115,18 @@ class _GetUserDetailsStep1State extends State<GetUserDetailsStep1> {
                   ),
                 ),
               ),
+              SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  "Don't worry you can modify the choices later.",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
             ],
           ),
         ),
@@ -107,53 +134,33 @@ class _GetUserDetailsStep1State extends State<GetUserDetailsStep1> {
     );
   }
 
-  Widget _buildOption(String label, IconData icon, String value) {
-    final isSelected = _selectedCourse == value;
+  Widget _buildPill(String label) {
+    final isSelected = _selectedCourse == label;
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedCourse = value;
+          _selectedCourse = label;
         });
       },
-      child: Container(
-        width: MediaQuery.of(context).size.width *
-            0.1, // Smaller width (60% reduction)
-        height: MediaQuery.of(context).size.width *
-            0.1, // Smaller height (60% reduction)
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Color(0xFFFFF3E0) // Light orange background for selected
-              : Colors.white, // White for unselected
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3), // Subtle shadow
-              spreadRadius: 1,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: isSelected ? Colors.orangeAccent : Colors.grey,
+            width: 1.2,
+          ),
+          color: isSelected ? Colors.orangeAccent : Colors.transparent,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 40, // Reduced size (50% of previous)
-              color: isSelected
-                  ? Color.fromARGB(255, 237, 110, 36)
-                  : Colors.black, // Orange for selected, black for unselected
-            ),
-            SizedBox(height: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14, // Slightly smaller font
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Color(0xFFFAAF84) : Colors.black,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : Colors.black,
+          ),
         ),
       ),
     );
