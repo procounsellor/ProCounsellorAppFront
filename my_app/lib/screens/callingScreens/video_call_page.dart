@@ -29,6 +29,10 @@ class _CallPageState extends State<VideoCallPage> {
   final FirebaseSignalingService _signalingService = FirebaseSignalingService();
   final CallService _callService = CallService();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool _isMuted = false;
+  bool _isCameraEnabled = true;
+  bool _isLocalVideoBig = false;
   
   RTCPeerConnection? _peerConnection;
   RTCVideoRenderer _localRenderer = RTCVideoRenderer();
@@ -266,17 +270,79 @@ class _CallPageState extends State<VideoCallPage> {
     super.dispose();
   }
 
-  @override
+  Future<void> _toggleMute() async {
+  setState(() {
+    _isMuted = !_isMuted;
+  });
+
+  if (_peerConnection != null) {
+    List<RTCRtpSender> senders = await _peerConnection!.getSenders();
+    for (var sender in senders) {
+      if (sender.track != null && sender.track!.kind == 'audio') {
+        sender.track!.enabled = !_isMuted;
+      }
+    }
+  }
+
+  print(_isMuted ? "🎤 Microphone Muted" : "🎤 Microphone Unmuted");
+}
+
+void _toggleCamera() {
+  setState(() {
+    _isCameraEnabled = !_isCameraEnabled;
+  });
+
+  _localRenderer.srcObject?.getVideoTracks().forEach((track) {
+    track.enabled = _isCameraEnabled;
+  });
+
+  print(_isCameraEnabled ? "📷 Camera Enabled" : "🚫 Camera Disabled");
+}
+
+void _switchCamera() async {
+  var videoTracks = _localRenderer.srcObject?.getVideoTracks();
+
+  if (videoTracks != null && videoTracks.isNotEmpty) {
+    var videoTrack = videoTracks.first; // ✅ Safely get first video track
+    await Helper.switchCamera(videoTrack);
+    print("🔄 Camera Switched");
+  } else {
+    print("⚠️ No Video Track Found");
+  }
+}
+
+
+void _swapVideos() {
+  setState(() {
+    _isLocalVideoBig = !_isLocalVideoBig;
+  });
+
+  print(_isLocalVideoBig
+      ? "📷 Local Video is Now Big"
+      : "📷 Remote Video is Now Big");
+}
+
+
+@override
 Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: Colors.black,
     body: Stack(
       children: [
+        // The Main Video (Can be either Local or Remote depending on swap)
         Positioned.fill(
-          child: RTCVideoView(_remoteRenderer, mirror: true),
+          child: GestureDetector(
+            onTap: _swapVideos,
+            child: RTCVideoView(
+              _isLocalVideoBig ? _localRenderer : _remoteRenderer,
+              mirror: _isLocalVideoBig,
+            ),
+          ),
         ),
+
+        // Caller Name at the Top
         Positioned(
-          top: 40, // Adjusted to keep space for status bar
+          top: 40,
           left: 20,
           right: 20,
           child: Text(
@@ -289,26 +355,73 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
+
+        // Small Video Preview (Tappable to Swap)
         Positioned(
-          bottom: 20,
+          bottom: 100, // ⬆ Keeps space for buttons
           right: 20,
-          child: Container(
-            width: 120,
-            height: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white, width: 2),
+          child: GestureDetector(
+            onTap: _swapVideos,
+            child: Container(
+              width: 120,
+              height: 160,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: RTCVideoView(
+                _isLocalVideoBig ? _remoteRenderer : _localRenderer,
+                mirror: !_isLocalVideoBig,
+              ),
             ),
-            child: RTCVideoView(_localRenderer, mirror: true),
           ),
         ),
+
+        // Control Buttons (Placed at Bottom)
         Positioned(
-          bottom: 40,
+          bottom: 20,
           left: 20,
-          child: ElevatedButton(
-            onPressed: _endCall,
-            child: Text("End Call", style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          right: 20,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Mute Button
+              IconButton(
+                icon: Icon(
+                  _isMuted ? Icons.mic_off : Icons.mic,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: _toggleMute,
+              ),
+              // Enable/Disable Camera Button
+              IconButton(
+                icon: Icon(
+                  _isCameraEnabled ? Icons.videocam : Icons.videocam_off,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: _toggleCamera,
+              ),
+              // Switch Camera Button
+              IconButton(
+                icon: Icon(
+                  Icons.switch_camera,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: _switchCamera,
+              ),
+              // End Call Button
+              IconButton(
+                icon: Icon(
+                  Icons.call_end,
+                  color: Colors.red,
+                  size: 30,
+                ),
+                onPressed: _endCall,
+              ),
+            ],
           ),
         ),
       ],

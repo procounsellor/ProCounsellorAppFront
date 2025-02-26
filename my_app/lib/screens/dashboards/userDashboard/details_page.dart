@@ -410,7 +410,7 @@ class _DetailsPageState extends State<DetailsPage> {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    "$totalRatings orders",
+                    "$totalRatings ratings",
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
