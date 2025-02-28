@@ -56,6 +56,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     _fetchCounsellorDetails();
     _listenToSubscriberChanges();
     _listenToFollowerChanges();
+    _listenToReviewChanges();
 
     // Set counsellor state to "online" when BasePage is created
     _setOnlineWithDebounce();
@@ -194,6 +195,33 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
           activityLogs.add("Updated follower: ${event.snapshot.key}");
         });
         print("Updated follower still false: ${event.snapshot.key}");
+      }
+    });
+  }
+
+  void _listenToReviewChanges() {
+    DatabaseReference reviewRef = FirebaseDatabase.instance
+        .ref('counsellorRealtimeReview/${widget.counsellorId}');
+
+    reviewRef.onChildAdded.listen((event) {
+      if (event.snapshot.value == false) {
+        // Notify only if value is false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("New review: ${event.snapshot.key}");
+        });
+        print("New review added with false value: ${event.snapshot.key}");
+      }
+    });
+
+    reviewRef.onChildChanged.listen((event) {
+      if (event.snapshot.value == false) {
+        // Ensure it is still false
+        setState(() {
+          subscriberNotificationCount++;
+          activityLogs.add("Updated Review: ${event.snapshot.key}");
+        });
+        print("Updated review still false: ${event.snapshot.key}");
       }
     });
   }

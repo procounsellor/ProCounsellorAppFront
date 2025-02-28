@@ -182,7 +182,14 @@ class _ChattingPageState extends State<ChattingPage> {
                   }),
                   _fileOption("File", Icons.insert_drive_file, () {
                     _pickFile(FileType.custom, allowedExtensions: [
-                      'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'
+                      'pdf',
+                      'doc',
+                      'docx',
+                      'xls',
+                      'xlsx',
+                      'ppt',
+                      'pptx',
+                      'txt'
                     ]);
                     Navigator.pop(context);
                   }),
@@ -195,7 +202,7 @@ class _ChattingPageState extends State<ChattingPage> {
     );
   }
 
-   // Widget for each file option
+  // Widget for each file option
   Widget _fileOption(String label, IconData icon, VoidCallback onTap) {
     return Column(
       children: [
@@ -213,31 +220,32 @@ class _ChattingPageState extends State<ChattingPage> {
     );
   }
 
-  Future<void> _pickFile(FileType type, {List<String>? allowedExtensions}) async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
-    type: type,
-    allowedExtensions: allowedExtensions,
-    withData: true, // Ensures bytes are available for web
-  );
+  Future<void> _pickFile(FileType type,
+      {List<String>? allowedExtensions}) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: type,
+      allowedExtensions: allowedExtensions,
+      withData: true, // Ensures bytes are available for web
+    );
 
-  if (result != null) {
-    setState(() {
-      selectedFileName = result.files.single.name;
+    if (result != null) {
+      setState(() {
+        selectedFileName = result.files.single.name;
 
-      if (kIsWeb) {
+        if (kIsWeb) {
           // Web: Store file bytes
           webFileBytes = result.files.single.bytes;
           selectedFile = null; // No File object on web
-      } else {
+        } else {
           // Mobile/Desktop: Store file path
           selectedFile = File(result.files.single.path!);
           webFileBytes = null;
-      }
+        }
         showSendButton = true;
-    });
-    print("Selected File: $selectedFileName");
+      });
+      print("Selected File: $selectedFileName");
+    }
   }
-}
 
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
@@ -314,7 +322,7 @@ class _ChattingPageState extends State<ChattingPage> {
         });
       }
     }
-}
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -355,106 +363,105 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
-  return GestureDetector(
-    onTap: () {
-      showDialog(
-        context: context,
-        builder: (_) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 3.0,
-            child: Image.network(
-              message['fileUrl'],
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      );
-    },
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8.0),
-      child: Image.network(
-        message['fileUrl'],
-        width: 200,
-        height: 200,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(child: CircularProgressIndicator());
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.error, color: Colors.red);
-        },
-      ),
-    ),
-  );
-}
-
-
-  Widget _buildVideoMessage(Map<String, dynamic> message) {
-  if (kIsWeb) {
-    // On Web, open video in a new browser tab
-    return GestureDetector(
-      onTap: () {
-        _launchURL(message['fileUrl']);
-      },
-      child: Container(
-        width: 200,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-          ],
-        ),
-      ),
-    );
-  } else {
-    // Mobile/Desktop: Show video preview and play inside the app
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
           builder: (_) => Dialog(
-            backgroundColor: Colors.black,
-            child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+            backgroundColor: Colors.transparent,
+            child: InteractiveViewer(
+              panEnabled: true,
+              boundaryMargin: EdgeInsets.all(20),
+              minScale: 0.5,
+              maxScale: 3.0,
+              child: Image.network(
+                message['fileUrl'],
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         );
       },
-      child: Container(
-        width: 200,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-          ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Image.network(
+          message['fileUrl'],
+          width: 200,
+          height: 200,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(child: CircularProgressIndicator());
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(Icons.error, color: Colors.red);
+          },
         ),
       ),
     );
   }
-}
+
+  Widget _buildVideoMessage(Map<String, dynamic> message) {
+    if (kIsWeb) {
+      // On Web, open video in a new browser tab
+      return GestureDetector(
+        onTap: () {
+          _launchURL(message['fileUrl']);
+        },
+        child: Container(
+          width: 200,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Mobile/Desktop: Show video preview and play inside the app
+      return GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (_) => Dialog(
+              backgroundColor: Colors.black,
+              child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+            ),
+          );
+        },
+        child: Container(
+          width: 200,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+            ],
+          ),
+        ),
+      );
+    }
+  }
 
 // Open Video in Browser on Web
-void _launchURL(String url) async {
-  Uri uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
-    print("Could not launch $url");
+  void _launchURL(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("Could not launch $url");
+    }
   }
-}
 
   Widget _buildFileMessage(Map<String, dynamic> message) {
     return GestureDetector(
@@ -484,17 +491,17 @@ void _launchURL(String url) async {
     );
   }
 
- void _downloadFile(String url) async {
-  Uri uri = Uri.parse(url); // Convert string to Uri
+  void _downloadFile(String url) async {
+    Uri uri = Uri.parse(url); // Convert string to Uri
 
-  print("Downloading file from: $url");
+    print("Downloading file from: $url");
 
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
-    print("Could not launch $url");
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("Could not launch $url");
+    }
   }
-}
 
   Widget _buildMessageWidget(Map<String, dynamic> message) {
     if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
@@ -675,8 +682,7 @@ void _launchURL(String url) async {
                     },
                   ),
                 ),
-
-                 if (selectedFileName != null) // Show selected file
+                if (selectedFileName != null) // Show selected file
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     width: double.infinity,
@@ -707,15 +713,14 @@ void _launchURL(String url) async {
                       ],
                     ),
                   ),
-
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                        IconButton(
-                          icon: Icon(Icons.add, color: Colors.black54),
-                          onPressed: () => _showFileOptions(context),
-                        ),
+                      IconButton(
+                        icon: Icon(Icons.add, color: Colors.black54),
+                        onPressed: () => _showFileOptions(context),
+                      ),
                       if (!showSendButton)
                         IconButton(
                           icon: Icon(Icons.camera_alt, color: Colors.black54),
@@ -731,7 +736,9 @@ void _launchURL(String url) async {
                             controller: _controller,
                             onChanged: (text) {
                               setState(() {
-                                showSendButton = text.isNotEmpty || selectedFile != null || webFileBytes != null;
+                                showSendButton = text.isNotEmpty ||
+                                    selectedFile != null ||
+                                    webFileBytes != null;
                               });
                             },
                             decoration: InputDecoration(
@@ -755,12 +762,13 @@ void _launchURL(String url) async {
                           showSendButton ? Icons.send : Icons.mic,
                           color: Colors.black54,
                         ),
-                        onPressed: showSendButton 
-                          ? () {
-                          if (_controller.text.isNotEmpty) _sendMessage();
-                          if (selectedFile != null || webFileBytes != null) _sendFileMessage();
-                        }
-                      : null,
+                        onPressed: showSendButton
+                            ? () {
+                                if (_controller.text.isNotEmpty) _sendMessage();
+                                if (selectedFile != null ||
+                                    webFileBytes != null) _sendFileMessage();
+                              }
+                            : null,
                       ),
                     ],
                   ),
