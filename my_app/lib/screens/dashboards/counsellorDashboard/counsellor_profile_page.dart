@@ -98,24 +98,6 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
     }
   }
 
-  Widget _buildListItem(String title, dynamic value) {
-    if (value == null || value.toString().isEmpty) {
-      value = "Not provided";
-    }
-
-    if (value is List) {
-      value = value.isNotEmpty ? value.join(", ") : "None";
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Text(
-        value.toString(),
-        style: TextStyle(color: Colors.black87, fontSize: 16),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,16 +167,19 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     SizedBox(width: 10),
-                                    _buildStatColumn("Clients",
-                                        profileData!["clientIds"]?.length ?? 0),
+                                    _buildStatColumn(
+                                        "Clients",
+                                        profileData!["clientIds"]?.length ?? 0,
+                                        Icons.people),
                                     SizedBox(width: 20),
                                     _buildStatColumn(
                                         "Followers",
                                         profileData!["followerIds"]?.length ??
-                                            0),
+                                            0,
+                                        Icons.group),
                                     SizedBox(width: 20),
-                                    _buildStatColumn(
-                                        "Posts", 12), // Temporary value
+                                    _buildStatColumn("Posts", 12,
+                                        Icons.article), // Placeholder value
                                   ],
                                 ),
                               ],
@@ -230,18 +215,26 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildListItem(
-                                  "Phone Number", profileData!["phoneNumber"]),
-                              _buildListItem("Email", profileData!["email"]),
-                              _buildListItem("Organisation Name",
-                                  profileData!["organisationName"]),
+                                  "Organisation",
+                                  profileData!["organisationName"],
+                                  Icons.business),
+                              _buildListItem("Experience",
+                                  profileData!["experience"], Icons.work),
                               _buildListItem(
-                                  "Experience", profileData!["experience"]),
-                              _buildListItem("State of Counsellor",
-                                  profileData!["stateOfCounsellor"]),
+                                  "State",
+                                  profileData!["stateOfCounsellor"],
+                                  Icons.location_on),
+                              _buildListItem("Expertise",
+                                  profileData!["expertise"], Icons.star),
                               _buildListItem(
-                                  "Expertise", profileData!["expertise"]),
+                                  "Rate Per Year",
+                                  profileData!["ratePerYear"],
+                                  Icons.attach_money),
                               _buildListItem(
-                                  "Rate Per Year", profileData!["ratePerYear"]),
+                                  "Languages Known",
+                                  profileData!["languagesKnow"]?.join(", ") ??
+                                      "Not provided",
+                                  Icons.language),
                             ],
                           ),
                         ),
@@ -252,10 +245,12 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
     );
   }
 
-// Helper Widget for Stats
-  Widget _buildStatColumn(String label, int value) {
+// Helper Widget for Stats with Icons
+  Widget _buildStatColumn(String label, int value, IconData icon) {
     return Column(
       children: [
+        Icon(icon, size: 20, color: Colors.black54),
+        SizedBox(height: 4),
         Text(
           value.toString(),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -265,6 +260,27 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
       ],
+    );
+  }
+
+// Helper Widget for Profile Details with Icons
+  Widget _buildListItem(String title, dynamic value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.blueGrey),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value != null && value.toString().isNotEmpty
+                  ? value.toString()
+                  : "Not provided",
+              style: TextStyle(color: Colors.black87, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

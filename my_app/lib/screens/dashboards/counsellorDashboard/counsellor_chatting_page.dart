@@ -9,6 +9,10 @@ import 'package:my_app/screens/customWidgets/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/chat_service.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -16,7 +20,8 @@ class ChattingPage extends StatefulWidget {
   final String counsellorId;
   final String? photo; // Allow photo to be nullable
 
-  ChattingPage({
+  const ChattingPage({
+    super.key,
     required this.itemName,
     required this.userId,
     required this.counsellorId,
@@ -29,7 +34,7 @@ class ChattingPage extends StatefulWidget {
 
 class _ChattingPageState extends State<ChattingPage> {
   List<Map<String, dynamic>> messages = []; // Store full message objects
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
@@ -39,10 +44,72 @@ class _ChattingPageState extends State<ChattingPage> {
   String? selectedFileName; // Store file name
   Uint8List? webFileBytes; // For Web
 
+  FlutterSoundRecorder? _recorder;
+  bool _isRecording = false;
+  String? _audioFilePath;
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
+    _recorder = FlutterSoundRecorder();
+    _initializeRecorder();
+  }
+
+  Future<void> _initializeRecorder() async {
+    await _recorder!.openRecorder();
+  }
+
+  void _startRecording() async {
+    Directory tempDir = await getTemporaryDirectory();
+    String path = '${tempDir.path}/audio_message.aac';
+
+    await _recorder!.startRecorder(toFile: path);
+
+    setState(() {
+      _isRecording = true;
+      _audioFilePath = path;
+    });
+  }
+
+  void _stopRecording() async {
+    String? path = await _recorder!.stopRecorder();
+
+    setState(() {
+      _isRecording = false;
+      _audioFilePath = path;
+    });
+
+    if (_audioFilePath != null) {
+      _uploadAudioAndSend(_audioFilePath!);
+    }
+  }
+
+  void _uploadAudioAndSend(String filePath) async {
+    File audioFile = File(filePath);
+    String fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+    FirebaseStorage storage = FirebaseStorage.instance;
+
+    try {
+      TaskSnapshot snapshot =
+          await storage.ref('chat_audio/$fileName').putFile(audioFile);
+
+      String audioUrl = await snapshot.ref.getDownloadURL();
+      _sendAudioMessage(audioUrl);
+    } catch (e) {
+      print("Audio upload failed: $e");
+    }
+  }
+
+  void _sendAudioMessage(String audioUrl) async {
+    try {
+      MessageRequest messageRequest =
+          MessageRequest(senderId: widget.counsellorId, text: audioUrl);
+
+      await ChatService().sendMessage(chatId, messageRequest);
+    } catch (e) {
+      print('Error sending audio message: $e');
+    }
   }
 
   Future<void> _initializeChat() async {
@@ -155,20 +222,20 @@ class _ChattingPageState extends State<ChattingPage> {
   void _showFileOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
       ),
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(15),
+          padding: const EdgeInsets.all(15),
           height: 180,
           child: Column(
             children: [
-              Text(
+              const Text(
                 "Select File Type",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -182,7 +249,14 @@ class _ChattingPageState extends State<ChattingPage> {
                   }),
                   _fileOption("File", Icons.insert_drive_file, () {
                     _pickFile(FileType.custom, allowedExtensions: [
-                      'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'
+                      'pdf',
+                      'doc',
+                      'docx',
+                      'xls',
+                      'xlsx',
+                      'ppt',
+                      'pptx',
+                      'txt'
                     ]);
                     Navigator.pop(context);
                   }),
@@ -195,7 +269,7 @@ class _ChattingPageState extends State<ChattingPage> {
     );
   }
 
-   // Widget for each file option
+  // Widget for each file option
   Widget _fileOption(String label, IconData icon, VoidCallback onTap) {
     return Column(
       children: [
@@ -207,37 +281,38 @@ class _ChattingPageState extends State<ChattingPage> {
             child: Icon(icon, size: 30, color: Colors.black),
           ),
         ),
-        SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 14)),
+        const SizedBox(height: 5),
+        Text(label, style: const TextStyle(fontSize: 14)),
       ],
     );
   }
 
-  Future<void> _pickFile(FileType type, {List<String>? allowedExtensions}) async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
-    type: type,
-    allowedExtensions: allowedExtensions,
-    withData: true, // Ensures bytes are available for web
-  );
+  Future<void> _pickFile(FileType type,
+      {List<String>? allowedExtensions}) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: type,
+      allowedExtensions: allowedExtensions,
+      withData: true, // Ensures bytes are available for web
+    );
 
-  if (result != null) {
-    setState(() {
-      selectedFileName = result.files.single.name;
+    if (result != null) {
+      setState(() {
+        selectedFileName = result.files.single.name;
 
-      if (kIsWeb) {
+        if (kIsWeb) {
           // Web: Store file bytes
           webFileBytes = result.files.single.bytes;
           selectedFile = null; // No File object on web
-      } else {
+        } else {
           // Mobile/Desktop: Store file path
           selectedFile = File(result.files.single.path!);
           webFileBytes = null;
-      }
+        }
         showSendButton = true;
-    });
-    print("Selected File: $selectedFileName");
+      });
+      print("Selected File: $selectedFileName");
+    }
   }
-}
 
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
@@ -314,7 +389,7 @@ class _ChattingPageState extends State<ChattingPage> {
         });
       }
     }
-}
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -351,110 +426,110 @@ class _ChattingPageState extends State<ChattingPage> {
   void dispose() {
     ChatService().cancelListeners(chatId);
     _controller.dispose();
+    _recorder!.closeRecorder();
     super.dispose();
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
-  return GestureDetector(
-    onTap: () {
-      showDialog(
-        context: context,
-        builder: (_) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 3.0,
-            child: Image.network(
-              message['fileUrl'],
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      );
-    },
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8.0),
-      child: Image.network(
-        message['fileUrl'],
-        width: 200,
-        height: 200,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(child: CircularProgressIndicator());
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.error, color: Colors.red);
-        },
-      ),
-    ),
-  );
-}
-
-
-  Widget _buildVideoMessage(Map<String, dynamic> message) {
-  if (kIsWeb) {
-    // On Web, open video in a new browser tab
-    return GestureDetector(
-      onTap: () {
-        _launchURL(message['fileUrl']);
-      },
-      child: Container(
-        width: 200,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-          ],
-        ),
-      ),
-    );
-  } else {
-    // Mobile/Desktop: Show video preview and play inside the app
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
           builder: (_) => Dialog(
-            backgroundColor: Colors.black,
-            child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+            backgroundColor: Colors.transparent,
+            child: InteractiveViewer(
+              panEnabled: true,
+              boundaryMargin: const EdgeInsets.all(20),
+              minScale: 0.5,
+              maxScale: 3.0,
+              child: Image.network(
+                message['fileUrl'],
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         );
       },
-      child: Container(
-        width: 200,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-          ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Image.network(
+          message['fileUrl'],
+          width: 200,
+          height: 200,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return const Center(child: CircularProgressIndicator());
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(Icons.error, color: Colors.red);
+          },
         ),
       ),
     );
   }
-}
+
+  Widget _buildVideoMessage(Map<String, dynamic> message) {
+    if (kIsWeb) {
+      // On Web, open video in a new browser tab
+      return GestureDetector(
+        onTap: () {
+          _launchURL(message['fileUrl']);
+        },
+        child: Container(
+          width: 200,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: const Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Mobile/Desktop: Show video preview and play inside the app
+      return GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (_) => Dialog(
+              backgroundColor: Colors.black,
+              child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+            ),
+          );
+        },
+        child: Container(
+          width: 200,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: const Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+            ],
+          ),
+        ),
+      );
+    }
+  }
 
 // Open Video in Browser on Web
-void _launchURL(String url) async {
-  Uri uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
-    print("Could not launch $url");
+  void _launchURL(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("Could not launch $url");
+    }
   }
-}
 
   Widget _buildFileMessage(Map<String, dynamic> message) {
     return GestureDetector(
@@ -462,39 +537,39 @@ void _launchURL(String url) async {
         _downloadFile(message['fileUrl']);
       },
       child: Container(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.blueGrey.withOpacity(0.2),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(Icons.insert_drive_file, color: Colors.black),
-            SizedBox(width: 8),
+            const Icon(Icons.insert_drive_file, color: Colors.black),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 message['fileName'] ?? "Unknown file",
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.download, color: Colors.blue),
+            const Icon(Icons.download, color: Colors.blue),
           ],
         ),
       ),
     );
   }
 
- void _downloadFile(String url) async {
-  Uri uri = Uri.parse(url); // Convert string to Uri
+  void _downloadFile(String url) async {
+    Uri uri = Uri.parse(url); // Convert string to Uri
 
-  print("Downloading file from: $url");
+    print("Downloading file from: $url");
 
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
-    print("Could not launch $url");
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("Could not launch $url");
+    }
   }
-}
 
   Widget _buildMessageWidget(Map<String, dynamic> message) {
     if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
@@ -506,6 +581,8 @@ void _launchURL(String url) async {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
         return _buildVideoMessage(message);
+      } else if (fileType == "audio") {
+        return _buildAudioMessage(message);
       } else {
         return _buildFileMessage(message);
       }
@@ -513,31 +590,52 @@ void _launchURL(String url) async {
 
     return Text(
       message['text'] ?? 'No message',
-      style: TextStyle(
+      style: const TextStyle(
         color: Colors.black,
         fontSize: 16.0,
       ),
     );
   }
 
+  Widget _buildAudioMessage(Map<String, dynamic> message) {
+    AudioPlayer audioPlayer = AudioPlayer();
+
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.play_arrow, color: Colors.black),
+          onPressed: () async {
+            await audioPlayer.play(UrlSource(message['fileUrl']));
+          },
+        ),
+        const Expanded(
+          child: Text(
+            "Audio message",
+            style: TextStyle(fontSize: 16.0),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
     return Container(
-      padding: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.grey.withOpacity(0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(Icons.upload, color: Colors.blue),
-          SizedBox(width: 8),
+          const Icon(Icons.upload, color: Colors.blue),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               message['fileName'] ?? "Uploading...",
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          CircularProgressIndicator(),
+          const CircularProgressIndicator(),
         ],
       ),
     );
@@ -551,7 +649,7 @@ void _launchURL(String url) async {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -606,11 +704,11 @@ void _launchURL(String url) async {
                   ),
                 ],
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   widget.itemName.isNotEmpty ? widget.itemName : 'Unknown User',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
@@ -623,7 +721,7 @@ void _launchURL(String url) async {
         ),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Expanded(
@@ -643,11 +741,11 @@ void _launchURL(String url) async {
                             : CrossAxisAlignment.end,
                         children: [
                           Container(
-                            margin: EdgeInsets.symmetric(
+                            margin: const EdgeInsets.symmetric(
                               vertical: 5.0,
                               horizontal: 10.0,
                             ),
-                            padding: EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(10.0),
                             decoration: BoxDecoration(
                               color: isUserMessage
                                   ? Colors.grey[300]
@@ -659,9 +757,8 @@ void _launchURL(String url) async {
                           if (index == messages.length - 1 &&
                               isCounsellorMessage &&
                               message['isSeen'] == true)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 2.0, right: 16.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2.0, right: 16.0),
                               child: Text(
                                 'Seen',
                                 style: TextStyle(
@@ -675,10 +772,10 @@ void _launchURL(String url) async {
                     },
                   ),
                 ),
-
-                 if (selectedFileName != null) // Show selected file
+                if (selectedFileName != null) // Show selected file
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
@@ -686,8 +783,9 @@ void _launchURL(String url) async {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.insert_drive_file, color: Colors.black54),
-                        SizedBox(width: 10),
+                        const Icon(Icons.insert_drive_file,
+                            color: Colors.black54),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             selectedFileName!,
@@ -695,7 +793,7 @@ void _launchURL(String url) async {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.red),
+                          icon: const Icon(Icons.close, color: Colors.red),
                           onPressed: () {
                             setState(() {
                               selectedFile = null;
@@ -707,23 +805,23 @@ void _launchURL(String url) async {
                       ],
                     ),
                   ),
-
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                        IconButton(
-                          icon: Icon(Icons.add, color: Colors.black54),
-                          onPressed: () => _showFileOptions(context),
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Colors.black54),
+                        onPressed: () => _showFileOptions(context),
+                      ),
                       if (!showSendButton)
                         IconButton(
-                          icon: Icon(Icons.camera_alt, color: Colors.black54),
+                          icon: const Icon(Icons.camera_alt,
+                              color: Colors.black54),
                           onPressed: () {},
                         ),
                       Expanded(
                         child: AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 300),
                           width: showSendButton
                               ? MediaQuery.of(context).size.width * 0.8
                               : MediaQuery.of(context).size.width * 0.65,
@@ -731,12 +829,14 @@ void _launchURL(String url) async {
                             controller: _controller,
                             onChanged: (text) {
                               setState(() {
-                                showSendButton = text.isNotEmpty || selectedFile != null || webFileBytes != null;
+                                showSendButton = text.isNotEmpty ||
+                                    selectedFile != null ||
+                                    webFileBytes != null;
                               });
                             },
                             decoration: InputDecoration(
                               hintText: "Type a message...",
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 15.0,
                                 vertical: 10.0,
                               ),
@@ -750,17 +850,26 @@ void _launchURL(String url) async {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          showSendButton ? Icons.send : Icons.mic,
-                          color: Colors.black54,
+                      GestureDetector(
+                        onLongPress:
+                            _startRecording, // Start recording on press
+                        onLongPressEnd: (_) =>
+                            _stopRecording(), // Stop recording on release
+                        child: IconButton(
+                          icon: Icon(
+                            showSendButton
+                                ? Icons.send
+                                : (_isRecording ? Icons.stop : Icons.mic),
+                            color: _isRecording ? Colors.red : Colors.black54,
+                          ),
+                          onPressed: showSendButton
+                              ? () {
+                                  if (_controller.text.isNotEmpty) {
+                                    _sendMessage();
+                                  }
+                                }
+                              : null,
                         ),
-                        onPressed: showSendButton 
-                          ? () {
-                          if (_controller.text.isNotEmpty) _sendMessage();
-                          if (selectedFile != null || webFileBytes != null) _sendFileMessage();
-                        }
-                      : null,
                       ),
                     ],
                   ),
