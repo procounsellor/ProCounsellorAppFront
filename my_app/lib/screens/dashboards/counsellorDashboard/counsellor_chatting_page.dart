@@ -9,10 +9,6 @@ import 'package:my_app/screens/customWidgets/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/chat_service.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -20,8 +16,7 @@ class ChattingPage extends StatefulWidget {
   final String counsellorId;
   final String? photo; // Allow photo to be nullable
 
-  const ChattingPage({
-    super.key,
+  ChattingPage({
     required this.itemName,
     required this.userId,
     required this.counsellorId,
@@ -34,7 +29,7 @@ class ChattingPage extends StatefulWidget {
 
 class _ChattingPageState extends State<ChattingPage> {
   List<Map<String, dynamic>> messages = []; // Store full message objects
-  final TextEditingController _controller = TextEditingController();
+  TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
@@ -44,72 +39,10 @@ class _ChattingPageState extends State<ChattingPage> {
   String? selectedFileName; // Store file name
   Uint8List? webFileBytes; // For Web
 
-  FlutterSoundRecorder? _recorder;
-  bool _isRecording = false;
-  String? _audioFilePath;
-
   @override
   void initState() {
     super.initState();
     _initializeChat();
-    _recorder = FlutterSoundRecorder();
-    _initializeRecorder();
-  }
-
-  Future<void> _initializeRecorder() async {
-    await _recorder!.openRecorder();
-  }
-
-  void _startRecording() async {
-    Directory tempDir = await getTemporaryDirectory();
-    String path = '${tempDir.path}/audio_message.aac';
-
-    await _recorder!.startRecorder(toFile: path);
-
-    setState(() {
-      _isRecording = true;
-      _audioFilePath = path;
-    });
-  }
-
-  void _stopRecording() async {
-    String? path = await _recorder!.stopRecorder();
-
-    setState(() {
-      _isRecording = false;
-      _audioFilePath = path;
-    });
-
-    if (_audioFilePath != null) {
-      _uploadAudioAndSend(_audioFilePath!);
-    }
-  }
-
-  void _uploadAudioAndSend(String filePath) async {
-    File audioFile = File(filePath);
-    String fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
-    FirebaseStorage storage = FirebaseStorage.instance;
-
-    try {
-      TaskSnapshot snapshot =
-          await storage.ref('chat_audio/$fileName').putFile(audioFile);
-
-      String audioUrl = await snapshot.ref.getDownloadURL();
-      _sendAudioMessage(audioUrl);
-    } catch (e) {
-      print("Audio upload failed: $e");
-    }
-  }
-
-  void _sendAudioMessage(String audioUrl) async {
-    try {
-      MessageRequest messageRequest =
-          MessageRequest(senderId: widget.counsellorId, text: audioUrl);
-
-      await ChatService().sendMessage(chatId, messageRequest);
-    } catch (e) {
-      print('Error sending audio message: $e');
-    }
   }
 
   Future<void> _initializeChat() async {
@@ -222,20 +155,20 @@ class _ChattingPageState extends State<ChattingPage> {
   void _showFileOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
       ),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.all(15),
+          padding: EdgeInsets.all(15),
           height: 180,
           child: Column(
             children: [
-              const Text(
+              Text(
                 "Select File Type",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -281,8 +214,8 @@ class _ChattingPageState extends State<ChattingPage> {
             child: Icon(icon, size: 30, color: Colors.black),
           ),
         ),
-        const SizedBox(height: 5),
-        Text(label, style: const TextStyle(fontSize: 14)),
+        SizedBox(height: 5),
+        Text(label, style: TextStyle(fontSize: 14)),
       ],
     );
   }
@@ -426,7 +359,6 @@ class _ChattingPageState extends State<ChattingPage> {
   void dispose() {
     ChatService().cancelListeners(chatId);
     _controller.dispose();
-    _recorder!.closeRecorder();
     super.dispose();
   }
 
@@ -439,7 +371,7 @@ class _ChattingPageState extends State<ChattingPage> {
             backgroundColor: Colors.transparent,
             child: InteractiveViewer(
               panEnabled: true,
-              boundaryMargin: const EdgeInsets.all(20),
+              boundaryMargin: EdgeInsets.all(20),
               minScale: 0.5,
               maxScale: 3.0,
               child: Image.network(
@@ -459,10 +391,10 @@ class _ChattingPageState extends State<ChattingPage> {
           fit: BoxFit.cover,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           },
           errorBuilder: (context, error, stackTrace) {
-            return const Icon(Icons.error, color: Colors.red);
+            return Icon(Icons.error, color: Colors.red);
           },
         ),
       ),
@@ -483,7 +415,7 @@ class _ChattingPageState extends State<ChattingPage> {
             color: Colors.black,
             borderRadius: BorderRadius.circular(8.0),
           ),
-          child: const Stack(
+          child: Stack(
             alignment: Alignment.center,
             children: [
               Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
@@ -510,7 +442,7 @@ class _ChattingPageState extends State<ChattingPage> {
             color: Colors.black,
             borderRadius: BorderRadius.circular(8.0),
           ),
-          child: const Stack(
+          child: Stack(
             alignment: Alignment.center,
             children: [
               Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
@@ -537,22 +469,22 @@ class _ChattingPageState extends State<ChattingPage> {
         _downloadFile(message['fileUrl']);
       },
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.blueGrey.withOpacity(0.2),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            const Icon(Icons.insert_drive_file, color: Colors.black),
-            const SizedBox(width: 8),
+            Icon(Icons.insert_drive_file, color: Colors.black),
+            SizedBox(width: 8),
             Expanded(
               child: Text(
                 message['fileName'] ?? "Unknown file",
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.download, color: Colors.blue),
+            Icon(Icons.download, color: Colors.blue),
           ],
         ),
       ),
@@ -581,8 +513,6 @@ class _ChattingPageState extends State<ChattingPage> {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
         return _buildVideoMessage(message);
-      } else if (fileType == "audio") {
-        return _buildAudioMessage(message);
       } else {
         return _buildFileMessage(message);
       }
@@ -590,52 +520,31 @@ class _ChattingPageState extends State<ChattingPage> {
 
     return Text(
       message['text'] ?? 'No message',
-      style: const TextStyle(
+      style: TextStyle(
         color: Colors.black,
         fontSize: 16.0,
       ),
     );
   }
 
-  Widget _buildAudioMessage(Map<String, dynamic> message) {
-    AudioPlayer audioPlayer = AudioPlayer();
-
-    return Row(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.play_arrow, color: Colors.black),
-          onPressed: () async {
-            await audioPlayer.play(UrlSource(message['fileUrl']));
-          },
-        ),
-        const Expanded(
-          child: Text(
-            "Audio message",
-            style: TextStyle(fontSize: 16.0),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.grey.withOpacity(0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          const Icon(Icons.upload, color: Colors.blue),
-          const SizedBox(width: 8),
+          Icon(Icons.upload, color: Colors.blue),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               message['fileName'] ?? "Uploading...",
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(),
         ],
       ),
     );
@@ -649,7 +558,7 @@ class _ChattingPageState extends State<ChattingPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -704,11 +613,11 @@ class _ChattingPageState extends State<ChattingPage> {
                   ),
                 ],
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: Text(
                   widget.itemName.isNotEmpty ? widget.itemName : 'Unknown User',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
@@ -721,7 +630,7 @@ class _ChattingPageState extends State<ChattingPage> {
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Expanded(
@@ -741,11 +650,11 @@ class _ChattingPageState extends State<ChattingPage> {
                             : CrossAxisAlignment.end,
                         children: [
                           Container(
-                            margin: const EdgeInsets.symmetric(
+                            margin: EdgeInsets.symmetric(
                               vertical: 5.0,
                               horizontal: 10.0,
                             ),
-                            padding: const EdgeInsets.all(10.0),
+                            padding: EdgeInsets.all(10.0),
                             decoration: BoxDecoration(
                               color: isUserMessage
                                   ? Colors.grey[300]
@@ -757,8 +666,9 @@ class _ChattingPageState extends State<ChattingPage> {
                           if (index == messages.length - 1 &&
                               isCounsellorMessage &&
                               message['isSeen'] == true)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2.0, right: 16.0),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 2.0, right: 16.0),
                               child: Text(
                                 'Seen',
                                 style: TextStyle(
@@ -774,8 +684,7 @@ class _ChattingPageState extends State<ChattingPage> {
                 ),
                 if (selectedFileName != null) // Show selected file
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
@@ -783,9 +692,8 @@ class _ChattingPageState extends State<ChattingPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.insert_drive_file,
-                            color: Colors.black54),
-                        const SizedBox(width: 10),
+                        Icon(Icons.insert_drive_file, color: Colors.black54),
+                        SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             selectedFileName!,
@@ -793,7 +701,7 @@ class _ChattingPageState extends State<ChattingPage> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
+                          icon: Icon(Icons.close, color: Colors.red),
                           onPressed: () {
                             setState(() {
                               selectedFile = null;
@@ -810,18 +718,17 @@ class _ChattingPageState extends State<ChattingPage> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.add, color: Colors.black54),
+                        icon: Icon(Icons.add, color: Colors.black54),
                         onPressed: () => _showFileOptions(context),
                       ),
                       if (!showSendButton)
                         IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              color: Colors.black54),
+                          icon: Icon(Icons.camera_alt, color: Colors.black54),
                           onPressed: () {},
                         ),
                       Expanded(
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
+                          duration: Duration(milliseconds: 300),
                           width: showSendButton
                               ? MediaQuery.of(context).size.width * 0.8
                               : MediaQuery.of(context).size.width * 0.65,
@@ -836,7 +743,7 @@ class _ChattingPageState extends State<ChattingPage> {
                             },
                             decoration: InputDecoration(
                               hintText: "Type a message...",
-                              contentPadding: const EdgeInsets.symmetric(
+                              contentPadding: EdgeInsets.symmetric(
                                 horizontal: 15.0,
                                 vertical: 10.0,
                               ),
@@ -850,26 +757,18 @@ class _ChattingPageState extends State<ChattingPage> {
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onLongPress:
-                            _startRecording, // Start recording on press
-                        onLongPressEnd: (_) =>
-                            _stopRecording(), // Stop recording on release
-                        child: IconButton(
-                          icon: Icon(
-                            showSendButton
-                                ? Icons.send
-                                : (_isRecording ? Icons.stop : Icons.mic),
-                            color: _isRecording ? Colors.red : Colors.black54,
-                          ),
-                          onPressed: showSendButton
-                              ? () {
-                                  if (_controller.text.isNotEmpty) {
-                                    _sendMessage();
-                                  }
-                                }
-                              : null,
+                      IconButton(
+                        icon: Icon(
+                          showSendButton ? Icons.send : Icons.mic,
+                          color: Colors.black54,
                         ),
+                        onPressed: showSendButton
+                            ? () {
+                                if (_controller.text.isNotEmpty) _sendMessage();
+                                if (selectedFile != null ||
+                                    webFileBytes != null) _sendFileMessage();
+                              }
+                            : null,
                       ),
                     ],
                   ),
