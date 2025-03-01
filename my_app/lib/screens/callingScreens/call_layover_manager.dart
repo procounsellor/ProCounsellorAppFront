@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class CallOverlayManager {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
   static OverlayEntry? _overlayEntry;
-  static final AudioPlayer _audioPlayer = AudioPlayer();
 
   static void showIncomingCall(
       Map<String, dynamic> callData,
@@ -15,10 +13,6 @@ class CallOverlayManager {
     if (_overlayEntry != null) return;
 
     bool isVideoCall = callData['callType'] == 'video';
-
-    // Start playing ringtone
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.play(AssetSource('sounds/ringer.mp3'));
 
     _overlayEntry = OverlayEntry(
       builder: (context) => 
@@ -114,7 +108,6 @@ class CallOverlayManager {
   }
 
   static void removeOverlay() {
-    _audioPlayer.stop();
     _overlayEntry?.remove();
     _overlayEntry = null;
   }

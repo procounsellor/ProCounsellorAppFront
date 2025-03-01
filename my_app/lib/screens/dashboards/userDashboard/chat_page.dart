@@ -8,8 +8,9 @@ import 'package:firebase_database/firebase_database.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
+  final Future<void> Function() onSignOut;
 
-  ChatPage({required this.userId});
+  ChatPage({required this.userId, required this.onSignOut});
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -262,6 +263,7 @@ class _ChatPageState extends State<ChatPage> {
                                     itemName: name,
                                     userId: widget.userId,
                                     counsellorId: counsellorId,
+                                    onSignOut: widget.onSignOut,
                                   ),
                                 ),
                               ).then((_) {

@@ -15,11 +15,14 @@ class ChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
+  final Future<void> Function() onSignOut;
+
 
   ChattingPage({
     required this.itemName,
     required this.userId,
     required this.counsellorId,
+    required this.onSignOut
   });
 
   @override
@@ -553,6 +556,7 @@ void _launchURL(String url) async {
                       counsellorId: widget.counsellorId,
                       userId: widget.userId,
                       itemName: widget.counsellorId,
+                      onSignOut: widget.onSignOut,
                     ),
                   ),
                 );

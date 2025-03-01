@@ -5,8 +5,9 @@ import 'details_page.dart'; // Import the DetailsPage
 
 class FollowingCounsellorsPage extends StatefulWidget {
   final String username;
+  final Future<void> Function() onSignOut;
 
-  FollowingCounsellorsPage({required this.username});
+  FollowingCounsellorsPage({required this.username, required this.onSignOut});
 
   @override
   _FollowingCounsellorsPageState createState() =>
@@ -136,6 +137,7 @@ class _FollowingCounsellorsPageState extends State<FollowingCounsellorsPage> {
                                   counsellorId: counsellor['userName'] ?? '',
                                   isNews: false,
                                   counsellor: counsellor,
+                                  onSignOut: widget.onSignOut,
                                 ),
                               ),
                             );

@@ -12,7 +12,7 @@ import 'details_page.dart';
 import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
 
 class UserDashboard extends StatefulWidget {
-  final VoidCallback onSignOut;
+  final Future<void> Function() onSignOut;
   final String username;
 
   UserDashboard({required this.onSignOut, required this.username});
@@ -216,6 +216,7 @@ void _startSearchHintCycle() {
                             topRatedCounsellors: _topRatedCounsellors,
                             topNews: _topNews,
                             userId: widget.username,
+                            onSignOut: widget.onSignOut,
                           ),
                         ),
                       );
@@ -597,6 +598,7 @@ void _startSearchHintCycle() {
                           itemName: items[index],
                           userId: widget.username,
                           counsellorId: '',
+                          onSignOut: widget.onSignOut,
                         ),
                       ),
                     );
@@ -647,6 +649,7 @@ void _startSearchHintCycle() {
                           counsellorId: counsellor['userName'] ?? '',
                           isNews: false,
                           counsellor: counsellor,
+                          onSignOut: widget.onSignOut,
                         ),
                       ),
                     );

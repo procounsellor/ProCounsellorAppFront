@@ -192,7 +192,8 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text(
-                          profileData!['description'],
+                          profileData!['description'] ??
+                                      "Not provided",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,

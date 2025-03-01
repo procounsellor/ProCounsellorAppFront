@@ -6,8 +6,9 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class CounsellorMyActivitiesPage extends StatefulWidget {
   final String username;
+  final Future<void> Function() onSignOut;
 
-  CounsellorMyActivitiesPage({required this.username});
+  CounsellorMyActivitiesPage({required this.username, required this.onSignOut});
 
   @override
   _CounsellorMyActivitiesPageState createState() =>
@@ -66,7 +67,7 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/my_activity_counsellor_subs1.jpg",
                     "My Subscribers",
-                    SubscribersPage(counsellorId: widget.username),
+                    SubscribersPage(counsellorId: widget.username, onSignOut: widget.onSignOut),
                     isReversed: false,
                   ),
                   buildDivider(),
@@ -74,7 +75,7 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/follow.jpg",
                     "My Followers",
-                    FollowersPage(counsellorId: widget.username),
+                    FollowersPage(counsellorId: widget.username, onSignOut: widget.onSignOut,),
                     isReversed: true,
                   ),
                   buildDivider(),
@@ -82,7 +83,7 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/chat.png",
                     "Chats",
-                    ChatsPage(counsellorId: widget.username),
+                    ChatsPage(counsellorId: widget.username, onSignOut: widget.onSignOut,),
                     isReversed: false,
                   ),
                   buildDivider(),

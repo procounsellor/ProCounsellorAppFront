@@ -14,7 +14,7 @@ import 'counsellor_chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CounsellorBasePage extends StatefulWidget {
-  final VoidCallback onSignOut;
+  final Future<void> Function() onSignOut;
   final String counsellorId;
 
   CounsellorBasePage({required this.onSignOut, required this.counsellorId});
@@ -68,7 +68,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     _pages.add(CounsellorTransactionsPage()); // Transactions Page
     _pages.add(CounsellorCommunityPage()); // Community Page
     _pages.add(CounsellorMyActivitiesPage(
-        username: widget.counsellorId)); // My Activities Page
+        username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
     _pages.add(
         CounsellorProfilePage(username: widget.counsellorId)); // Profile Page
   }
@@ -256,7 +256,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            ChatsPage(counsellorId: widget.counsellorId),
+                            ChatsPage(counsellorId: widget.counsellorId, onSignOut: widget.onSignOut,),
                       ),
                     );
                   }),
@@ -304,6 +304,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                       builder: (context) => ActivityPage(
                         activityLogs: activityLogs,
                         counsellorId: widget.counsellorId,
+                        onSignOut: widget.onSignOut,
                       ),
                     ),
                   );

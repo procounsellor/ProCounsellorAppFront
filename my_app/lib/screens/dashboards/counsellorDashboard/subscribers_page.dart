@@ -5,8 +5,9 @@ import 'dart:convert';
 
 class SubscribersPage extends StatefulWidget {
   final String counsellorId;
+  final Future<void> Function() onSignOut;
 
-  SubscribersPage({required this.counsellorId});
+  SubscribersPage({required this.counsellorId, required this.onSignOut});
 
   @override
   _SubscribersPageState createState() => _SubscribersPageState();
@@ -127,6 +128,7 @@ class _SubscribersPageState extends State<SubscribersPage> {
                                 builder: (_) => ClientDetailsPage(
                                   client: subscriber,
                                   counsellorId: widget.counsellorId,
+                                  onSignOut: widget.onSignOut,
                                 ),
                               ),
                             );

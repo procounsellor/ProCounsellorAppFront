@@ -6,8 +6,7 @@ import 'client_details_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class CounsellorDashboard extends StatefulWidget {
-  final VoidCallback onSignOut;
-  final double earnings = 150.0;
+  final Future<void> Function() onSignOut;
   final String counsellorId;
 
   CounsellorDashboard({required this.onSignOut, required this.counsellorId});
@@ -178,6 +177,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                                     client: client,
                                                     counsellorId:
                                                         widget.counsellorId,
+                                                    onSignOut: widget.onSignOut,
                                                   ),
                                                 ),
                                               );
@@ -294,7 +294,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                         Icon(Icons.currency_rupee,
                                             color: Colors.green, size: 24),
                                         Text(
-                                          widget.earnings.toStringAsFixed(2),
+                                          earnings.toStringAsFixed(2),
                                           style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
