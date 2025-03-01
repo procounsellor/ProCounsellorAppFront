@@ -57,7 +57,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         UserDashboard(onSignOut: widget.onSignOut, username: widget.username));
     _pages.add(LearnWithUsPage());
     _pages.add(CommunityPage());
-    _pages.add(MyActivitiesPage(username: widget.username));
+    _pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
     _pages.add(ProfilePage(username: widget.username));
   }
 
@@ -190,7 +190,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatPage(userId: widget.username),
+                        builder: (context) => ChatPage(userId: widget.username, onSignOut: widget.onSignOut,),
                       ),
                     );
                   }),

@@ -7,12 +7,14 @@ class SearchPage extends StatefulWidget {
   final List<dynamic> topRatedCounsellors;
   final List<String> topNews;
   final String userId;
+  final Future<void> Function() onSignOut;
 
   SearchPage({
     required this.liveCounsellors,
     required this.topRatedCounsellors,
     required this.topNews,
     required this.userId,
+    required this.onSignOut
   });
 
   @override
@@ -232,6 +234,7 @@ class _SearchPageState extends State<SearchPage> {
                       itemName: items[index],
                       userId: widget.userId,
                       counsellorId: '',
+                      onSignOut: widget.onSignOut,
                     ),
                   ),
                 );
@@ -265,6 +268,7 @@ class _SearchPageState extends State<SearchPage> {
                           counsellor['firstName'] ?? counsellor['userName'],
                       userId: widget.userId,
                       counsellorId: counsellor['userName'] ?? '',
+                      onSignOut: widget.onSignOut,
                     ),
                   ),
                 );

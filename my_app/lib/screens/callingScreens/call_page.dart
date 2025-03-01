@@ -2,6 +2,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
+import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'package:http/http.dart' as http;
@@ -13,12 +15,14 @@ class CallPage extends StatefulWidget {
   final String id;
   final bool isCaller;
   final String callInitiatorId;
+  final Future<void> Function() onSignOut;
 
   CallPage(
       {required this.callId,
       required this.id,
       required this.isCaller,
-      required this.callInitiatorId});
+      required this.callInitiatorId,
+      required this.onSignOut});
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -41,6 +45,8 @@ class _CallPageState extends State<CallPage> {
   bool _isSpeaking = false;
   bool _callAnswered = false; // ✅ Track if call is answered
   Timer? _ringingTimer;
+
+  bool callReceiverIsUser = false;
 
   @override
   void initState() {
@@ -78,6 +84,7 @@ class _CallPageState extends State<CallPage> {
         setState(() {
           callerName = "${data['firstName']} ${data['lastName']}";
           callerPhoto = data['photoUrl'];
+          callReceiverIsUser = true;
         });
       }
     } catch (e) {
@@ -275,8 +282,26 @@ class _CallPageState extends State<CallPage> {
     _callService.endCall(widget.callId);
     _signalingService.clearIncomingCall(widget.callInitiatorId);
     _stopRinging();
-     // ✅ Use Global Navigator Key to ensure correct pop
-    if (CallOverlayManager.navigatorKey.currentState?.canPop() ?? false) {
+
+    if(!widget.isCaller){
+      if(callReceiverIsUser){
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => BasePage(
+                  username: widget.id,
+                  onSignOut: widget.onSignOut,)));
+      }
+      else{
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CounsellorBasePage(
+                  counsellorId: widget.id,
+                  onSignOut: widget.onSignOut,)));
+      }
+    }
+    else{
       CallOverlayManager.navigatorKey.currentState?.pop();
     }
   }

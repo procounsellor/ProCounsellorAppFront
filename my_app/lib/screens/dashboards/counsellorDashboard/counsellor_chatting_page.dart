@@ -14,13 +14,15 @@ class ChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
-  final String? photo; // Allow photo to be nullable
+  final String? photo;
+  final Future<void> Function() onSignOut;
 
   ChattingPage({
     required this.itemName,
     required this.userId,
     required this.counsellorId,
     this.photo,
+    required this.onSignOut
   });
 
   @override
@@ -580,6 +582,7 @@ class _ChattingPageState extends State<ChattingPage> {
                     'userName': widget.userId,
                   },
                   counsellorId: widget.counsellorId,
+                  onSignOut: widget.onSignOut,
                 ),
               ),
             );

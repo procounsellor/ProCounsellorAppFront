@@ -15,6 +15,7 @@ class DetailsPage extends StatefulWidget {
   final String counsellorId;
   final bool isNews;
   final Map<String, dynamic>? counsellor;
+  final Future<void> Function() onSignOut;
 
   DetailsPage({
     required this.itemName,
@@ -22,6 +23,7 @@ class DetailsPage extends StatefulWidget {
     required this.counsellorId,
     this.counsellor,
     this.isNews = false,
+    required this.onSignOut,
   });
 
   @override
@@ -292,7 +294,8 @@ class _DetailsPageState extends State<DetailsPage> {
                   callId: callId,
                   id: widget.userId,
                   isCaller: true,
-                  callInitiatorId: widget.counsellorId)));
+                  callInitiatorId: widget.counsellorId,
+                  onSignOut: widget.onSignOut,)));
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Call failed")));
@@ -321,6 +324,7 @@ class _DetailsPageState extends State<DetailsPage> {
             id: widget.counsellorId,
             isCaller: true,
             callInitiatorId: widget.counsellorId,
+            onSignOut: widget.onSignOut,
           ),
         ),
       );
@@ -856,6 +860,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                                   userId: widget.userId,
                                                   counsellorId:
                                                       widget.counsellorId,
+                                                      onSignOut: widget.onSignOut,
                                                 ),
                                               ),
                                             );

@@ -8,8 +8,9 @@ import 'package:intl/intl.dart';
 class ActivityPage extends StatefulWidget {
   final String counsellorId;
   final List<String> activityLogs;
+  final Future<void> Function() onSignOut;
 
-  ActivityPage({required this.counsellorId, required this.activityLogs});
+  ActivityPage({required this.counsellorId, required this.activityLogs, required this.onSignOut});
 
   @override
   _ActivityPageState createState() => _ActivityPageState();
@@ -230,6 +231,7 @@ class _ActivityPageState extends State<ActivityPage> {
                   'userName': phoneNumber,
                 },
                 counsellorId: widget.counsellorId,
+                onSignOut: widget.onSignOut,
               ),
             ),
           );

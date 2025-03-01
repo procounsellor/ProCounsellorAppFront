@@ -8,8 +8,9 @@ import '../../../services/video_call_service.dart';
 class ClientDetailsPage extends StatelessWidget {
   final Map<String, dynamic> client;
   final String counsellorId;
+  final Future<void> Function() onSignOut;
 
-  ClientDetailsPage({required this.client, required this.counsellorId});
+  ClientDetailsPage({required this.client, required this.counsellorId, required this.onSignOut});
 
   void _startCall(BuildContext context) async {
     final CallService _callService = CallService();
@@ -32,7 +33,8 @@ class ClientDetailsPage extends StatelessWidget {
                   callId: callId,
                   id: counsellorId,
                   callInitiatorId: receiverId,
-                  isCaller: true)));
+                  isCaller: true,
+                  onSignOut: onSignOut)));
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Call failed")));
@@ -61,6 +63,7 @@ class ClientDetailsPage extends StatelessWidget {
             id: counsellorId,
             isCaller: true,
             callInitiatorId: receiverId,
+            onSignOut: onSignOut,
           ),
         ),
       );
@@ -153,6 +156,7 @@ class ClientDetailsPage extends StatelessWidget {
                             userId: client['userName'] ?? 'unknown_user',
                             counsellorId: counsellorId,
                             photo: client['photo'] ?? '',
+                            onSignOut: onSignOut,
                           ),
                         ),
                       );
