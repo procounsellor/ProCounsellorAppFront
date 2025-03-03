@@ -114,7 +114,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
                       isCaller: false,
                       callInitiatorId:
                           callData['senderId'] ?? callData['callerId'],
-                          onSignOut: restartApp,
+                      onSignOut: restartApp,
                     )
                   : CallPage(
                       callId: callData['callId'],
@@ -122,7 +122,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
                       isCaller: false,
                       callInitiatorId:
                           callData['senderId'] ?? callData['callerId'],
-                          onSignOut: restartApp,
+                      onSignOut: restartApp,
                     ),
             ),
           );
@@ -131,7 +131,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         },
         () {
           _signalingService.clearIncomingCall(userId!);
-          _callService.endCall(callData['callId']);
+          _callService.declinedCall(callData['callId']);
           _signalingService.listenForCallEnd(
               callData['callId'], _handleCallEnd);
         },
@@ -175,10 +175,9 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
 
     if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
       return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorKey: CallOverlayManager.navigatorKey,
-        home: UserSignInPage(onSignOut: restartApp)
-      );
+          debugShowCheckedModeBanner: false,
+          navigatorKey: CallOverlayManager.navigatorKey,
+          home: UserSignInPage(onSignOut: restartApp));
     }
 
     switch (role?.toLowerCase()) {

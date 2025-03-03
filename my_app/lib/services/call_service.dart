@@ -4,9 +4,10 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 
 class CallService {
-  static const String baseUrl = "http://localhost:8080/calls"; 
+  static const String baseUrl = "http://localhost:8080/calls";
 
-  Future<String?> startCall(String callerId, String receiverId, String callType) async {
+  Future<String?> startCall(
+      String callerId, String receiverId, String callType) async {
     final response = await http.post(
       Uri.parse("$baseUrl/start"),
       body: {
@@ -34,7 +35,11 @@ class CallService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"sdp": offer.sdp}), // Send only the "sdp" field as JSON
     );
-}
+  }
+
+  Future<void> declinedCall(String callId) async {
+    await http.post(Uri.parse("$baseUrl/$callId/declined"));
+  }
 
   Future<void> sendAnswer(String callId, String? sdp) async {
     if (sdp == null || sdp.isEmpty) {
@@ -57,7 +62,8 @@ class CallService {
     }
   }
 
-  Future<void> sendIceCandidate(String callId, Map<String, dynamic> candidate, String senderId) async {
+  Future<void> sendIceCandidate(
+      String callId, Map<String, dynamic> candidate, String senderId) async {
     print("Sending ICE candidate: $candidate from $senderId");
 
     await http.post(

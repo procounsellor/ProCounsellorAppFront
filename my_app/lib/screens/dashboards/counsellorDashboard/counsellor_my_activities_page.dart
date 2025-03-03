@@ -3,6 +3,7 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/followers_page.dar
 import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
 import 'counsellor_chat_page.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/call_history_page.dart';
 
 class CounsellorMyActivitiesPage extends StatefulWidget {
   final String username;
@@ -67,7 +68,9 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/my_activity_counsellor_subs1.jpg",
                     "My Subscribers",
-                    SubscribersPage(counsellorId: widget.username, onSignOut: widget.onSignOut),
+                    SubscribersPage(
+                        counsellorId: widget.username,
+                        onSignOut: widget.onSignOut),
                     isReversed: false,
                   ),
                   buildDivider(),
@@ -75,7 +78,10 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/follow.jpg",
                     "My Followers",
-                    FollowersPage(counsellorId: widget.username, onSignOut: widget.onSignOut,),
+                    FollowersPage(
+                      counsellorId: widget.username,
+                      onSignOut: widget.onSignOut,
+                    ),
                     isReversed: true,
                   ),
                   buildDivider(),
@@ -83,7 +89,10 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/chat.png",
                     "Chats",
-                    ChatsPage(counsellorId: widget.username, onSignOut: widget.onSignOut,),
+                    ChatsPage(
+                      counsellorId: widget.username,
+                      onSignOut: widget.onSignOut,
+                    ),
                     isReversed: false,
                   ),
                   buildDivider(),
@@ -91,9 +100,10 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/calls.jpg",
                     "Calls (Video/Audio)",
-                    null,
+                    CallHistoryPage(
+                        counsellorId: widget.username,
+                        onSignOut: widget.onSignOut), // ✅ Update Here
                     isReversed: true,
-                    routeName: '/calls',
                   ),
                   buildDivider(),
                   buildActivityRow(
