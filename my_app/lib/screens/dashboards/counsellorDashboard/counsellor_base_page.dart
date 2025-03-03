@@ -12,6 +12,7 @@ import 'counsellor_state_notifier.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'counsellor_chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'call_history_page.dart';
 
 class CounsellorBasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -67,8 +68,10 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         counsellorId: widget.counsellorId)); // User Dashboard
     _pages.add(CounsellorTransactionsPage()); // Transactions Page
     _pages.add(CounsellorCommunityPage()); // Community Page
-    _pages.add(CounsellorMyActivitiesPage(
-        username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
+    // _pages.add(CounsellorMyActivitiesPage(
+    //     username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
+    _pages.add(CallHistoryPage(
+        counsellorId: widget.counsellorId, onSignOut: widget.onSignOut));
     _pages.add(
         CounsellorProfilePage(username: widget.counsellorId)); // Profile Page
   }
@@ -255,8 +258,10 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            ChatsPage(counsellorId: widget.counsellorId, onSignOut: widget.onSignOut,),
+                        builder: (context) => ChatsPage(
+                          counsellorId: widget.counsellorId,
+                          onSignOut: widget.onSignOut,
+                        ),
                       ),
                     );
                   }),
@@ -433,8 +438,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
           BottomNavigationBarItem(
               icon: Icon(Icons.currency_rupee), label: "Transactions"),
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: "Community"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt), label: "My Activities"),
+          BottomNavigationBarItem(icon: Icon(Icons.call_sharp), label: "Calls"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

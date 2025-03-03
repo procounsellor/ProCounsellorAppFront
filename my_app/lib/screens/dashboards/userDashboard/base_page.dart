@@ -2,6 +2,7 @@ import 'dart:async'; // Import Timer
 import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import http for API calls
+import 'package:my_app/screens/dashboards/userDashboard/call_history_page.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
 import 'learn_with_us_page.dart';
@@ -57,7 +58,9 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         UserDashboard(onSignOut: widget.onSignOut, username: widget.username));
     _pages.add(LearnWithUsPage());
     _pages.add(CommunityPage());
-    _pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
+    //_pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
+    _pages.add(
+        CallHistoryPage(userId: widget.username, onSignOut: widget.onSignOut));
     _pages.add(ProfilePage(username: widget.username));
   }
 
@@ -190,7 +193,10 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatPage(userId: widget.username, onSignOut: widget.onSignOut,),
+                        builder: (context) => ChatPage(
+                          userId: widget.username,
+                          onSignOut: widget.onSignOut,
+                        ),
                       ),
                     );
                   }),
@@ -302,9 +308,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             ListTile(
               leading: Icon(Icons.list_alt),
               title: Text('My Activities'),
-              onTap: () {
-                _navigateToPage(3);
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: Icon(Icons.person),
@@ -353,8 +357,8 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             label: "Community",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: "My Activities",
+            icon: Icon(Icons.call),
+            label: "Calls",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

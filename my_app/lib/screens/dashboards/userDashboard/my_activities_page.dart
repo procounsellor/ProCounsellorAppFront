@@ -4,6 +4,7 @@ import 'package:my_app/screens/dashboards/userDashboard/my_reviews.dart';
 import 'subscribed_counsellors_page.dart';
 import 'chat_page.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'call_history_page.dart';
 
 class MyActivitiesPage extends StatefulWidget {
   final String username;
@@ -67,7 +68,10 @@ class _MyActivitiesPageState extends State<MyActivitiesPage> {
                     context,
                     "images/my_activity_counsellor_subs1.jpg",
                     "Counsellors Subscribed",
-                    SubscribedCounsellorsPage(username: widget.username, onSignOut: widget.onSignOut,),
+                    SubscribedCounsellorsPage(
+                      username: widget.username,
+                      onSignOut: widget.onSignOut,
+                    ),
                     isReversed: false,
                   ),
                   buildDivider(),
@@ -75,7 +79,10 @@ class _MyActivitiesPageState extends State<MyActivitiesPage> {
                     context,
                     "images/follow.jpg",
                     "Followed Counselor",
-                    FollowingCounsellorsPage(username: widget.username, onSignOut: widget.onSignOut,),
+                    FollowingCounsellorsPage(
+                      username: widget.username,
+                      onSignOut: widget.onSignOut,
+                    ),
                     isReversed: true,
                   ),
                   buildDivider(),
@@ -91,7 +98,10 @@ class _MyActivitiesPageState extends State<MyActivitiesPage> {
                     context,
                     "images/chat.png",
                     "Chats",
-                    ChatPage(userId: widget.username, onSignOut: widget.onSignOut,),
+                    ChatPage(
+                      userId: widget.username,
+                      onSignOut: widget.onSignOut,
+                    ),
                     isReversed: true,
                   ),
                   buildDivider(),
@@ -99,9 +109,10 @@ class _MyActivitiesPageState extends State<MyActivitiesPage> {
                     context,
                     "images/calls.jpg",
                     "Calls (Video/Audio)",
-                    null,
-                    isReversed: false,
-                    routeName: '/calls',
+                    CallHistoryPage(
+                        userId: widget.username,
+                        onSignOut: widget.onSignOut), // ✅ Update Here
+                    isReversed: true,
                   ),
                   buildDivider(),
                   buildActivityRow(
