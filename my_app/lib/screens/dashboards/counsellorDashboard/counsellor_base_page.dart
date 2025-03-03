@@ -72,8 +72,10 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     //     username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
     _pages.add(CallHistoryPage(
         counsellorId: widget.counsellorId, onSignOut: widget.onSignOut));
-    _pages.add(
-        CounsellorProfilePage(username: widget.counsellorId)); // Profile Page
+    _pages.add(CounsellorProfilePage(
+      username: widget.counsellorId,
+      onSignOut: widget.onSignOut,
+    )); // Profile Page
   }
 
   void _listenToNotifications(List<String> chatIds) {
