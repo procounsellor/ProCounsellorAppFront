@@ -4,11 +4,16 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
+
+import 'package:my_app/screens/dashboards/counsellorDashboard/followers_page.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
 
 class CounsellorProfilePage extends StatefulWidget {
   final String username;
+  final Future<void> Function() onSignOut;
 
-  CounsellorProfilePage({required this.username});
+  CounsellorProfilePage({required this.username, required this.onSignOut});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -170,16 +175,33 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                                     _buildStatColumn(
                                         "Clients",
                                         profileData!["clientIds"]?.length ?? 0,
-                                        Icons.people),
+                                        () => _navigateToPage(
+                                              context,
+                                              SubscribersPage(
+                                                  counsellorId: widget.username,
+                                                  onSignOut: widget.onSignOut),
+                                            )),
                                     SizedBox(width: 20),
                                     _buildStatColumn(
-                                        "Followers",
-                                        profileData!["followerIds"]?.length ??
-                                            0,
-                                        Icons.group),
+                                      "Followers",
+                                      profileData!["followerIds"]?.length ?? 0,
+                                      () => _navigateToPage(
+                                          context,
+                                          FollowersPage(
+                                            counsellorId: widget.username,
+                                            onSignOut: widget.onSignOut,
+                                          )),
+                                    ),
                                     SizedBox(width: 20),
-                                    _buildStatColumn("Posts", 12,
-                                        Icons.article), // Placeholder value
+                                    _buildStatColumn(
+                                      "Reviews",
+                                      12, // Placeholder value
+
+                                      () => _navigateToPage(
+                                          context,
+                                          MyReviewPage(
+                                              username: widget.username)),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -192,8 +214,7 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text(
-                          profileData!['description'] ??
-                                      "Not provided",
+                          profileData!['description'] ?? "Not provided",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -247,20 +268,27 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
   }
 
 // Helper Widget for Stats with Icons
-  Widget _buildStatColumn(String label, int value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, size: 20, color: Colors.black54),
-        SizedBox(height: 4),
-        Text(
-          value.toString(),
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-      ],
+  Widget _buildStatColumn(String label, int count, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap, // ✅ Navigation on tap
+      child: Column(
+        children: [
+          SizedBox(height: 5),
+          Text(
+            "$count",
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToPage(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
     );
   }
 
