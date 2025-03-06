@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'client_details_page.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String counsellorId;
   final Future<void> Function() onSignOut;
+  final VoidCallback? onMissedCallUpdated; // ✅ Add this
 
   const CallHistoryPage(
-      {required this.counsellorId, required this.onSignOut, Key? key})
+      {required this.counsellorId,
+      required this.onSignOut,
+      this.onMissedCallUpdated,
+      Key? key})
       : super(key: key);
 
   @override
@@ -22,11 +27,55 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
   Map<String, String> contactNames = {}; // Store fetched contact names
   bool isLoading = true;
   bool hasError = false;
+  int missedCallNotificationCount = 0; // ✅ Initialize variable
 
   @override
   void initState() {
     super.initState();
     fetchCallHistory();
+  }
+
+  void markMissedCallsAsSeen() async {
+    DatabaseReference callRef = FirebaseDatabase.instance.ref('calls');
+
+    try {
+      // ✅ Fetch all calls from Firebase
+      DataSnapshot snapshot = await callRef.get();
+
+      if (snapshot.exists && snapshot.value != null) {
+        Map<dynamic, dynamic> calls = snapshot.value as Map<dynamic, dynamic>;
+
+        calls.forEach((callId, callData) {
+          if (callData["receiverId"] == widget.counsellorId &&
+              callData["status"] == "Missed Call" &&
+              callData["missedCallStatusSeen"] == false) {
+            print("🔹 Marking call $callId as seen..."); // ✅ Debug Log
+
+            // ✅ Update the missed call status in Firebase
+            callRef
+                .child(callId)
+                .update({"missedCallStatusSeen": true}).then((_) {
+              print("✅ Successfully marked missed call $callId as seen.");
+            }).catchError((error) {
+              print("❌ Error updating missed call status: $error");
+            });
+          }
+        });
+      }
+    } catch (error) {
+      print("❌ Error fetching calls from Firebase: $error");
+    }
+
+    // ✅ Update UI after marking calls as seen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          missedCallNotificationCount = 0;
+        });
+
+        widget.onMissedCallUpdated?.call();
+      }
+    });
   }
 
   Future<void> fetchCallHistory() async {
@@ -41,15 +90,23 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
             .map((call) => Map<String, dynamic>.from(call))
             .toList();
 
-        // Sort calls (newest first)
+        // ✅ Sort calls (newest first)
         calls.sort((a, b) => b["startTime"].compareTo(a["startTime"]));
 
         setState(() {
           callHistory = calls;
+          missedCallNotificationCount = calls
+              .where((call) =>
+                  call["receiverId"] == widget.counsellorId &&
+                  call["status"] == "Missed Call" &&
+                  call["missedCallStatusSeen"] == false)
+              .length;
           isLoading = false;
         });
 
-        // Fetch profile pictures and names for each call
+        // ✅ Mark missed calls as seen (Firebase)
+        markMissedCallsAsSeen();
+
         fetchContactDetails();
       } else {
         throw Exception("Failed to load call history");

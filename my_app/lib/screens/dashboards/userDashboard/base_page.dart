@@ -35,6 +35,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   bool _isLoadingPhoto = true; // To track photo loading state
   int notificationCount = 0;
   late DatabaseReference chatRef;
+  int missedCallNotificationCount = 0;
 
   @override
   void initState() {
@@ -49,6 +50,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
     // Fetch user details
     _fetchUserDetails();
+    _listenToMissedCalls();
 
     // Set user state to "online" when BasePage is created
     _setOnlineWithDebounce();
@@ -59,9 +61,47 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     _pages.add(LearnWithUsPage());
     _pages.add(CommunityPage());
     //_pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
-    _pages.add(
-        CallHistoryPage(userId: widget.username, onSignOut: widget.onSignOut));
+    _pages.add(CallHistoryPage(
+      userId: widget.username,
+      onSignOut: widget.onSignOut,
+      onMissedCallUpdated: _resetMissedCallCount,
+    ));
     _pages.add(ProfilePage(username: widget.username));
+  }
+
+  void _listenToMissedCalls() {
+    DatabaseReference callRef = FirebaseDatabase.instance.ref('calls');
+
+    callRef.onValue.listen((event) {
+      int newMissedCalls = 0;
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic> calls =
+            event.snapshot.value as Map<dynamic, dynamic>;
+
+        calls.forEach((key, callData) {
+          if (callData["receiverId"] == widget.username &&
+              callData["status"] == "Missed Call" &&
+              callData["missedCallStatusSeen"] == false) {
+            newMissedCalls++;
+          }
+        });
+      }
+
+      // ✅ Delay setState() until after the build phase
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            missedCallNotificationCount = newMissedCalls;
+          });
+        }
+      });
+    });
+  }
+
+  void _resetMissedCallCount() {
+    setState(() {
+      missedCallNotificationCount = 0;
+    });
   }
 
   Future<void> _fetchUserDetails() async {
@@ -343,7 +383,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             .fixed, // Use fixed to keep the white background
         showSelectedLabels: true, // Show label only for selected item
         showUnselectedLabels: false, // Hide labels for unselected items
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "Home",
@@ -357,7 +397,11 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
             label: "Community",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.call),
+            icon: missedCallNotificationCount > 0
+                ? Icon(Icons.call_missed,
+                    color: Colors
+                        .red) // 🔴 Show missed call icon if there are missed calls
+                : Icon(Icons.call_sharp), // 📞 Default call icon
             label: "Calls",
           ),
           BottomNavigationBarItem(

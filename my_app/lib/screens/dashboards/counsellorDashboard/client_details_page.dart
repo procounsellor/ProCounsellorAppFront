@@ -10,7 +10,10 @@ class ClientDetailsPage extends StatelessWidget {
   final String counsellorId;
   final Future<void> Function() onSignOut;
 
-  ClientDetailsPage({required this.client, required this.counsellorId, required this.onSignOut});
+  ClientDetailsPage(
+      {required this.client,
+      required this.counsellorId,
+      required this.onSignOut});
 
   void _startCall(BuildContext context) async {
     final CallService _callService = CallService();
@@ -106,12 +109,28 @@ class ClientDetailsPage extends StatelessWidget {
                         top: Radius.circular(15),
                         bottom: Radius.circular(15),
                       ),
-                      child: Image.network(
-                        client['photo'] ?? 'https://via.placeholder.com/150',
-                        width: double.infinity,
-                        height: 300,
-                        fit: BoxFit.cover,
-                      ),
+                      child:
+                          client['photo'] != null && client['photo'].isNotEmpty
+                              ? Image.network(
+                                  client['photo'],
+                                  width: double.infinity,
+                                  height: 300,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/5857.jpg', // ✅ Asset fallback
+                                      width: double.infinity,
+                                      height: 300,
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  'assets/images/5857.jpg', // ✅ Local Asset Image
+                                  width: double.infinity,
+                                  height: 300,
+                                  fit: BoxFit.cover,
+                                ),
                     ),
                     SizedBox(height: 10),
                     Text(

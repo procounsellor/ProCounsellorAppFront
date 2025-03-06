@@ -39,6 +39,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   int notificationCount = 0;
   int subscriberNotificationCount = 0;
   List<String> activityLogs = [];
+  int missedCallNotificationCount = 0;
 
   late DatabaseReference chatRef;
 
@@ -58,6 +59,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     _listenToSubscriberChanges();
     _listenToFollowerChanges();
     _listenToReviewChanges();
+    _listenToMissedCalls();
 
     // Set counsellor state to "online" when BasePage is created
     _setOnlineWithDebounce();
@@ -71,11 +73,49 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     // _pages.add(CounsellorMyActivitiesPage(
     //     username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
     _pages.add(CallHistoryPage(
-        counsellorId: widget.counsellorId, onSignOut: widget.onSignOut));
+      counsellorId: widget.counsellorId,
+      onSignOut: widget.onSignOut,
+      onMissedCallUpdated: _resetMissedCallCount,
+    ));
     _pages.add(CounsellorProfilePage(
       username: widget.counsellorId,
       onSignOut: widget.onSignOut,
     )); // Profile Page
+  }
+
+  void _listenToMissedCalls() {
+    DatabaseReference callRef = FirebaseDatabase.instance.ref('calls');
+
+    callRef.onValue.listen((event) {
+      int newMissedCalls = 0;
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic> calls =
+            event.snapshot.value as Map<dynamic, dynamic>;
+
+        calls.forEach((key, callData) {
+          if (callData["receiverId"] == widget.counsellorId &&
+              callData["status"] == "Missed Call" &&
+              callData["missedCallStatusSeen"] == false) {
+            newMissedCalls++;
+          }
+        });
+      }
+
+      // ✅ Delay setState() until after the build phase
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            missedCallNotificationCount = newMissedCalls;
+          });
+        }
+      });
+    });
+  }
+
+  void _resetMissedCallCount() {
+    setState(() {
+      missedCallNotificationCount = 0;
+    });
   }
 
   void _listenToNotifications(List<String> chatIds) {
@@ -435,12 +475,19 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
             .fixed, // Use fixed to keep the white background
         showSelectedLabels: true, // Show label only for selected item
         showUnselectedLabels: false, // Hide labels for unselected items
-        items: const [
+        items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
               icon: Icon(Icons.currency_rupee), label: "Transactions"),
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: "Community"),
-          BottomNavigationBarItem(icon: Icon(Icons.call_sharp), label: "Calls"),
+          BottomNavigationBarItem(
+            icon: missedCallNotificationCount > 0
+                ? Icon(Icons.call_missed,
+                    color: Colors
+                        .red) // 🔴 Show missed call icon if there are missed calls
+                : Icon(Icons.call_sharp), // 📞 Default call icon
+            label: "Calls",
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

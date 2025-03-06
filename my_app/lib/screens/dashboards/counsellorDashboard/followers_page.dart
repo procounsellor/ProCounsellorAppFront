@@ -138,13 +138,29 @@ class _FollowersPageState extends State<FollowersPage> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    follower['photo'] ??
-                                        'https://via.placeholder.com/150/0000FF/808080?Text=PAKAINFO.com',
-                                    height: 80,
-                                    width: 80,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: follower['photo'] != null &&
+                                          follower['photo'].isNotEmpty
+                                      ? Image.network(
+                                          follower['photo'],
+                                          height: 80,
+                                          width: 80,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/images/5857.jpg', // ✅ Asset fallback
+                                              height: 80,
+                                              width: 80,
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
+                                        )
+                                      : Image.asset(
+                                          'assets/images/5857.jpg', // ✅ Local Asset Image
+                                          height: 80,
+                                          width: 80,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                                 SizedBox(width: 16),
                                 Expanded(
