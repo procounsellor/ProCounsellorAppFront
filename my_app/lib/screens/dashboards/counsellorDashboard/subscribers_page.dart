@@ -146,13 +146,29 @@ class _SubscribersPageState extends State<SubscribersPage> {
                                   borderRadius: BorderRadius.vertical(
                                     top: Radius.circular(15),
                                   ),
-                                  child: Image.network(
-                                    subscriber['photo'] ??
-                                        'https://via.placeholder.com/150',
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: subscriber['photo'] != null &&
+                                          subscriber['photo'].isNotEmpty
+                                      ? Image.network(
+                                          subscriber['photo'],
+                                          height: 150,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/images/5857.jpg', // ✅ Asset fallback
+                                              height: 150,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
+                                        )
+                                      : Image.asset(
+                                          'assets/images/5857.jpg', // ✅ Local Asset Image
+                                          height: 150,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(

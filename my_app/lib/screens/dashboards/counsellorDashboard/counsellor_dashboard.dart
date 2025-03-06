@@ -200,11 +200,16 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                                     ),
                                                     child: CircleAvatar(
                                                       radius: 30,
-                                                      backgroundImage:
-                                                          NetworkImage(
-                                                        client['photo'] ??
-                                                            'https://via.placeholder.com/150',
-                                                      ),
+                                                      backgroundImage: client[
+                                                                      'photo'] !=
+                                                                  null &&
+                                                              client['photo']
+                                                                  .isNotEmpty
+                                                          ? NetworkImage(
+                                                              client['photo'])
+                                                          : AssetImage(
+                                                                  'assets/images/5857.jpg')
+                                                              as ImageProvider, // ✅ Asset fallback
                                                     ),
                                                   ),
                                                   SizedBox(height: 8),
@@ -357,12 +362,33 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           15.0),
-                                                  child: Image.network(
-                                                    review['userPhotoUrl'],
-                                                    height: 80,
-                                                    width: 80,
-                                                    fit: BoxFit.cover,
-                                                  ),
+                                                  child: review['userPhotoUrl'] !=
+                                                              null &&
+                                                          review['userPhotoUrl']
+                                                              .isNotEmpty
+                                                      ? Image.network(
+                                                          review[
+                                                              'userPhotoUrl'],
+                                                          height: 80,
+                                                          width: 80,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (context, error,
+                                                                  stackTrace) {
+                                                            return Image.asset(
+                                                              'assets/images/5857.jpg', // ✅ Asset fallback
+                                                              height: 80,
+                                                              width: 80,
+                                                              fit: BoxFit.cover,
+                                                            );
+                                                          },
+                                                        )
+                                                      : Image.asset(
+                                                          'assets/images/5857.jpg', // ✅ Local Asset Image
+                                                          height: 80,
+                                                          width: 80,
+                                                          fit: BoxFit.cover,
+                                                        ),
                                                 ),
                                                 SizedBox(height: 10),
                                                 Row(
