@@ -334,33 +334,32 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-  //review summary section
 // Function to calculate ratings summary
-  Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
-    int totalRatings = reviews.length;
-    double averageRating = 0.0;
-    Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
+  int totalRatings = reviews.length;
+  double averageRating = 0.0;
+  Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
 
-    for (var review in reviews) {
-      if (review is Map<String, dynamic>) {
-        int rating = review['rating'] ?? 0;
-        if (rating > 0 && rating <= 5) {
-          starCounts[rating] = (starCounts[rating] ?? 0) + 1;
-          averageRating += rating;
-        }
+  for (var review in reviews) {
+    if (review is Map<String, dynamic>) {
+      int rating = (review['rating'] ?? 0).toInt(); // Ensure it's an int
+      if (rating > 0 && rating <= 5) {
+        starCounts[rating] = (starCounts[rating] ?? 0) + 1;
+        averageRating += rating;
       }
     }
-
-    if (totalRatings > 0) {
-      averageRating /= totalRatings;
-    }
-
-    return {
-      "averageRating": averageRating,
-      "totalRatings": totalRatings,
-      "starCounts": starCounts,
-    };
   }
+
+  if (totalRatings > 0) {
+    averageRating /= totalRatings.toDouble(); // Ensure division returns a double
+  }
+
+  return {
+    "averageRating": averageRating, // It's okay to return double here
+    "totalRatings": totalRatings,
+    "starCounts": starCounts,
+  };
+}
 
 // Widget for Rating Summary
   Widget buildRatingSummary(List<Map<String, dynamic>> reviews) {
@@ -1045,11 +1044,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                           Row(
                                             children: [
                                               ...List.generate(
-                                                review["rating"] ??
-                                                    0, // Generate stars based on rating
-                                                (index) => Icon(Icons.star,
-                                                    color: Colors.orange,
-                                                    size: 16),
+                                                (review["rating"] ?? 0).toInt(), // Convert rating to int safely
+                                                (index) => Icon(Icons.star, color: Colors.orange, size: 16),
                                               ),
                                             ],
                                           ),

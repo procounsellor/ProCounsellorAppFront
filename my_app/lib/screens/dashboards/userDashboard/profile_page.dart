@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:my_app/screens/paymentScreens/add_funds.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -477,7 +478,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         .spaceBetween, // Ensure even spacing
                                     children: [
                                       Text(
-                                        "Balance",
+                                        "Wallet Balance",
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -490,9 +491,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                           SizedBox(width: 4),
                                           Text(
                                             profileData != null &&
-                                                    profileData!['balance'] !=
+                                                    profileData!['walletAmount'] !=
                                                         null
-                                                ? profileData!['balance']
+                                                ? profileData!['walletAmount']
                                                     .toString()
                                                 : "Not provided",
                                             style: TextStyle(
@@ -521,12 +522,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        // Placeholder for future functionality
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(
-                                                  "Add Funds functionality coming soon!")),
+                                       Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddFundsPage(userName: widget.username),
+                                          ),
                                         );
                                       },
                                       child: Text(

@@ -101,8 +101,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         () {
           bool isVideoCall = callData['callType'] == 'video';
 
-          CallOverlayManager
-              .removeOverlay(); // ✅ Remove overlay before navigating
+          CallOverlayManager.removeOverlay();
 
           // ✅ Use the global navigator key for safe navigation
           CallOverlayManager.navigatorKey.currentState?.push(
