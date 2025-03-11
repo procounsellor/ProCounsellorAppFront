@@ -6,6 +6,7 @@ import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/video_call_service.dart';
 import 'dart:convert'; // For encoding/decoding JSON
+import '../../../services/api_utils.dart';
 import 'chatting_page.dart';
 import '../../callingScreens/video_call_page.dart';
 
@@ -51,7 +52,7 @@ class _DetailsPageState extends State<DetailsPage> {
   Future<void> fetchReviews() async {
     try {
       final response = await http.get(Uri.parse(
-          'http://localhost:8080/api/reviews/counsellor/${widget.counsellorId}'));
+          '${ApiUtils.baseUrl}/api/reviews/counsellor/${widget.counsellorId}'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List;
         setState(() {
@@ -74,7 +75,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to fetch counsellor details
   Future<void> fetchCounsellorDetails() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/counsellor/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
 
     try {
       final response = await http.get(url);
@@ -105,7 +106,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to check if the user is already subscribed to the counsellor
   Future<void> checkSubscriptionStatus() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/is-subscribed/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/is-subscribed/${widget.counsellorId}');
 
     try {
       final response = await http.get(url);
@@ -137,7 +138,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to check if the user is already following the counsellor
   Future<void> checkFollowingStatus() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/has-followed/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/has-followed/${widget.counsellorId}');
 
     try {
       final response = await http.get(url);
@@ -169,7 +170,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to call the subscribe API
   Future<void> subscribe() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/subscribe/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribe/${widget.counsellorId}');
 
     try {
       final response = await http.post(url);
@@ -196,7 +197,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to call the unsubscribe API
   Future<void> unsubscribe() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/unsubscribe/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/unsubscribe/${widget.counsellorId}');
 
     try {
       final response = await http.delete(url);
@@ -223,7 +224,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to call the follow API
   Future<void> follow() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/follow/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/follow/${widget.counsellorId}');
 
     try {
       final response = await http.post(url);
@@ -250,7 +251,7 @@ class _DetailsPageState extends State<DetailsPage> {
   // Function to call the unfollow API
   Future<void> unfollow() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/user/${widget.userId}/unfollow/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/user/${widget.userId}/unfollow/${widget.counsellorId}');
 
     try {
       final response = await http.delete(url);
@@ -1248,7 +1249,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://localhost:8080/api/reviews/$reviewId/comments/$username'),
+            '${ApiUtils.baseUrl}/api/reviews/$reviewId/comments/$username'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'commentText': commentText}),
       );
@@ -1275,11 +1276,11 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
       final response = isLiked
           ? await http.post(
               Uri.parse(
-                  'http://localhost:8080/api/reviews/$userId/$reviewId/unlike'),
+                  '${ApiUtils.baseUrl}/api/reviews/$userId/$reviewId/unlike'),
             ) // Unliking
           : await http.post(
               Uri.parse(
-                  'http://localhost:8080/api/reviews/$userId/$reviewId/like'),
+                  '${ApiUtils.baseUrl}/api/reviews/$userId/$reviewId/like'),
             ); // Liking
 
       if (response.statusCode == 200) {
@@ -1296,7 +1297,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
     try {
       final response = await http.delete(
         Uri.parse(
-            'http://localhost:8080/api/reviews/$reviewId/comments/$commentId'),
+            '${ApiUtils.baseUrl}/api/reviews/$reviewId/comments/$commentId'),
       );
 
       if (response.statusCode == 200) {

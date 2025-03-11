@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../../services/api_utils.dart';
+
 class MyReviewPage extends StatefulWidget {
   final String username;
 
@@ -26,7 +28,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8080/api/reviews/counsellor/${widget.username}'),
+            '${ApiUtils.baseUrl}/api/reviews/counsellor/${widget.username}'),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -47,11 +49,11 @@ class _MyReviewPageState extends State<MyReviewPage> {
       final response = isLiked
           ? await http.post(
               Uri.parse(
-                  'http://localhost:8080/api/reviews/${widget.username}/$reviewId/unlike'),
+                  '${ApiUtils.baseUrl}/api/reviews/${widget.username}/$reviewId/unlike'),
             )
           : await http.post(
               Uri.parse(
-                  'http://localhost:8080/api/reviews/${widget.username}/$reviewId/like'),
+                  '${ApiUtils.baseUrl}/api/reviews/${widget.username}/$reviewId/like'),
             );
       if (response.statusCode == 200) {
         fetchReviews();
@@ -65,7 +67,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://localhost:8080/api/reviews/$reviewId/comments/${widget.username}'),
+            '${ApiUtils.baseUrl}/api/reviews/$reviewId/comments/${widget.username}'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'commentText': commentText}),
       );

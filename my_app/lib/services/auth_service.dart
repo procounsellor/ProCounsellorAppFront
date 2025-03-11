@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:my_app/services/api_utils.dart';
 
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8080/api/auth';
+  static const String _baseUrl = '${ApiUtils.baseUrl}/api/auth';
   // http://10.0.2.2:8080 //android simulator
   // http://127.0.0.1:8080 //iphone simulator
 
@@ -116,7 +117,7 @@ class AuthService {
       List<String> userInterestedStates, String interestedCourse) async {
     try {
       final response = await http.patch(
-        Uri.parse('http://localhost:8080/api/user/$userId'),
+        Uri.parse('${ApiUtils.baseUrl}/api/user/$userId'),
         headers: {
           'Content-Type': 'application/json',
         },

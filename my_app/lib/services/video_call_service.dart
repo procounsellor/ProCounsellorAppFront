@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app/services/api_utils.dart';
 
 class VideoCallService {
-  static const String baseUrl = "http://localhost:8080/calls";
+  static const String baseUrl = "${ApiUtils.baseUrl}/calls";
 
   // Start a Video or Audio Call
   Future<String?> startCall(

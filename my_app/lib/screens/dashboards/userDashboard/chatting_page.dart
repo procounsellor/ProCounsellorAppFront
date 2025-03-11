@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:my_app/screens/customWidgets/video_player_widget.dart';
+import '../../../services/api_utils.dart';
 import '../../../services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert'; // For JSON decoding
@@ -82,7 +83,7 @@ class _ChattingPageState extends State<ChattingPage> {
   Future<void> _fetchCounsellorProfile() async {
     try {
       String url =
-          'http://localhost:8080/api/counsellor/${widget.counsellorId}';
+          '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(json.decode(response.body));
@@ -334,7 +335,7 @@ class _ChattingPageState extends State<ChattingPage> {
   Future<void> _markMessageAsSeen(String messageId) async {
     try {
       String url =
-          'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
+          '${ApiUtils.baseUrl}/api/chats/$chatId/messages/$messageId/mark-seen';
       final response = await http.post(Uri.parse(url));
       if (response.statusCode != 200) {
         print('Failed to mark message $messageId as seen: ${response.body}');

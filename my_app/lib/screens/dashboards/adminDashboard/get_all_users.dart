@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/adminDashboard/get_user_details.dart';
 import 'dart:convert';
 
+import 'package:my_app/services/api_utils.dart';
+
 class AllUsersPage extends StatefulWidget {
   @override
   _AllUsersPageState createState() => _AllUsersPageState();
@@ -21,7 +23,7 @@ class _AllUsersPageState extends State<AllUsersPage> {
   Future<void> fetchUsers() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/user/all-users'),
+        Uri.parse('${ApiUtils.baseUrl}/api/user/all-users'),
       );
 
       if (response.statusCode == 200) {

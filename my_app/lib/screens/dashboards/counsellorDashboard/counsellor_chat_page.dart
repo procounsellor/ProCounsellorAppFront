@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../services/api_utils.dart';
 import 'counsellor_chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -33,7 +34,7 @@ class _ChatsPageState extends State<ChatsPage> {
   Future<void> fetchChats() async {
     try {
       final response = await http.get(Uri.parse(
-          'http://localhost:8080/api/counsellor/${widget.counsellorId}/clients'));
+          '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/clients'));
 
       if (response.statusCode == 200) {
         final List<dynamic> clients = json.decode(response.body);
@@ -47,19 +48,19 @@ class _ChatsPageState extends State<ChatsPage> {
 
           try {
             final chatExistsResponse = await http.get(Uri.parse(
-                'http://localhost:8080/api/chats/exists?userId=$userId&counsellorId=${widget.counsellorId}'));
+                '${ApiUtils.baseUrl}/api/chats/exists?userId=$userId&counsellorId=${widget.counsellorId}'));
 
             if (chatExistsResponse.statusCode == 200 &&
                 json.decode(chatExistsResponse.body) == true) {
               final chatResponse = await http.post(Uri.parse(
-                  'http://localhost:8080/api/chats/start-chat?userId=$userId&counsellorId=${widget.counsellorId}'));
+                  '${ApiUtils.baseUrl}/api/chats/start-chat?userId=$userId&counsellorId=${widget.counsellorId}'));
 
               if (chatResponse.statusCode == 200) {
                 final chatData = json.decode(chatResponse.body);
                 final chatId = chatData['chatId'];
 
                 final messagesResponse = await http.get(
-                  Uri.parse('http://localhost:8080/api/chats/$chatId/messages'),
+                  Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'),
                 );
 
                 if (messagesResponse.statusCode == 200) {

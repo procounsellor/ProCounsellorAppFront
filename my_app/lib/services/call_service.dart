@@ -2,9 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app/services/api_utils.dart';
 
 class CallService {
-  static const String baseUrl = "http://localhost:8080/calls";
+  static const String baseUrl = "${ApiUtils.baseUrl}/calls";
 
   Future<String?> startCall(
       String callerId, String receiverId, String callType) async {

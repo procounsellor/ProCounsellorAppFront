@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import '../../../services/api_utils.dart';
 import 'client_details_page.dart';
 import 'package:intl/intl.dart';
 
@@ -28,7 +29,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Future<void> _fetchActivityLogs() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/counsellor/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -186,7 +187,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
     return FutureBuilder<http.Response>(
       future:
-          http.get(Uri.parse('http://localhost:8080/api/user/$phoneNumber')),
+          http.get(Uri.parse('${ApiUtils.baseUrl}/api/user/$phoneNumber')),
       builder: (context, snapshot) {
         String photoUrl = "";
         if (snapshot.connectionState == ConnectionState.waiting) {

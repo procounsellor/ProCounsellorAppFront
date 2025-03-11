@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../../services/api_utils.dart';
+
 class PostUserReview extends StatefulWidget {
   final String userName;
   final String counsellorName;
@@ -28,7 +30,7 @@ class _PostUserReviewState extends State<PostUserReview> {
   Future<void> fetchCounsellorDetails() async {
     final response = await http.get(
       Uri.parse(
-          'http://localhost:8080/api/counsellor/${widget.counsellorName}'),
+          '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorName}'),
     );
 
     if (response.statusCode == 200) {
@@ -58,7 +60,7 @@ class _PostUserReviewState extends State<PostUserReview> {
 
     final response = await http.post(
       Uri.parse(
-          'http://localhost:8080/api/reviews/${widget.userName}/${widget.counsellorName}'),
+          '${ApiUtils.baseUrl}/api/reviews/${widget.userName}/${widget.counsellorName}'),
       headers: headers,
       body: jsonEncode(body),
     );

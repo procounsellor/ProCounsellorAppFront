@@ -4,6 +4,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
+import 'package:my_app/services/api_utils.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/firebase_signaling_service.dart';
 import 'package:http/http.dart' as http;
@@ -62,7 +63,7 @@ class _CallPageState extends State<CallPage> {
   }
 
   Future<void> _fetchCallerDetails() async {
-    String baseUrl = "http://localhost:8080/api";
+    String baseUrl = "${ApiUtils.baseUrl}/api";
     String userUrl = "$baseUrl/user/${widget.callInitiatorId}";
     String counsellorUrl = "$baseUrl/counsellor/${widget.callInitiatorId}";
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../services/api_utils.dart';
+
 class WithdrawFundsPage extends StatefulWidget {
   @override
   _WithdrawFundsPageState createState() => _WithdrawFundsPageState();
@@ -13,7 +15,7 @@ class _WithdrawFundsPageState extends State<WithdrawFundsPage> {
     double amount = double.parse(_amountController.text);
 
     final response = await http.post(
-      Uri.parse("http://localhost:8080/api/wallet/withdraw"),
+      Uri.parse("${ApiUtils.baseUrl}/api/wallet/withdraw"),
       body: {"userName": "counsellorUser", "amount": amount.toString()},
     );
 

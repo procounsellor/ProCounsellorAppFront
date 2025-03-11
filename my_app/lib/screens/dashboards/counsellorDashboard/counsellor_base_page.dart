@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import http for API calls
 import 'dart:convert'; // For JSON decoding
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_community_page.dart';
+import '../../../services/api_utils.dart';
 import 'counsellor_dashboard.dart';
 import 'counsellor_my_activities_page.dart'; // Import My Activities Page
 import 'counsellor_transactions_page.dart'; // Import Transactions Page
@@ -160,7 +161,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8080/api/counsellor/${widget.counsellorId}'),
+            '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}'),
       );
 
       if (response.statusCode == 200) {

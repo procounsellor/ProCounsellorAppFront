@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+
+import '../../../services/api_utils.dart';
 // import 'dart:html' as html;
 
 class AddNewsPage extends StatefulWidget {
@@ -46,7 +48,7 @@ class _AddNewsPageState extends State<AddNewsPage> {
       try {
         var request = http.MultipartRequest(
           'POST',
-          Uri.parse('http://localhost:8080/api/news'),
+          Uri.parse('${ApiUtils.baseUrl}/api/news'),
         );
 
         Map<String, String> newsData = {

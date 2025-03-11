@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import '../../../services/api_utils.dart';
 import 'details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -80,7 +81,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Future<void> fetchCallHistory() async {
     try {
-      String apiUrl = "http://localhost:8080/api/user/${widget.userId}";
+      String apiUrl = "${ApiUtils.baseUrl}/api/user/${widget.userId}";
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
@@ -130,7 +131,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
           contactNames.containsKey(contactId)) continue;
 
       try {
-        String apiUrl = "http://localhost:8080/api/counsellor/$contactId";
+        String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$contactId";
         final response = await http.get(Uri.parse(apiUrl));
 
         if (response.statusCode == 200 && response.body.isNotEmpty) {
@@ -298,7 +299,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   void _navigateToClientDetails(BuildContext context, String clientId) async {
     try {
-      String apiUrl = "http://localhost:8080/api/counsellor/$clientId";
+      String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$clientId";
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {

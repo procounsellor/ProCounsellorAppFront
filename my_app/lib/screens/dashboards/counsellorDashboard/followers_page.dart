@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../services/api_utils.dart';
 import 'client_details_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -26,7 +27,7 @@ class _FollowersPageState extends State<FollowersPage> {
 
   Future<void> fetchFollowers() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/counsellor/${widget.counsellorId}/followers');
+        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/followers');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

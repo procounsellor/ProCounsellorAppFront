@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../services/api_utils.dart';
+
 class TransferFundsPage extends StatefulWidget {
   @override
   _TransferFundsPageState createState() => _TransferFundsPageState();
@@ -15,7 +17,7 @@ class _TransferFundsPageState extends State<TransferFundsPage> {
     String counsellorId = _counsellorIdController.text;
 
     final response = await http.post(
-      Uri.parse("http://localhost:8080/api/wallet/transfer"),
+      Uri.parse("${ApiUtils.baseUrl}/api/wallet/transfer"),
       body: {"userName": "testUser", "counsellorName": counsellorId, "amount": amount.toString()},
     );
 
