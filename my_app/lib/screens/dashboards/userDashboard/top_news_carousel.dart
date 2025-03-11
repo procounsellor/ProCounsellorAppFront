@@ -6,6 +6,8 @@ import 'dart:convert';
 
 import 'package:my_app/screens/dashboards/userDashboard/news_details_page.dart';
 
+import '../../../services/api_utils.dart';
+
 class TopNewsCarousel extends StatefulWidget {
   @override
   _TopNewsCarouselState createState() => _TopNewsCarouselState();
@@ -32,7 +34,7 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
   }
 
   Future<void> _fetchNews() async {
-    const String apiUrl = 'http://localhost:8080/api/news';
+    const String apiUrl = '${ApiUtils.baseUrl}/api/news';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

@@ -5,6 +5,7 @@ import 'package:my_app/screens/dashboards/adminDashboard/admin_dashboard.dart';
 import 'dart:convert';
 
 import 'package:my_app/screens/dashboards/adminDashboard/admin_profile_page.dart';
+import 'package:my_app/services/api_utils.dart';
 
 class AdminBasePage extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -50,7 +51,7 @@ class _AdminBasePageState extends State<AdminBasePage>
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8080/api/admin/${widget.adminId}'),
+            '${ApiUtils.baseUrl}/api/admin/${widget.adminId}'),
       );
 
       if (response.statusCode == 200) {

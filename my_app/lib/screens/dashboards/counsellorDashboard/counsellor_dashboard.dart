@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
 import 'dart:convert';
+import '../../../services/api_utils.dart';
 import 'client_details_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -32,9 +33,9 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
 
   Future<void> fetchDashboardData() async {
     final clientUrl = Uri.parse(
-        'http://localhost:8080/api/counsellor/${widget.counsellorId}/clients');
+        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/clients');
     final detailsUrl = Uri.parse(
-        'http://localhost:8080/api/counsellor/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
 
     try {
       final clientResponse = await http.get(clientUrl);
@@ -67,7 +68,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
 
   Future<void> fetchReviews() async {
     final url = Uri.parse(
-        'http://localhost:8080/api/reviews/counsellor/${widget.counsellorId}');
+        '${ApiUtils.baseUrl}/api/reviews/counsellor/${widget.counsellorId}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

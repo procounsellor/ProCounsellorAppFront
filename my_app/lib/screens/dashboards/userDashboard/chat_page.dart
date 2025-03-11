@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../services/api_utils.dart';
 import 'chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -33,7 +34,7 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> fetchChats() async {
     try {
       final response = await http.get(Uri.parse(
-          'http://localhost:8080/api/user/${widget.userId}/subscribed-counsellors'));
+          '${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribed-counsellors'));
 
       if (response.statusCode == 200) {
         final List<dynamic> counsellors = json.decode(response.body);
@@ -48,7 +49,7 @@ class _ChatPageState extends State<ChatPage> {
 
           // Check if chat exists
           final chatExistsResponse = await http.get(Uri.parse(
-              'http://localhost:8080/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
+              '${ApiUtils.baseUrl}/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
 
           if (chatExistsResponse.statusCode == 200) {
             final chatExists = json.decode(chatExistsResponse.body) as bool;
@@ -57,7 +58,7 @@ class _ChatPageState extends State<ChatPage> {
               // Fetch or initialize chat ID
               final chatResponse = await http.post(
                 Uri.parse(
-                    'http://localhost:8080/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
+                    '${ApiUtils.baseUrl}/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
               );
 
               if (chatResponse.statusCode == 200) {
@@ -66,7 +67,7 @@ class _ChatPageState extends State<ChatPage> {
 
                 // Fetch messages for the chat
                 final messagesResponse = await http.get(
-                  Uri.parse('http://localhost:8080/api/chats/$chatId/messages'),
+                  Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'),
                 );
 
                 if (messagesResponse.statusCode == 200) {

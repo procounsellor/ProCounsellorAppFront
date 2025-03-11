@@ -7,6 +7,7 @@ import 'package:indexed/indexed.dart';
 import 'dart:convert';
 import 'dart:async';
 
+import '../../../services/api_utils.dart';
 import 'search_page.dart';
 import 'details_page.dart';
 import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
@@ -97,7 +98,7 @@ class _UserDashboardState extends State<UserDashboard>
   Future<void> _fetchTopCounsellorsAccordingToInterest() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/all'),
+        Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/all'),
       );
 
       if (response.statusCode == 200) {
@@ -142,7 +143,7 @@ class _UserDashboardState extends State<UserDashboard>
     for (String state in states) {
       try {
         final response = await http.get(Uri.parse(
-            'http://localhost:8080/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/${state.toLowerCase()}'));
+            '${ApiUtils.baseUrl}/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/${state.toLowerCase()}'));
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body) as List<dynamic>;

@@ -3,6 +3,8 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../services/api_utils.dart';
+
 class AddFundsPage extends StatefulWidget {
   final String userName;
 
@@ -34,7 +36,7 @@ class _AddFundsPageState extends State<AddFundsPage> {
   Future<void> _createPaymentOrder() async {
     double amount = double.parse(_amountController.text);
     final response = await http.post(
-      Uri.parse("http://localhost:8080/api/wallet/add"),
+      Uri.parse("${ApiUtils.baseUrl}/api/wallet/add"),
       body: {"userName": widget.userName, "amount": amount.toString()},
     );
     if (response.statusCode == 200) {

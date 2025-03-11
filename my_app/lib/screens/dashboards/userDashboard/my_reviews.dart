@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../../services/api_utils.dart';
+
 class MyReviewPage extends StatefulWidget {
   final String username;
 
@@ -24,7 +26,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
 
   Future<List<dynamic>> fetchUserReviews(String userName) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/api/reviews/user/$userName'),
+      Uri.parse('${ApiUtils.baseUrl}/api/reviews/user/$userName'),
     );
 
     if (response.statusCode == 200) {
@@ -62,7 +64,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://localhost:8080/api/reviews/$reviewId/comments/$username'),
+            '${ApiUtils.baseUrl}/api/reviews/$reviewId/comments/$username'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'commentText': commentText}),
       );
@@ -84,9 +86,9 @@ class _MyReviewPageState extends State<MyReviewPage> {
 
       final response = isLiked
           ? await http.post(Uri.parse(
-              'http://localhost:8080/api/reviews/$userId/$reviewId/unlike'))
+              '${ApiUtils.baseUrl}/api/reviews/$userId/$reviewId/unlike'))
           : await http.post(Uri.parse(
-              'http://localhost:8080/api/reviews/$userId/$reviewId/like'));
+              '${ApiUtils.baseUrl}/api/reviews/$userId/$reviewId/like'));
 
       if (response.statusCode == 200) {
         fetchReviews();

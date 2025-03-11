@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart'; // For Firebase Realt
 import 'package:http/http.dart' as http; // For API calls
 import 'package:my_app/screens/customWidgets/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../services/api_utils.dart';
 import '../../../services/chat_service.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
 
@@ -88,7 +89,7 @@ class _ChattingPageState extends State<ChattingPage> {
   Future<void> _markMessageAsSeen(String messageId) async {
     try {
       String url =
-          'http://localhost:8080/api/chats/$chatId/messages/$messageId/mark-seen';
+          '${ApiUtils.baseUrl}/api/chats/$chatId/messages/$messageId/mark-seen';
       final response = await http.post(Uri.parse(url));
       if (response.statusCode != 200) {
         print('Failed to mark message $messageId as seen: ${response.body}');

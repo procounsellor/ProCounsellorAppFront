@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../../services/api_utils.dart';
+
 class CounsellorDetailsPage extends StatefulWidget {
   final String userName;
 
@@ -24,7 +26,7 @@ class _CounsellorDetailsPageState extends State<CounsellorDetailsPage> {
   Future<void> fetchCounsellorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/counsellor/${widget.userName}'),
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/${widget.userName}'),
       );
 
       if (response.statusCode == 200) {

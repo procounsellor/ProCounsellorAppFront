@@ -3,6 +3,7 @@ import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import http for API calls
 import 'package:my_app/screens/dashboards/userDashboard/call_history_page.dart';
+import '../../../services/api_utils.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
 import 'learn_with_us_page.dart';
@@ -107,7 +108,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   Future<void> _fetchUserDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/user/${widget.username}'),
+        Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}'),
       );
 
       if (response.statusCode == 200) {

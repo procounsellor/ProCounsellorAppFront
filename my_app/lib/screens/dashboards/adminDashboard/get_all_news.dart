@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app/services/api_utils.dart';
 import 'dart:convert';
 
 import '../userDashboard/news_class.dart';
@@ -21,7 +22,7 @@ class _AllNewsPageState extends State<AllNewsPage> {
   }
 
   Future<void> _fetchNews() async {
-    const String apiUrl = 'http://localhost:8080/api/news';
+    const String apiUrl = '${ApiUtils.baseUrl}/api/news';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

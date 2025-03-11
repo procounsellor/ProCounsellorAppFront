@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,6 +14,8 @@ import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
+
+import 'package:permission_handler/permission_handler.dart';
 
 import 'services/call_service.dart';
 
@@ -31,8 +36,47 @@ void main() async {
   } catch (e) {
     debugPrint("Firebase initialization failed: $e");
   }
-
+  await requestPermissions();
+  await requestNotificationPermission();
   runApp(AppRoot());
+}
+
+Future<void> requestPermissions() async {
+  if (kIsWeb) return;
+
+  if (Platform.isAndroid || Platform.isIOS) {
+    // Request Camera permission
+    var cameraStatus = await Permission.camera.request();
+    if (cameraStatus.isDenied) {
+      print("Camera permission is denied.");
+    }
+
+    // Request Microphone permission
+    var micStatus = await Permission.microphone.request();
+    if (micStatus.isDenied) {
+      print("Microphone permission is denied.");
+    }
+
+    // Request Photo Library access (iOS only)
+    if (Platform.isIOS) {
+      var photoStatus = await Permission.photos.request();
+      if (photoStatus.isDenied) {
+        print("Photo library permission is denied.");
+      }
+    }
+  }
+}
+
+Future<void> requestNotificationPermission() async {
+  // Web does not need explicit notification permission handling
+  if (kIsWeb) return;
+
+  if (Platform.isIOS || Platform.isAndroid) {
+    var status = await Permission.notification.request();
+    if (status.isDenied) {
+      print("Notification permission is denied.");
+    }
+  }
 }
 
 class AppRoot extends StatefulWidget {

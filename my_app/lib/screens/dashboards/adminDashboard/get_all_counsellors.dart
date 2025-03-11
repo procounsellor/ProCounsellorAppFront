@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:my_app/screens/dashboards/adminDashboard/get_counsellor_details.dart';
+import 'package:my_app/services/api_utils.dart';
 
 class AllCounsellorsPage extends StatefulWidget {
   @override
@@ -22,7 +23,7 @@ class _AllCounsellorsPageState extends State<AllCounsellorsPage> {
   Future<void> fetchCounsellors() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/counsellor/all-counsellors'),
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/all-counsellors'),
       );
 
       if (response.statusCode == 200) {

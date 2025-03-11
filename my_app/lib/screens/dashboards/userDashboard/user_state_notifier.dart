@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../services/api_utils.dart';
+
 class UserStateNotifier with ChangeNotifier {
   final String userName;
   bool _isOnline = false;
@@ -28,7 +30,7 @@ class UserStateNotifier with ChangeNotifier {
   Future<void> _postStateToServer(String state) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/user/$userName/$state'),
+        Uri.parse('${ApiUtils.baseUrl}/api/user/$userName/$state'),
       );
       if (response.statusCode == 200) {
         print("User state updated to $state.");

@@ -9,6 +9,7 @@ import 'package:my_app/screens/signInScreens/terms_page.dart';
 import 'package:my_app/screens/signInScreens/verification_page.dart';
 import 'package:my_app/screens/signInScreens/counsellor_signin.dart';
 import 'package:my_app/screens/signInScreens/counsellor_signup.dart';
+import 'package:my_app/services/api_utils.dart';
 
 class UserSignInPage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -335,7 +336,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
       print("Phone number " + phoneNumber);
       //
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/auth/generateOtp'),
+        Uri.parse('${ApiUtils.baseUrl}/api/auth/generateOtp'),
         //Uri.parse('http://10.0.2.2:8080/api/auth/generateOtp'),
 
         body: {'phoneNumber': phoneNumber},

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+
+import 'api_utils.dart';
 
 class MessageRequest {
   final String senderId;
@@ -25,7 +26,7 @@ class MessageRequest {
 }
 
 class ChatService {
-  static const String baseUrl = 'http://localhost:8080/api/chats';
+  static const String baseUrl = '${ApiUtils.baseUrl}/api/chats';
   final Map<String, StreamSubscription> _activeListeners = {};
 
   // Mark a message as seen
@@ -92,7 +93,7 @@ class ChatService {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://localhost:8080/api/chats/$chatId/files'),
+        Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/files'),
       );
 
       request.fields['senderId'] = senderId;

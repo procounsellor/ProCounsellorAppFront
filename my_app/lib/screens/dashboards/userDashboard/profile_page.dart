@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:my_app/screens/paymentScreens/add_funds.dart';
 
+import '../../../services/api_utils.dart';
+
 class ProfilePage extends StatefulWidget {
   final String username;
 
@@ -44,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchProfileData() async {
-    final url = 'http://localhost:8080/api/user/${widget.username}';
+    final url = '${ApiUtils.baseUrl}/api/user/${widget.username}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -86,7 +88,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _uploadPhoto(Uint8List imageBytes, String fileName) async {
     final url =
-        'http://localhost:8080/api/user/${widget.username}/photo'; // Ensure correct endpoint
+        '${ApiUtils.baseUrl}/api/user/${widget.username}/photo'; // Ensure correct endpoint
 
     try {
       var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -121,7 +123,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _updateProfile(Map<String, dynamic> updatedData) async {
-    final url = 'http://localhost:8080/api/user/${widget.username}';
+    final url = '${ApiUtils.baseUrl}/api/user/${widget.username}';
 
     try {
       final response = await http.patch(

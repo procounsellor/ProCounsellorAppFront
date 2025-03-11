@@ -9,6 +9,8 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews
 import 'package:my_app/screens/dashboards/counsellorDashboard/followers_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/subscribers_page.dart';
 
+import '../../../services/api_utils.dart';
+
 class CounsellorProfilePage extends StatefulWidget {
   final String username;
   final Future<void> Function() onSignOut;
@@ -33,7 +35,7 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
   }
 
   Future<void> _fetchProfileData() async {
-    final url = 'http://localhost:8080/api/counsellor/${widget.username}';
+    final url = '${ApiUtils.baseUrl}/api/counsellor/${widget.username}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -72,7 +74,7 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse(
-            'http://localhost:8080/api/counsellor/${widget.username}/photo'),
+            '${ApiUtils.baseUrl}/api/counsellor/${widget.username}/photo'),
       );
 
       request.files.add(
