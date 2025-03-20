@@ -3,6 +3,9 @@
 .packages
 .pub-cache/
 .pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+android/app/.cxx/
 
 # Build artifacts
 /build/
@@ -53,3 +56,15 @@ firebase_app_id_file.json
 *.swo
 *.swn
 *.bak
+linux/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.cc
+macos/Flutter/GeneratedPluginRegistrant.swift
+.dart_tool/chrome-device/
+.dart_tool/**/*
+**/.dart_tool/
+android/.gradle/
+macos/build/
+ios/build/
+linux/build/
+windows/build/
+web/build/
