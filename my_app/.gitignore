@@ -1,0 +1,55 @@
+# Flutter/Dart specific files
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# Build artifacts
+/build/
+android/app/build/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/.symlinks/
+ios/Pods/
+macos/Flutter/ephemeral/
+web/.dart_tool/
+linux/flutter/
+windows/flutter/
+
+# Xcode specific files
+**/xcuserdata/
+*.xcworkspace/
+ios/Runner.xcworkspace/
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+macos/Flutter/ephemeral/
+*.pbxproj
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Android specific files
+**/local.properties
+**/*.keystore
+**/key.properties
+
+# VS Code settings
+.vscode/
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Firebase
+firebase_app_id_file.json
+
+# Miscellaneous
+*.log
+*.lock
+*.DS_Store
+*.swp
+*.swo
+*.swn
+*.bak
