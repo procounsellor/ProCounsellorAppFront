@@ -108,6 +108,11 @@ class _CallPageState extends State<CallPage> {
 
     _peerConnection = await createPeerConnection(config);
 
+    await _peerConnection!.setConfiguration({
+      'iceTransportPolicy':
+          'relay' // ✅ Force relay to keep the connection alive
+    });
+
     // ✅ Request both audio & video if needed
     MediaStream localStream = await navigator.mediaDevices
         .getUserMedia({'audio': true, 'video': false});
@@ -138,6 +143,13 @@ class _CallPageState extends State<CallPage> {
     } else {
       _signalingService.listenForOffer(widget.callId, (offer) async {
         if (offer.isNotEmpty) {
+          if (_peerConnection!.signalingState ==
+              RTCSignalingState.RTCSignalingStateStable) {
+            print(
+                "⚠️ Peer connection is already stable. Ignoring duplicate offer.");
+            return;
+          }
+
           await _peerConnection!
               .setRemoteDescription(RTCSessionDescription(offer, "offer"));
           RTCSessionDescription answer = await _peerConnection!.createAnswer();
@@ -155,13 +167,16 @@ class _CallPageState extends State<CallPage> {
         RTCSessionDescription answer =
             RTCSessionDescription(answerString, "answer");
 
-        if (_peerConnection != null) {
-          await _peerConnection!.setRemoteDescription(answer);
-          print("✅ Remote description set successfully.");
-          _stopRinging(); // ✅ Stop ringing when answer received
-        } else {
-          print("⚠️ Peer connection is null when setting remote description.");
+        if (_peerConnection!.signalingState ==
+            RTCSignalingState.RTCSignalingStateStable) {
+          print(
+              "⚠️ Remote description already set, skipping redundant answer.");
+          return;
         }
+
+        await _peerConnection!.setRemoteDescription(answer);
+        print("✅ Remote description set successfully.");
+        _stopRinging(); // ✅ Stop ringing when answer received
       } catch (e) {
         print("❌ Error setting remote description: $e");
       }
@@ -253,7 +268,8 @@ class _CallPageState extends State<CallPage> {
     // 🔹 Auto stop ringer after 1 minute if call is not answered
     _ringingTimer = Timer(Duration(minutes: 1), () {
       if (!_callAnswered) {
-        print("⏳ Call not answered. Stopping ringer and cutting the call after 1 minute.");
+        print(
+            "⏳ Call not answered. Stopping ringer and cutting the call after 1 minute.");
         _endCall();
       }
     });
@@ -269,7 +285,6 @@ class _CallPageState extends State<CallPage> {
     }
   }
 
-
   void _handleCallEnd() {
     if (mounted) {
       _peerConnection?.close();
@@ -284,25 +299,25 @@ class _CallPageState extends State<CallPage> {
     _signalingService.clearIncomingCall(widget.callInitiatorId);
     _stopRinging();
 
-    if(!widget.isCaller){
-      if(callReceiverIsUser){
+    if (!widget.isCaller) {
+      if (callReceiverIsUser) {
         Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => BasePage(
-                  username: widget.id,
-                  onSignOut: widget.onSignOut,)));
-      }
-      else{
+            context,
+            MaterialPageRoute(
+                builder: (context) => BasePage(
+                      username: widget.id,
+                      onSignOut: widget.onSignOut,
+                    )));
+      } else {
         Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => CounsellorBasePage(
-                  counsellorId: widget.id,
-                  onSignOut: widget.onSignOut,)));
+            context,
+            MaterialPageRoute(
+                builder: (context) => CounsellorBasePage(
+                      counsellorId: widget.id,
+                      onSignOut: widget.onSignOut,
+                    )));
       }
-    }
-    else{
+    } else {
       CallOverlayManager.navigatorKey.currentState?.pop();
     }
   }
@@ -317,142 +332,140 @@ class _CallPageState extends State<CallPage> {
     super.dispose();
   }
 
-Future<void> _toggleMute() async {
-  setState(() {
-    _isMuted = !_isMuted;
-  });
+  Future<void> _toggleMute() async {
+    setState(() {
+      _isMuted = !_isMuted;
+    });
 
-  if (_peerConnection != null) {
-    List<RTCRtpSender> senders = await _peerConnection!.getSenders();
-    for (var sender in senders) {
-      if (sender.track != null && sender.track!.kind == 'audio') {
-        sender.track!.enabled = !_isMuted;
+    if (_peerConnection != null) {
+      List<RTCRtpSender> senders = await _peerConnection!.getSenders();
+      for (var sender in senders) {
+        if (sender.track != null && sender.track!.kind == 'audio') {
+          sender.track!.enabled = !_isMuted;
+        }
       }
     }
+
+    print(_isMuted ? "🎤 Microphone Muted" : "🎤 Microphone Unmuted");
   }
 
-  print(_isMuted ? "🎤 Microphone Muted" : "🎤 Microphone Unmuted");
-}
+  void _toggleSpeaker() async {
+    setState(() {
+      _isSpeakerOn = !_isSpeakerOn;
+    });
 
-
-
-void _toggleSpeaker() async {
-  setState(() {
-    _isSpeakerOn = !_isSpeakerOn;
-  });
-
-  try {
-    // Ensure the correct audio output is set
-    if (_isSpeakerOn) {
-      // 🔊 Enable Speaker Mode
-      await Helper.setSpeakerphoneOn(true);
-    } else {
-      // 📞 Switch to Earpiece Mode (Normal Call)
-      await Helper.setSpeakerphoneOn(false);
+    try {
+      // Ensure the correct audio output is set
+      if (_isSpeakerOn) {
+        // 🔊 Enable Speaker Mode
+        await Helper.setSpeakerphoneOn(true);
+      } else {
+        // 📞 Switch to Earpiece Mode (Normal Call)
+        await Helper.setSpeakerphoneOn(false);
+      }
+    } catch (e) {
+      print("Error toggling speaker: $e");
     }
-  } catch (e) {
-    print("Error toggling speaker: $e");
+
+    print(_isSpeakerOn ? "🔊 Speaker Mode ON" : "📞 Normal Call Mode ON");
   }
 
-  print(_isSpeakerOn ? "🔊 Speaker Mode ON" : "📞 Normal Call Mode ON");
-}
-
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.black,
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(begin: 1.0, end: _isSpeaking ? 1.3 : 1.0),
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            builder: (context, scale, child) {
-              return Transform.scale(
-                scale: scale,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blueAccent
-                            .withOpacity(_isSpeaking ? 0.7 : 0.0),
-                        blurRadius: _isSpeaking ? 30 : 0,
-                        spreadRadius: _isSpeaking ? 10 : 0,
-                      ),
-                    ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 1.0, end: _isSpeaking ? 1.3 : 1.0),
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent
+                              .withOpacity(_isSpeaking ? 0.7 : 0.0),
+                          blurRadius: _isSpeaking ? 30 : 0,
+                          spreadRadius: _isSpeaking ? 10 : 0,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: callerPhoto != null
+                          ? NetworkImage(callerPhoto!)
+                          : null,
+                      child: callerPhoto == null
+                          ? Icon(Icons.person, size: 60, color: Colors.white)
+                          : null,
+                    ),
                   ),
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundImage: callerPhoto != null
-                        ? NetworkImage(callerPhoto!)
-                        : null,
-                    child: callerPhoto == null
-                        ? Icon(Icons.person, size: 60, color: Colors.white)
-                        : null,
-                  ),
-                ),
-              );
-            },
-          ),
-          SizedBox(height: 20),
-          Text(
-            callerName ?? "Unknown Caller",
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 30),
-
-          // Buttons Row: Mute & Speaker
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Mute Button
-              IconButton(
-                icon: Icon(
-                  _isMuted ? Icons.mic_off : Icons.mic,
-                  color: Colors.white,
-                  size: 30,
-                ),
-                onPressed: _toggleMute,
-              ),
-              SizedBox(width: 40), // Spacing
-              // Speaker Button
-              IconButton(
-                icon: Icon(
-                  _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
-                  color: Colors.white,
-                  size: 30,
-                ),
-                onPressed: _toggleSpeaker,
-              ),
-            ],
-          ),
-
-          SizedBox(height: 20),
-
-          // End Call Button
-          ElevatedButton(
-            onPressed: _endCall,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: Text("End Call",
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
+                );
+              },
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+            SizedBox(height: 20),
+            Text(
+              callerName ?? "Unknown Caller",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 30),
+
+            // Buttons Row: Mute & Speaker
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Mute Button
+                IconButton(
+                  icon: Icon(
+                    _isMuted ? Icons.mic_off : Icons.mic,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  onPressed: _toggleMute,
+                ),
+                SizedBox(width: 40), // Spacing
+                // Speaker Button
+                IconButton(
+                  icon: Icon(
+                    _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  onPressed: _toggleSpeaker,
+                ),
+              ],
+            ),
+
+            SizedBox(height: 20),
+
+            // End Call Button
+            ElevatedButton(
+              onPressed: _endCall,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Text("End Call",
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../services/api_utils.dart';
 import 'details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../../optimizations/api_cache.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String userId;
@@ -81,30 +82,34 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Future<void> fetchCallHistory() async {
     try {
+      String cacheKey = "call_history_${widget.userId}";
       String apiUrl = "${ApiUtils.baseUrl}/api/user/${widget.userId}";
-      final response = await http.get(Uri.parse(apiUrl));
 
+      // ✅ Step 1: Check Cache First
+      var cachedData = await ApiCache.get(cacheKey);
+      if (cachedData != null) {
+        print("✅ Loaded call history from cache");
+        _updateCallHistory(cachedData);
+      }
+
+      // ✅ Step 2: Fetch Data from API (Only If Needed)
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<dynamic> calls = (data['callHistory'] ?? [])
             .map((call) => Map<String, dynamic>.from(call))
             .toList();
 
-        // ✅ Sort calls (newest first)
+        // ✅ Step 3: Sort calls (newest first)
         calls.sort((a, b) => b["startTime"].compareTo(a["startTime"]));
 
-        setState(() {
-          callHistory = calls;
-          missedCallNotificationCount = calls
-              .where((call) =>
-                  call["receiverId"] == widget.userId &&
-                  call["status"] == "Missed Call" &&
-                  call["missedCallStatusSeen"] == false)
-              .length;
-          isLoading = false;
-        });
+        // ✅ Step 4: Store Fetched Data in Cache
+        await ApiCache.set(cacheKey, calls, persist: true);
 
-        // ✅ Mark missed calls as seen (Firebase)
+        // ✅ Step 5: Update UI with Fresh Data
+        _updateCallHistory(calls);
+
+        // ✅ Step 6: Mark Missed Calls as Seen
         markMissedCallsAsSeen();
 
         fetchContactDetails();
@@ -120,15 +125,40 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     }
   }
 
+  void _updateCallHistory(List<dynamic> calls) {
+    setState(() {
+      callHistory = calls;
+      missedCallNotificationCount = calls
+          .where((call) =>
+              call["receiverId"] == widget.userId &&
+              call["status"] == "Missed Call" &&
+              call["missedCallStatusSeen"] == false)
+          .length;
+      isLoading = false;
+    });
+  }
+
   Future<void> fetchContactDetails() async {
     for (var call in callHistory) {
       String contactId = call["callerId"] == widget.userId
           ? call["receiverId"]
           : call["callerId"];
 
-      // Skip if details already fetched
+      // ✅ Step 1: Skip if details are already available in memory
       if (profilePhotos.containsKey(contactId) &&
           contactNames.containsKey(contactId)) continue;
+
+      // ✅ Step 2: Check Cache First
+      String cacheKey = "contact_$contactId";
+      var cachedData = await ApiCache.get(cacheKey);
+      if (cachedData != null) {
+        setState(() {
+          profilePhotos[contactId] = cachedData["photoUrl"] ?? "";
+          contactNames[contactId] =
+              "${cachedData["firstName"]} ${cachedData["lastName"]}";
+        });
+        continue; // ✅ Skip API call if data is found in cache
+      }
 
       try {
         String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$contactId";
@@ -136,10 +166,15 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
         if (response.statusCode == 200 && response.body.isNotEmpty) {
           final data = json.decode(response.body);
+
+          // ✅ Step 3: Store in Cache
+          await ApiCache.set(cacheKey, data, persist: true);
+
+          // ✅ Step 4: Update UI with fetched data
           setState(() {
             profilePhotos[contactId] = data["photoUrl"] ?? "";
             contactNames[contactId] =
-                "${data["firstName"]} ${data["lastName"]}"; // ✅ Store full name
+                "${data["firstName"]} ${data["lastName"]}";
           });
         }
       } catch (e) {
@@ -170,24 +205,24 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Call History"),
+        title: const Text("Call History"),
         backgroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: widget.onSignOut,
             tooltip: "Sign Out",
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.white))
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : hasError
-              ? Center(
+              ? const Center(
                   child: Text("Failed to load call history",
                       style: TextStyle(color: Colors.white)))
               : callHistory.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Text("No call history available",
                           style: TextStyle(color: Colors.white)))
                   : _buildCallHistoryList(),
@@ -205,27 +240,24 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Widget _buildCallCard(Map<String, dynamic> call) {
     bool isOutgoing = call["callerId"] == widget.userId;
-    String callType =
-        call["callType"] == "video" ? "📹 Video Call" : "📞 Audio Call";
     String status = call["status"];
-    String duration = call["duration"] ?? "0 sec";
     String formattedTime = formatTimestamp(call["startTime"]);
     String contactId = isOutgoing ? call["receiverId"] : call["callerId"];
     String photoUrl = profilePhotos[contactId] ?? "";
-    String contactName = contactNames[contactId] ?? contactId;
+    String contactName = contactNames[contactId] ?? "Name ";
 
     Icon callStatusIcon;
     if (status == "Missed Call") {
       callStatusIcon = isOutgoing
-          ? Icon(Icons.call_made,
+          ? const Icon(Icons.call_made,
               color: Colors.grey, size: 16) // Outgoing missed → No Response
-          : Icon(Icons.call_received,
+          : const Icon(Icons.call_received,
               color: Colors.red, size: 16); // Incoming missed → Missed Call
     } else if (status == "Declined") {
       callStatusIcon = isOutgoing
-          ? Icon(Icons.call_made,
+          ? const Icon(Icons.call_made,
               color: Colors.grey, size: 16) // Outgoing missed → No Response
-          : Icon(Icons.call_received,
+          : const Icon(Icons.call_received,
               color: Colors.red, size: 16); // Incoming missed → Missed Call
     } else {
       callStatusIcon = Icon(
@@ -237,7 +269,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     }
 
     return ListTile(
-      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       leading: GestureDetector(
         onTap: () => _navigateToClientDetails(context, contactId),
         child: CircleAvatar(
@@ -245,19 +277,19 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
           backgroundColor: Colors.grey[800],
           backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
           child: photoUrl.isEmpty
-              ? Icon(Icons.person, color: Colors.white, size: 30)
+              ? const Icon(Icons.person, color: Colors.white, size: 30)
               : null,
         ),
       ),
       title: Text(
         contactName,
-        style: TextStyle(
+        style: const TextStyle(
             color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
       ),
       subtitle: Row(
         children: [
           callStatusIcon, // ✅ Shows different icons for missed call / no response
-          SizedBox(width: 5),
+          const SizedBox(width: 5),
           Text(
             status == "Declined"
                 ? "Declined" // ✅ If call was declined, show "Declined" on both sides
@@ -268,10 +300,10 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
                     : (isOutgoing
                         ? "Outgoing"
                         : "Incoming"), // ✅ Default: Incoming/Outgoing
-            style: TextStyle(color: Colors.grey, fontSize: 14),
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
 
-          SizedBox(width: 5),
+          const SizedBox(width: 5),
           Icon(
             call["callType"] == "video" ? Icons.videocam : Icons.call,
             color: Colors.grey,
@@ -284,11 +316,11 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         children: [
           Text(
             formattedTime,
-            style: TextStyle(color: Colors.grey, fontSize: 14),
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           IconButton(
-            icon: Icon(Icons.info_outline, color: Colors.grey, size: 20),
+            icon: const Icon(Icons.info_outline, color: Colors.grey, size: 20),
             onPressed: () => _showCallDetailsModal(
                 context, call, contactName, photoUrl, contactId),
           ),
@@ -318,12 +350,12 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to load client details")));
+            const SnackBar(content: Text("Failed to load client details")));
       }
     } catch (e) {
       print("Error fetching client details: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error fetching client details")));
+          const SnackBar(content: Text("Error fetching client details")));
     }
   }
 
@@ -332,7 +364,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(15))),
       builder: (context) {
         return GestureDetector(
@@ -347,34 +379,34 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
               children: [
                 CircleAvatar(
                     radius: 40, backgroundImage: NetworkImage(photoUrl)),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(contactName,
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.black,
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
-                Divider(color: Colors.grey),
+                const Divider(color: Colors.grey),
                 ListTile(
-                  leading: Icon(Icons.call, color: Colors.green),
+                  leading: const Icon(Icons.call, color: Colors.green),
                   title: Text("Call Type: ${call["callType"]}",
-                      style: TextStyle(color: Colors.black)),
+                      style: const TextStyle(color: Colors.black)),
                 ),
                 ListTile(
-                  leading: Icon(Icons.timer, color: Colors.blue),
+                  leading: const Icon(Icons.timer, color: Colors.blue),
                   title: Text("Duration: ${call["duration"] ?? "0 sec"}",
-                      style: TextStyle(color: Colors.black)),
+                      style: const TextStyle(color: Colors.black)),
                 ),
                 ListTile(
-                  leading: Icon(Icons.access_time, color: Colors.orange),
+                  leading: const Icon(Icons.access_time, color: Colors.orange),
                   title: Text("Time: ${formatTimestamp(call["startTime"])}",
-                      style: TextStyle(color: Colors.black)),
+                      style: const TextStyle(color: Colors.black)),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "Tap anywhere to view full details",
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),

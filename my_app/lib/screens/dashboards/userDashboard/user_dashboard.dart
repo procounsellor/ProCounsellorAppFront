@@ -6,11 +6,17 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:indexed/indexed.dart';
 import 'dart:convert';
 import 'dart:async';
-
+import 'components/CollegeCarousel.dart';
 import '../../../services/api_utils.dart';
 import 'search_page.dart';
 import 'details_page.dart';
 import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
+import 'components/TopExamsList.dart';
+import 'components/TopFormsList.dart';
+import 'components/TrendingCoursesList.dart';
+import 'components/UpcomingDeadlinesTicker.dart';
+// import 'components/InfiniteScrollJsonLoader.dart';
+import 'components/InfiniteCollegeRanking.dart';
 
 class UserDashboard extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -47,8 +53,53 @@ class _UserDashboardState extends State<UserDashboard>
   late Animation<Offset> _animation;
   late AnimationController _pageController;
   late Animation<Offset> _pageAnimation;
+  // late PageController _pageController; // ✅ Declare separately
+  // late AnimationController _animationController;
+  // late Animation<Offset> _slideAnimation; // ✅ Name changed to avoid confusion
 
   @override
+  // void initState() {
+  //   super.initState();
+  //   _fetchTopCounsellorsAccordingToInterest();
+  //   _listenToCounsellorStates();
+  //   _fetchCounsellorsByState();
+
+  //   // ✅ Initialize Animation Controller
+  //   _animationController = AnimationController(
+  //     duration: Duration(milliseconds: 300),
+  //     vsync: this,
+  //   );
+
+  //   _slideAnimation = Tween<Offset>(
+  //     begin: Offset(0, 0),
+  //     end: Offset(0, -1),
+  //   ).animate(_animationController);
+
+  //   // ✅ Initialize PageController separately
+  //   _pageController = PageController();
+  //   _pageAnimation = Tween<Offset>(
+  //     begin: Offset(0, 0),
+  //     end: Offset(0, 0.05),
+  //   ).animate(CurvedAnimation(
+  //     parent:
+  //         _animationController, // ✅ Corrected: Must use _animationController
+  //     curve: Curves.easeInOut,
+  //   ));
+
+  //   // ✅ Delay animations until widget tree is built
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     if (_pageController.hasClients) {
+  //       _pageController.animateToPage(
+  //         1,
+  //         duration: Duration(milliseconds: 300),
+  //         curve: Curves.easeInOut,
+  //       );
+  //     }
+  //   });
+
+  //   _startSearchHintCycle();
+  // }
+
   void initState() {
     super.initState();
     _fetchTopCounsellorsAccordingToInterest();
@@ -98,7 +149,8 @@ class _UserDashboardState extends State<UserDashboard>
   Future<void> _fetchTopCounsellorsAccordingToInterest() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/all'),
+        Uri.parse(
+            '${ApiUtils.baseUrl}/api/user/${widget.username}/counsellorsAccordingToInterestedCourse/all'),
       );
 
       if (response.statusCode == 200) {
@@ -109,13 +161,13 @@ class _UserDashboardState extends State<UserDashboard>
       } else if (response.statusCode == 404) {
         print('No counsellors found for the user.');
       } else {
-        print('Failed to load counsellors. Status code: ${response.statusCode}');
+        print(
+            'Failed to load counsellors. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching top-rated counsellors: $e');
     }
   }
-
 
   void _listenToCounsellorStates() {
     final databaseReference = FirebaseDatabase.instance.ref('counsellorStates');
@@ -160,40 +212,55 @@ class _UserDashboardState extends State<UserDashboard>
     }
   }
 
+  // void _toggleState(String state) {
+  //   //if (!mounted || _pageController.isAnimating || _pageController.isCompleted) return;
+  //   setState(() {
+  //     if (_activeStates.contains(state)) {
+  //       _activeStates.remove(state);
+  //       if (_pageController.status != AnimationStatus.dismissed) {
+  //         _pageController.reverse(); // Transition back to original position
+  //       }
+  //     } else {
+  //       _activeStates.add(state);
+  //       if (_pageController.status != AnimationStatus.completed) {
+  //         _pageController.forward(); // Move lists down with transition
+  //       }
+  //     }
+  //   });
+  // }
   void _toggleState(String state) {
-  //if (!mounted || _pageController.isAnimating || _pageController.isCompleted) return;
-  setState(() {
-    if (_activeStates.contains(state)) {
-      _activeStates.remove(state);
-      if (_pageController.status != AnimationStatus.dismissed) {
-        _pageController.reverse(); // Transition back to original position
+    setState(() {
+      if (_activeStates.contains(state)) {
+        _activeStates.remove(state);
+        if (_animationController.status != AnimationStatus.dismissed) {
+          _animationController.reverse(); // ✅ Corrected
+        }
+      } else {
+        _activeStates.add(state);
+        if (_animationController.status != AnimationStatus.completed) {
+          _animationController.forward(); // ✅ Corrected
+        }
       }
-    } else {
-      _activeStates.add(state);
-      if (_pageController.status != AnimationStatus.completed) {
-        _pageController.forward(); // Move lists down with transition
-      }
-    }
-  });
-}
-
-void _startSearchHintCycle() {
-  Timer.periodic(Duration(seconds: 3), (timer) {
-    if (_isAnimationControllerDisposed || !mounted) {
-      timer.cancel();
-      return;
-    }
-
-    _animationController.forward().then((_) {
-      if (!mounted || _isAnimationControllerDisposed) return;
-      setState(() {
-        _currentSearchHintIndex =
-            (_currentSearchHintIndex + 1) % _searchHints.length;
-      });
-      _animationController.reset();
     });
-  });
-}
+  }
+
+  void _startSearchHintCycle() {
+    Timer.periodic(Duration(seconds: 3), (timer) {
+      if (_isAnimationControllerDisposed || !mounted) {
+        timer.cancel();
+        return;
+      }
+
+      _animationController.forward().then((_) {
+        if (!mounted || _isAnimationControllerDisposed) return;
+        setState(() {
+          _currentSearchHintIndex =
+              (_currentSearchHintIndex + 1) % _searchHints.length;
+        });
+        _animationController.reset();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,23 +353,13 @@ void _startSearchHintCycle() {
                         color: !isActive
                             ? Color(0xffeeeeee)
                             : Colors.orange[100], // Transparent background
-                        // border: Border.all(
-                        //   color: isActive
-                        //       ? Colors.orange
-                        //       : Color(
-                        //           0xFFFFA726), // Active and inactive border colors
-                        //   width: 2, // Border width
-                        // ),
+
                         borderRadius:
                             BorderRadius.circular(5), // Rounded border
                       ),
                       child: Text(
                         state,
                         style: TextStyle(
-                          // color: isActive
-                          //     ? Colors.orange
-                          //     : Colors
-                          //         .black, // Text color for active/inactive state
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -333,7 +390,7 @@ void _startSearchHintCycle() {
                                   color: Colors.grey.withOpacity(0.3),
                                   spreadRadius: 1,
                                   blurRadius: 6,
-                                  offset: Offset(0, 2),
+                                  // offset: Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -374,7 +431,7 @@ void _startSearchHintCycle() {
                                   color: Colors.grey.withOpacity(0.3),
                                   spreadRadius: 1,
                                   blurRadius: 6,
-                                  offset: Offset(0, 2),
+                                  //  offset: Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -420,13 +477,17 @@ void _startSearchHintCycle() {
                                             color: Colors.grey.withOpacity(0.3),
                                             spreadRadius: 1,
                                             blurRadius: 6,
-                                            offset: Offset(0, 2),
+                                            //  offset: Offset(0, 2),
                                           ),
                                         ],
                                         borderRadius: BorderRadius.circular(5)),
                                     child: Row(
                                       children: [
                                         Image.asset(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width -
+                                              205,
                                           i[0],
                                         ),
                                         Column(
@@ -509,13 +570,15 @@ void _startSearchHintCycle() {
                                 color: Colors.grey.withOpacity(0.3),
                                 spreadRadius: 1,
                                 blurRadius: 6,
-                                offset: Offset(0, 2),
+                                // offset: Offset(0, 2),
                               ),
                             ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              SizedBox(height: 10),
+                              UpcomingDeadlinesTicker(),
                               Text(
                                 "Top Rated Counsellors",
                                 style: TextStyle(
@@ -543,7 +606,7 @@ void _startSearchHintCycle() {
                                     .withOpacity(0.3), // Subtle shadow
                                 spreadRadius: 1,
                                 blurRadius: 6,
-                                offset: Offset(0, 2),
+                                //offset: Offset(0, 2),
                               ),
                             ],
                           ),
@@ -555,8 +618,40 @@ void _startSearchHintCycle() {
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold),
                               ),
+
                               SizedBox(height: 10),
-                              TopNewsCarousel(), // Use the external carousel widget
+                              TopNewsCarousel(),
+                              SizedBox(height: 10),
+                              CollegeCarousel(),
+                              SizedBox(height: 10),
+
+                              TopExamsList(),
+                              SizedBox(height: 10),
+                              //TopFormsList() // Use the external carousel widget
+                              TrendingCoursesList(),
+                              SizedBox(
+                                height: 100,
+                                child: Center(
+                                  // ✅ Ensures text is centered
+                                  child: Text(
+                                    "Explore More",
+                                    style: TextStyle(
+                                      fontSize: 28, // ✅ Bigger text
+                                      fontWeight:
+                                          FontWeight.w900, // ✅ Extremely bold
+                                      color: Colors
+                                          .grey[400], // ✅ Light grey color
+                                      letterSpacing:
+                                          1.5, // ✅ Slight spacing for aesthetics
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(
+                                height: 300, // ✅ Adjust based on JSON content
+                                child: InfiniteCollegeRanking(),
+                              ),
                             ],
                           ),
                         ),
@@ -584,19 +679,23 @@ void _startSearchHintCycle() {
           ),
         if (title.isNotEmpty) SizedBox(height: 10),
         SizedBox(
-          height: 160, // Adjusted height for added content
+          height: 165, // Adjusted height for added content
           child: ListView.builder(
+            key: ValueKey(items.length), // ✅ Ensures proper state tracking
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             itemBuilder: (context, index) {
               if (isNews) {
+                // ✅ Ensure items[index] is a String
+                final String newsTitle = items[index].toString();
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => DetailsPage(
-                          itemName: items[index],
+                          itemName: newsTitle,
                           userId: widget.username,
                           counsellorId: '',
                           onSignOut: widget.onSignOut,
@@ -604,40 +703,37 @@ void _startSearchHintCycle() {
                       ),
                     );
                   },
-                  child: Container(
-                    width: 110, // Adjusted for rectangular dimensions
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 4), // Reduced spacing
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 1,
-                          blurRadius: 6,
-                          offset: Offset(0, 0), // Uniform shadow
-                        ),
-                      ],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.newspaper, size: 40, color: Colors.orange),
-                        SizedBox(height: 8),
-                        Text(
-                          items[index],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ],
+                  child: Card(
+                    color: Colors.white,
+                    key: ValueKey(newsTitle), // ✅ Unique key for each news item
+                    elevation: 3,
+                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.newspaper,
+                              size: 40,
+                              color: Colors.orange), // ✅ const for optimization
+                          const SizedBox(height: 8),
+                          Text(
+                            newsTitle,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12), // ✅ const
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               } else {
                 final counsellor = items[index];
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -655,89 +751,74 @@ void _startSearchHintCycle() {
                       ),
                     );
                   },
-                  child: Container(
-                    width: 110, // Adjusted for rectangular dimensions
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 4), // Reduced spacing
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 1,
-                          blurRadius: 6,
-                          offset: Offset(0, 0), // Uniform shadow
-                        ),
-                      ],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color:
-                                  Color(0xFFFFCC80), // Thin light orange border
-                              width: 1,
+                  child: Card(
+                    color: Colors.white,
+                    key: ValueKey(counsellor[
+                        'userName']), // ✅ Unique key for each counsellor
+                    elevation: 3,
+                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Color(0xFFFFCC80), // Light orange border
+                                width: 1,
+                              ),
+                              shape: BoxShape.circle,
                             ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              counsellor['photoUrl'] ??
-                                  'https://via.placeholder.com/150',
-                            ),
-                            radius: 31, // Increased radius
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          counsellor['firstName'] ??
-                              counsellor['userName'] ??
-                              'Unknown',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          counsellor['ratePerYear'] != null
-                              ? "\$${counsellor['ratePerYear']}/year"
-                              : "Rate not available",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        SizedBox(height: 6),
-                        // Button-like text for "Contact"
-                        Container(
-                          padding:
-                              EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.green
-                                .withOpacity(0.1), // Light green background
-                            border: Border.all(
-                              color: Colors.green, // Green border
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            "Contact",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                counsellor['photoUrl'] ??
+                                    'https://via.placeholder.com/150',
+                              ),
+                              radius: 31,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            counsellor['firstName'] ??
+                                counsellor['userName'] ??
+                                'Unknown',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            counsellor['ratePerYear'] != null
+                                ? "\$${counsellor['ratePerYear']}/year"
+                                : "Rate not available",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 6),
+                          // Button-like text for "Contact"
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.green
+                                  .withOpacity(0.1), // Light green background
+                              border: Border.all(color: Colors.green, width: 1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Text(
+                              "Contact",
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

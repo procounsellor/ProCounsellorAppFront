@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../services/api_utils.dart';
 import 'client_details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../../optimizations/api_cache.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String counsellorId;
@@ -81,31 +82,35 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Future<void> fetchCallHistory() async {
     try {
+      String cacheKey = "call_history_${widget.counsellorId}";
       String apiUrl =
           "${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}";
-      final response = await http.get(Uri.parse(apiUrl));
 
+      // ✅ Step 1: Check Cache First
+      var cachedData = await ApiCache.get(cacheKey);
+      if (cachedData != null) {
+        print("✅ Loaded call history from cache");
+        _updateCallHistory(cachedData);
+      }
+
+      // ✅ Step 2: Fetch Data from API (Only If Needed)
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<dynamic> calls = (data['callHistory'] ?? [])
             .map((call) => Map<String, dynamic>.from(call))
             .toList();
 
-        // ✅ Sort calls (newest first)
+        // ✅ Step 3: Sort calls (newest first)
         calls.sort((a, b) => b["startTime"].compareTo(a["startTime"]));
 
-        setState(() {
-          callHistory = calls;
-          missedCallNotificationCount = calls
-              .where((call) =>
-                  call["receiverId"] == widget.counsellorId &&
-                  call["status"] == "Missed Call" &&
-                  call["missedCallStatusSeen"] == false)
-              .length;
-          isLoading = false;
-        });
+        // ✅ Step 4: Store Fetched Data in Cache
+        await ApiCache.set(cacheKey, calls, persist: true);
 
-        // ✅ Mark missed calls as seen (Firebase)
+        // ✅ Step 5: Update UI with Fresh Data
+        _updateCallHistory(calls);
+
+        // ✅ Step 6: Mark Missed Calls as Seen
         markMissedCallsAsSeen();
 
         fetchContactDetails();
@@ -121,15 +126,40 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     }
   }
 
+  void _updateCallHistory(List<dynamic> calls) {
+    setState(() {
+      callHistory = calls;
+      missedCallNotificationCount = calls
+          .where((call) =>
+              call["receiverId"] == widget.counsellorId &&
+              call["status"] == "Missed Call" &&
+              call["missedCallStatusSeen"] == false)
+          .length;
+      isLoading = false;
+    });
+  }
+
   Future<void> fetchContactDetails() async {
     for (var call in callHistory) {
       String contactId = call["callerId"] == widget.counsellorId
           ? call["receiverId"]
           : call["callerId"];
 
-      // Skip if details already fetched
+      // ✅ Step 1: Skip if details are already available in memory
       if (profilePhotos.containsKey(contactId) &&
           contactNames.containsKey(contactId)) continue;
+
+      // ✅ Step 2: Check Cache First
+      String cacheKey = "contact_$contactId";
+      var cachedData = await ApiCache.get(cacheKey);
+      if (cachedData != null) {
+        setState(() {
+          profilePhotos[contactId] = cachedData["photo"] ?? "";
+          contactNames[contactId] =
+              "${cachedData["firstName"]} ${cachedData["lastName"]}";
+        });
+        continue; // ✅ Skip API call if data is found in cache
+      }
 
       try {
         String apiUrl = "${ApiUtils.baseUrl}/api/user/$contactId";
@@ -137,10 +167,15 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
         if (response.statusCode == 200 && response.body.isNotEmpty) {
           final data = json.decode(response.body);
+
+          // ✅ Step 3: Store in Cache
+          await ApiCache.set(cacheKey, data, persist: true);
+
+          // ✅ Step 4: Update UI with fetched data
           setState(() {
             profilePhotos[contactId] = data["photo"] ?? "";
             contactNames[contactId] =
-                "${data["firstName"]} ${data["lastName"]}"; // ✅ Store full name
+                "${data["firstName"]} ${data["lastName"]}";
           });
         }
       } catch (e) {
@@ -213,7 +248,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     String formattedTime = formatTimestamp(call["startTime"]);
     String contactId = isOutgoing ? call["receiverId"] : call["callerId"];
     String photoUrl = profilePhotos[contactId] ?? "";
-    String contactName = contactNames[contactId] ?? contactId;
+    String contactName = contactNames[contactId] ?? "Name";
 
     Icon callStatusIcon;
     if (status == "Missed Call") {

@@ -6,6 +6,7 @@ import 'chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../../optimizations/api_cache.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -33,29 +34,37 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> fetchChats() async {
     try {
-      final response = await http.get(Uri.parse(
-          '${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribed-counsellors'));
+      String cacheKey = "user_chats_${widget.userId}";
+      String apiUrl =
+          "${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribed-counsellors";
 
+      // ✅ Step 1: Check Cache First
+      var cachedChats = await ApiCache.get(cacheKey);
+      if (cachedChats != null) {
+        print("✅ Loaded chat list from cache");
+        _updateChatList(cachedChats);
+      }
+
+      // ✅ Step 2: Fetch Data from API
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final List<dynamic> counsellors = json.decode(response.body);
-        List<Map<String, dynamic>> chatDetails = [];
-
-        for (var counsellor in counsellors) {
+        List<Future<Map<String, dynamic>?>> chatFutures =
+            counsellors.map((counsellor) async {
           final counsellorId = counsellor['userName'];
           final counsellorName =
               counsellor['firstName'] ?? 'Unknown Counsellor';
           final counsellorPhotoUrl =
               counsellor['photoUrl'] ?? 'https://via.placeholder.com/150';
 
-          // Check if chat exists
-          final chatExistsResponse = await http.get(Uri.parse(
-              '${ApiUtils.baseUrl}/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
+          try {
+            // ✅ Check if chat exists
+            final chatExistsResponse = await http.get(Uri.parse(
+                '${ApiUtils.baseUrl}/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
 
-          if (chatExistsResponse.statusCode == 200) {
-            final chatExists = json.decode(chatExistsResponse.body) as bool;
-
-            if (chatExists) {
-              // Fetch or initialize chat ID
+            if (chatExistsResponse.statusCode == 200 &&
+                json.decode(chatExistsResponse.body) == true) {
+              // ✅ Start or fetch existing chat
               final chatResponse = await http.post(
                 Uri.parse(
                     '${ApiUtils.baseUrl}/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
@@ -65,7 +74,7 @@ class _ChatPageState extends State<ChatPage> {
                 final chatData = json.decode(chatResponse.body);
                 final chatId = chatData['chatId'];
 
-                // Fetch messages for the chat
+                // ✅ Fetch chat messages
                 final messagesResponse = await http.get(
                   Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'),
                 );
@@ -74,59 +83,25 @@ class _ChatPageState extends State<ChatPage> {
                   final messages =
                       json.decode(messagesResponse.body) as List<dynamic>;
 
-                  String lastMessage = 'No messages yet';
-                  String timestamp = 'N/A';
-                  bool isSeen = true;
-                  String senderId = '';
-
-                  if (messages.isNotEmpty) {
-                    var lastMsg = messages.last;
-                    senderId = lastMsg['senderId'] ?? '';
-
-                    if (lastMsg.containsKey('text') &&
-                        lastMsg['text'] != null) {
-                      lastMessage = lastMsg['text'];
-                    } else if (lastMsg.containsKey('fileUrl') &&
-                        lastMsg['fileUrl'] != null) {
-                      String fileType = lastMsg['fileType'] ?? 'unknown';
-
-                      if (fileType.startsWith('image/')) {
-                        lastMessage = "📷 Image";
-                      } else if (fileType.startsWith('video/')) {
-                        lastMessage = "🎥 Video";
-                      } else {
-                        lastMessage = "📄 File";
-                      }
-                    }
-
-                    timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-                      DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
-                    );
-                    isSeen = lastMsg['isSeen'] ?? true;
-                  }
-
-                  chatDetails.add({
-                    'id': chatId,
-                    'counsellorId': counsellorId,
-                    'name': counsellorName,
-                    'photoUrl': counsellorPhotoUrl,
-                    'lastMessage': lastMessage,
-                    'timestamp': timestamp,
-                    'isSeen': isSeen,
-                    'senderId': senderId,
-                  });
+                  return _processChatData(chatId, counsellorId, counsellorName,
+                      counsellorPhotoUrl, messages);
                 }
               }
             }
+          } catch (e) {
+            print("Error fetching chat for counsellor $counsellorId: $e");
           }
-        }
+          return null;
+        }).toList();
 
-        setState(() {
-          chats = chatDetails;
-          chats.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
-          filteredChats = chatDetails;
-          isLoading = false;
-        });
+        // ✅ Wait for all chat data to be processed
+        final chatDetails = await Future.wait(chatFutures);
+
+        // ✅ Store updated chats in cache
+        await ApiCache.set(cacheKey, chatDetails, persist: true);
+
+        // ✅ Update UI with latest chat data
+        _updateChatList(chatDetails);
       } else {
         throw Exception("Failed to fetch subscribed counsellors");
       }
@@ -138,6 +113,62 @@ class _ChatPageState extends State<ChatPage> {
         SnackBar(content: Text("Error: $e")),
       );
     }
+  }
+
+  Map<String, dynamic> _processChatData(
+      String chatId,
+      String counsellorId,
+      String counsellorName,
+      String counsellorPhotoUrl,
+      List<dynamic> messages) {
+    String lastMessage = 'No messages yet';
+    String timestamp = 'N/A';
+    bool isSeen = true;
+    String senderId = '';
+
+    if (messages.isNotEmpty) {
+      var lastMsg = messages.last;
+      senderId = lastMsg['senderId'] ?? '';
+
+      if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+        lastMessage = lastMsg['text'];
+      } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+        String fileType = lastMsg['fileType'] ?? 'unknown';
+
+        if (fileType.startsWith('image/')) {
+          lastMessage = "📷 Image";
+        } else if (fileType.startsWith('video/')) {
+          lastMessage = "🎥 Video";
+        } else {
+          lastMessage = "📄 File";
+        }
+      }
+
+      timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
+        DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
+      );
+      isSeen = lastMsg['isSeen'] ?? true;
+    }
+
+    return {
+      'id': chatId,
+      'counsellorId': counsellorId,
+      'name': counsellorName,
+      'photoUrl': counsellorPhotoUrl,
+      'lastMessage': lastMessage,
+      'timestamp': timestamp,
+      'isSeen': isSeen,
+      'senderId': senderId,
+    };
+  }
+
+  void _updateChatList(List<dynamic> chatDetails) {
+    setState(() {
+      chats = chatDetails.whereType<Map<String, dynamic>>().toList();
+      chats.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+      filteredChats = List.from(chats);
+      isLoading = false;
+    });
   }
 
   void _listenToRealtimeMessages() {
@@ -168,10 +199,15 @@ class _ChatPageState extends State<ChatPage> {
                 );
                 chats[index]['isSeen'] = lastMessageData['isSeen'] ?? true;
                 chats[index]['senderId'] = lastMessageData['senderId'] ?? '';
+
                 // Move updated chat to the top
                 final updatedChat = chats.removeAt(index);
                 chats.insert(0, updatedChat);
                 filteredChats = List.from(chats);
+
+                // ✅ Update Cache with Latest Messages
+                String cacheKey = "user_chats_${widget.userId}";
+                ApiCache.set(cacheKey, chats, persist: true);
               });
             } else {
               print("⚠️ Chat ID Not Found in List: $chatId");

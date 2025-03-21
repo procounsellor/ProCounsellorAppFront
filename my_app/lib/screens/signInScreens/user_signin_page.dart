@@ -24,6 +24,8 @@ class _UserSignInPageState extends State<UserSignInPage> {
   final TextEditingController _phoneController = TextEditingController();
   String selectedCountryCode = '+91';
   bool isButtonEnabled = false;
+  //bool isButtonEnabled = true; // Initially enabled
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -185,7 +188,16 @@ class _UserSignInPageState extends State<UserSignInPage> {
                 ),
                 minimumSize: Size(double.infinity, 48),
               ),
-              child: Text('Get verification code'),
+              child: isLoading
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text('Get verification code'),
             ),
             SizedBox(height: 24),
             RichText(
@@ -210,11 +222,12 @@ class _UserSignInPageState extends State<UserSignInPage> {
                 ],
               ),
             ),
-            Spacer(),
-            Image.asset(
-              'assets/images/c3.png',
-              height: 100,
-            ),
+            // Spacer(),
+            // Image.asset(
+            //   'assets/images/c3.png',
+
+            //   height: 100,
+            // ),
             GestureDetector(
               onTap: () {
                 showModalBottomSheet(
@@ -319,11 +332,10 @@ class _UserSignInPageState extends State<UserSignInPage> {
                 'SignIn as counsellor',
                 style: TextStyle(
                   color: Colors.orange,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
             ),
-            Spacer(),
           ],
         ),
       ),
@@ -332,16 +344,24 @@ class _UserSignInPageState extends State<UserSignInPage> {
 
   void generateOtp(String phoneNumber) async {
     try {
+      setState(() {
+        isLoading = true; // ✅ Show loader
+        isButtonEnabled = false; // ✅ Disable button
+      });
       //random code
       print("Phone number " + phoneNumber);
       //
       final response = await http.post(
         Uri.parse('${ApiUtils.baseUrl}/api/auth/generateOtp'),
-        //Uri.parse('http://10.0.2.2:8080/api/auth/generateOtp'),
+        //Uri.parse('http://localhost:8080/api/auth/generateOtp'),
 
         body: {'phoneNumber': phoneNumber},
       );
       if (response.statusCode == 200) {
+        setState(() {
+          isLoading = false; // ✅ Show loader
+          isButtonEnabled = true; // ✅ Disable button
+        });
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -354,6 +374,36 @@ class _UserSignInPageState extends State<UserSignInPage> {
       }
     } catch (e) {
       print('Error calling API: $e');
+    }
+  }
+
+  void generateOtpTest(String phoneNumber) async {
+    try {
+      setState(() {
+        isLoading = true; // Start loading indicator
+      });
+
+      print("Phone number: $phoneNumber");
+
+      // Simulate API delay of 2 seconds
+      await Future.delayed(Duration(seconds: 2));
+
+      setState(() {
+        isLoading = false; // Stop loading
+      });
+
+      // Navigate to VerificationPage after the delay
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VerificationPage(
+            phoneNumber: phoneNumber,
+            onSignOut: widget.onSignOut,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error: $e');
     }
   }
 }
