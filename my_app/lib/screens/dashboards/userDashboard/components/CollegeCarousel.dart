@@ -92,10 +92,10 @@ class _CollegeCarouselState extends State<CollegeCarousel> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          "Top Colleges",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
+        // Text(
+        //   "Top Colleges",
+        //   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        // ),
         SizedBox(height: 10),
 
         // ✅ Show Loading Indicator while fetching data

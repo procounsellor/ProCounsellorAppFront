@@ -44,6 +44,8 @@ dependencies:
   shared_preferences: ^2.2.2 # Ensure it's the latest version
   file_picker: ^6.0.0
   path_provider: ^2.1.2
+  google_fonts: ^6.1.0
+  material_symbols_icons: ^1.1.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -70,7 +72,7 @@ dependency_overrides:
     git:
       url: https://github.com/miguelpruivo/flutter_file_picker.git
       ref: master
-      
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,7 +83,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
-  video_player_web: ^2.0.19  # Add this for Web support
+  video_player_web: ^2.0.19 # Add this for Web support
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -100,6 +102,8 @@ flutter:
     - assets/images/no_results.png
     - assets/images/c1.png
     - assets/sounds/ringtone.mp3
+    - assets/data/
+    - assets/data/updated_college_ranking.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

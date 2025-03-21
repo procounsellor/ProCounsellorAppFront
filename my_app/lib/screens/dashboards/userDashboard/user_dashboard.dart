@@ -17,6 +17,8 @@ import 'components/TrendingCoursesList.dart';
 import 'components/UpcomingDeadlinesTicker.dart';
 // import 'components/InfiniteScrollJsonLoader.dart';
 import 'components/InfiniteCollegeRanking.dart';
+import 'headersText/TrendingHeader.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UserDashboard extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -99,9 +101,20 @@ class _UserDashboardState extends State<UserDashboard>
 
   //   _startSearchHintCycle();
   // }
+  late void Function() myMethod;
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      myMethod.call();
+      print("call");
+    }
+  }
+
+  ScrollController _scrollController = ScrollController();
 
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchTopCounsellorsAccordingToInterest();
     _listenToCounsellorStates();
     _fetchCounsellorsByState();
@@ -135,6 +148,7 @@ class _UserDashboardState extends State<UserDashboard>
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _isAnimationControllerDisposed = true;
     _animationController.dispose();
     _pageController.dispose();
@@ -310,8 +324,8 @@ class _UserDashboardState extends State<UserDashboard>
                             alignment: Alignment.centerLeft,
                             child: Text(
                               _searchHints[_currentSearchHintIndex],
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 16),
+                              style: GoogleFonts.outfit(
+                                  color: Colors.grey, fontSize: 16),
                             ),
                           ),
                         ),
@@ -333,7 +347,8 @@ class _UserDashboardState extends State<UserDashboard>
               alignment: Alignment.centerLeft,
               child: Text(
                 "Which state are you looking for?",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             SizedBox(height: 10),
@@ -359,7 +374,7 @@ class _UserDashboardState extends State<UserDashboard>
                       ),
                       child: Text(
                         state,
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -371,294 +386,272 @@ class _UserDashboardState extends State<UserDashboard>
 
             SizedBox(height: 20),
             Expanded(
-              child: SingleChildScrollView(
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_activeStates.isNotEmpty)
-                        SlideTransition(
-                          position: _pageAnimation,
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: 16),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  spreadRadius: 1,
-                                  blurRadius: 6,
-                                  // offset: Offset(0, 2),
-                                ),
-                              ],
+              child: ListView(
+                controller: _scrollController,
+                children: [
+                  if (_activeStates.isNotEmpty)
+                    SlideTransition(
+                      position: _pageAnimation,
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 16),
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 6,
+                              // offset: Offset(0, 2),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _activeStates.map((state) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Top Counsellors in $state",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    _buildHorizontalList(
-                                        "", _stateCounsellors[state] ?? []),
-                                    SizedBox(height: 10)
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
+                          ],
                         ),
-                      if (_liveCounsellors.isNotEmpty)
-                        SlideTransition(
-                          position: _pageAnimation,
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: 16),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  spreadRadius: 1,
-                                  blurRadius: 6,
-                                  //  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _activeStates.map((state) {
+                            return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Live Counsellors",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
+                                  "Top Counsellors in $state",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 SizedBox(height: 10),
-                                _buildHorizontalList("", _liveCounsellors),
+                                _buildHorizontalList(
+                                    "", _stateCounsellors[state] ?? []),
+                                SizedBox(height: 10)
                               ],
-                            ),
-                          ),
-                        ),
-                      Indexer(children: [
-                        CarouselSlider(
-                          options: CarouselOptions(
-                            height: 120.0,
-                            viewportFraction: 1,
-                            autoPlay: true,
-                            onPageChanged: (index, reason) {
-                              setState(() {
-                                currentIndex = index;
-                              });
-                            },
-                          ),
-                          items: carouselItems.map((i) {
-                            return Builder(
-                              builder: (BuildContext context) {
-                                return Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: 100,
-                                    margin: EdgeInsets.symmetric(
-                                        horizontal: 5.0, vertical: 10),
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.3),
-                                            spreadRadius: 1,
-                                            blurRadius: 6,
-                                            //  offset: Offset(0, 2),
-                                          ),
-                                        ],
-                                        borderRadius: BorderRadius.circular(5)),
-                                    child: Row(
-                                      children: [
-                                        Image.asset(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              205,
-                                          i[0],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              i[1],
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            SizedBox(
-                                              height: 2,
-                                            ),
-                                            Text(
-                                              "Ask Councellor",
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                  color: Colors.orange
-                                                      .withOpacity(0.4),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: Text(
-                                                "Chat Now",
-                                                style: TextStyle(fontSize: 8),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 10,
-                                            )
-                                          ],
-                                        )
-                                      ],
-                                    ));
-                              },
                             );
                           }).toList(),
                         ),
-                        Indexed(
-                          index: 3,
-                          child: Positioned(
-                              bottom: 8,
-                              child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Center(
-                                      child: DotsIndicator(
-                                          dotsCount: carouselItems.length,
-                                          position: currentIndex,
-                                          decorator: DotsDecorator(
-                                              size: const Size.square(5.0),
-                                              spacing:
-                                                  const EdgeInsets.all(4.0),
-                                              activeSize:
-                                                  const Size.square(5.0)))))),
+                      ),
+                    ),
+                  if (_liveCounsellors.isNotEmpty)
+                    SlideTransition(
+                      position: _pageAnimation,
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 16),
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 6,
+                              //  offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ]),
-                      SlideTransition(
-                        position: _pageAnimation,
-                        child: Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
-                                spreadRadius: 1,
-                                blurRadius: 6,
-                                // offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 10),
-                              UpcomingDeadlinesTicker(),
-                              Text(
-                                "Top Rated Counsellors",
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 10),
-                              _buildHorizontalList("", _topRatedCounsellors),
-                            ],
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Live Counsellors",
+                              style: GoogleFonts.outfit(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 10),
+                            _buildHorizontalList("", _liveCounsellors),
+                          ],
                         ),
                       ),
-                      SlideTransition(
-                        position: _pageAnimation,
-                        child: Container(
-                          margin: EdgeInsets.only(
-                              bottom: 16), // Spacing between cards
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.circular(10), // Rounded corners
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey
-                                    .withOpacity(0.3), // Subtle shadow
-                                spreadRadius: 1,
-                                blurRadius: 6,
-                                //offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Top News",
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-
-                              SizedBox(height: 10),
-                              TopNewsCarousel(),
-                              SizedBox(height: 10),
-                              CollegeCarousel(),
-                              SizedBox(height: 10),
-
-                              TopExamsList(),
-                              SizedBox(height: 10),
-                              //TopFormsList() // Use the external carousel widget
-                              TrendingCoursesList(),
-                              SizedBox(
+                    ),
+                  Indexer(children: [
+                    CarouselSlider(
+                      options: CarouselOptions(
+                        height: 120.0,
+                        viewportFraction: 1,
+                        autoPlay: true,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            currentIndex = index;
+                          });
+                        },
+                      ),
+                      items: carouselItems.map((i) {
+                        return Builder(
+                          builder: (BuildContext context) {
+                            return Container(
+                                width: MediaQuery.of(context).size.width,
                                 height: 100,
-                                child: Center(
-                                  // ✅ Ensures text is centered
-                                  child: Text(
-                                    "Explore More",
-                                    style: TextStyle(
-                                      fontSize: 28, // ✅ Bigger text
-                                      fontWeight:
-                                          FontWeight.w900, // ✅ Extremely bold
-                                      color: Colors
-                                          .grey[400], // ✅ Light grey color
-                                      letterSpacing:
-                                          1.5, // ✅ Slight spacing for aesthetics
+                                margin: EdgeInsets.symmetric(
+                                    horizontal: 5.0, vertical: 10),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        spreadRadius: 1,
+                                        blurRadius: 6,
+                                        //  offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                    borderRadius: BorderRadius.circular(5)),
+                                child: Row(
+                                  children: [
+                                    Image.asset(
+                                      width: MediaQuery.of(context).size.width -
+                                          205,
+                                      i[0],
                                     ),
-                                  ),
-                                ),
-                              ),
-
-                              SizedBox(
-                                height: 300, // ✅ Adjust based on JSON content
-                                child: InfiniteCollegeRanking(),
-                              ),
-                            ],
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          i[1],
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        SizedBox(
+                                          height: 2,
+                                        ),
+                                        Text(
+                                          "Ask Councellor",
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 2),
+                                          decoration: BoxDecoration(
+                                              color: Colors.orange
+                                                  .withOpacity(0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          child: Text(
+                                            "Chat Now",
+                                            style:
+                                                GoogleFonts.outfit(fontSize: 8),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ));
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    Indexed(
+                      index: 3,
+                      child: Positioned(
+                          bottom: 8,
+                          child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              child: Center(
+                                  child: DotsIndicator(
+                                      dotsCount: carouselItems.length,
+                                      position: currentIndex,
+                                      decorator: DotsDecorator(
+                                          size: const Size.square(5.0),
+                                          spacing: const EdgeInsets.all(4.0),
+                                          activeSize:
+                                              const Size.square(5.0)))))),
+                    ),
+                  ]),
+                  SlideTransition(
+                    position: _pageAnimation,
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 16),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 6,
+                            // offset: Offset(0, 2),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 10),
+                          UpcomingDeadlinesTicker(),
+                          Text(
+                            "Top Rated Counsellors",
+                            style: GoogleFonts.outfit(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          _buildHorizontalList("", _topRatedCounsellors),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  SlideTransition(
+                    position: _pageAnimation,
+                    child: Container(
+                      margin:
+                          EdgeInsets.only(bottom: 16), // Spacing between cards
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                Colors.grey.withOpacity(0.3), // Subtle shadow
+                            spreadRadius: 1,
+                            blurRadius: 6,
+                            //offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrendingHeader(title: "Top News"),
+                          TopNewsCarousel(),
+                          SizedBox(height: 10),
+
+                          TrendingHeader(title: "Top Colleges"),
+                          CollegeCarousel(),
+                          SizedBox(height: 10),
+
+                          const TrendingHeader(title: "Trending Exams"),
+
+                          TopExamsList(),
+                          SizedBox(height: 10),
+                          //TopFormsList() // Use the external carousel widget
+                          TrendingHeader(title: "Trending Courses"),
+                          const SizedBox(height: 10),
+                          TrendingCoursesList(),
+                          TrendingHeader(title: "Explore More"),
+
+                          // ✅ Adjust based on JSON content
+                          InfiniteCollegeRanking(
+                            builder: (BuildContext context,
+                                void Function() methodFromChild) {
+                              myMethod = methodFromChild;
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -675,7 +668,8 @@ class _UserDashboardState extends State<UserDashboard>
         if (title.isNotEmpty)
           Text(
             title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style:
+                GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         if (title.isNotEmpty) SizedBox(height: 10),
         SizedBox(
