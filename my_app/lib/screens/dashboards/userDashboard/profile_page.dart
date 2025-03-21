@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:my_app/screens/paymentScreens/add_funds.dart';
+import '../../../optimizations/api_cache.dart';
 
 import '../../../services/api_utils.dart';
 
@@ -46,22 +47,41 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchProfileData() async {
+    final cacheKey = "user_${widget.username}";
     final url = '${ApiUtils.baseUrl}/api/user/${widget.username}';
 
+    // Step 1: Check if data is available in cache
+    var cachedData = ApiCache.get(cacheKey);
+    if (cachedData != null) {
+      setState(() {
+        profileData = cachedData;
+        isLoading = false;
+      });
+      print("✅ Loaded profile data from cache");
+      return;
+    }
+
     try {
+      // Step 2: Fetch from API if cache is empty
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // Step 3: Store response in cache for future use
+        ApiCache.set(cacheKey, data, persist: true);
+
         setState(() {
-          profileData = json.decode(response.body);
-          print(profileData?['photo']);
+          profileData = data;
           isLoading = false;
         });
+
+        print("✅ Fetched profile data from API and stored in cache");
       } else {
         throw Exception('Failed to load profile data');
       }
     } catch (error) {
-      print('Error fetching profile data: $error');
+      print('❌ Error fetching profile data: $error');
       setState(() {
         isLoading = false;
       });
@@ -133,10 +153,37 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile updated successfully!')),
-        );
-        _fetchProfileData(); // Refresh profile data after update
+        // ✅ Step 1: Fetch fresh profile data from API instead of using cached response
+        final fetchResponse = await http.get(Uri.parse(url));
+
+        if (fetchResponse.statusCode == 200) {
+          final newData = json.decode(fetchResponse.body);
+
+          // ✅ Step 2: Update the UI with new data first
+          if (mounted) {
+            setState(() {
+              profileData = newData;
+            });
+          }
+
+          // ✅ Step 3: Update cache after UI is updated
+          await ApiCache.set("user_${widget.username}", newData, persist: true);
+
+          // ✅ Step 4: Close modal only if it's still open
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+
+          // ✅ Step 5: Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Profile updated successfully!')),
+          );
+
+          print(
+              "✅ Profile updated from API, cache refreshed, and UI updated instantly.");
+        } else {
+          throw Exception('Failed to fetch updated profile data.');
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update profile.')),
@@ -149,9 +196,21 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _showUpdateModal() {
-    String? firstName = profileData?['firstName'];
-    String? lastName = profileData?['lastName'];
+  void _showUpdateModal() async {
+    // ✅ Step 1: Fetch fresh data before opening the modal
+    var freshData = await ApiCache.get("user_${widget.username}");
+    if (freshData != null) {
+      setState(() {
+        profileData = freshData;
+      });
+    }
+
+    // ✅ Step 2: Initialize controllers with latest data
+    TextEditingController firstNameController =
+        TextEditingController(text: profileData?['firstName'] ?? '');
+    TextEditingController lastNameController =
+        TextEditingController(text: profileData?['lastName'] ?? '');
+
     String? interestedCourse = profileData?['interestedCourse'];
     List<String> userInterestedStates = List<String>.from(
         profileData?['userInterestedStateOfCounsellors'] ?? []);
@@ -166,66 +225,55 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) {
         return ClipRRect(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Color(0xFFFFCC80), // Light orange color
-                  width: 4.0,
-                ),
-              ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 16,
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
             ),
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 16,
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              ),
-              child: StatefulBuilder(
-                builder: (context, setModalState) {
-                  return Column(
+            child: StatefulBuilder(
+              builder: (context, setModalState) {
+                return SingleChildScrollView(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Title
                       Text(
                         'Update Information',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 16),
+
+                      // First Name Field
                       TextField(
-                        controller: TextEditingController(text: firstName),
+                        controller: firstNameController,
                         decoration: InputDecoration(
                           labelText: 'First Name',
                           border: OutlineInputBorder(),
                         ),
-                        onChanged: (value) {
-                          firstName = value;
-                        },
                       ),
                       SizedBox(height: 16),
+
+                      // Last Name Field
                       TextField(
-                        controller: TextEditingController(text: lastName),
+                        controller: lastNameController,
                         decoration: InputDecoration(
                           labelText: 'Last Name',
                           border: OutlineInputBorder(),
                         ),
-                        onChanged: (value) {
-                          lastName = value;
-                        },
                       ),
                       SizedBox(height: 16),
+
+                      // Degree Selection Dropdown
                       DropdownButtonFormField<String>(
                         value: interestedCourse,
-                        items: courses
-                            .map((course) => DropdownMenuItem(
-                                  value: course,
-                                  child: Text(course),
-                                ))
-                            .toList(),
+                        items: courses.map((course) {
+                          return DropdownMenuItem(
+                              value: course, child: Text(course));
+                        }).toList(),
                         decoration: InputDecoration(
                           labelText: 'Degree I am looking for',
                           border: OutlineInputBorder(),
@@ -237,11 +285,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                       SizedBox(height: 16),
+
+                      // Location Selection Title
                       Text(
                         'Location I am looking for',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+
+                      // Location Checkboxes
                       Column(
                         children: allowedStates.map((state) {
                           return CheckboxListTile(
@@ -260,33 +312,35 @@ class _ProfilePageState extends State<ProfilePage> {
                         }).toList(),
                       ),
                       SizedBox(height: 16),
+
+                      // Update Button
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green, // Light green color
+                            backgroundColor: Colors.green,
                             padding: EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(8), // Rounded corners
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           onPressed: () {
+                            // ✅ Prepare updated data
                             Map<String, dynamic> updatedData = {
-                              'firstName': firstName,
-                              'lastName': lastName,
+                              'firstName': firstNameController.text.trim(),
+                              'lastName': lastNameController.text.trim(),
                               'interestedCourse': interestedCourse,
                               'userInterestedStateOfCounsellors':
                                   userInterestedStates,
                             };
 
+                            // ✅ Step 1: Update profile
                             _updateProfile(updatedData);
-                            Navigator.pop(context);
                           },
                           child: Text(
                             'Update',
                             style: TextStyle(
-                              color: Colors.black, // Black text color
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -294,9 +348,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -493,7 +547,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                           SizedBox(width: 4),
                                           Text(
                                             profileData != null &&
-                                                    profileData!['walletAmount'] !=
+                                                    profileData![
+                                                            'walletAmount'] !=
                                                         null
                                                 ? profileData!['walletAmount']
                                                     .toString()
@@ -524,10 +579,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                       Navigator.push(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => AddFundsPage(userName: widget.username),
+                                            builder: (context) => AddFundsPage(
+                                                userName: widget.username),
                                           ),
                                         );
                                       },

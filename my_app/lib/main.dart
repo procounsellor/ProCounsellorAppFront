@@ -7,6 +7,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
 import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/screens/callingScreens/video_call_page.dart';
+import 'package:my_app/screens/signInScreens/get_user_details_step2.dart';
+import 'package:my_app/screens/signInScreens/user_details.dart';
 import 'package:my_app/screens/signInScreens/user_signin_page.dart';
 
 import 'package:my_app/services/firebase_signaling_service.dart';
@@ -207,6 +209,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
+          resizeToAvoidBottomInset: false,
           body: Center(child: CircularProgressIndicator()),
         ),
         theme: ThemeData(
@@ -221,6 +224,12 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           debugShowCheckedModeBanner: false,
           navigatorKey: CallOverlayManager.navigatorKey,
           home: UserSignInPage(onSignOut: restartApp));
+      // home: GetUserDetailsStep2(
+      //     userDetails: new UserDetails(userInterestedStates: []),
+      //     userId: "",
+      //     jwtToken: "jwtToken",
+      //     firebaseCustomToken: "firebaseCustomToken",
+      //     onSignOut: restartApp));
     }
 
     switch (role?.toLowerCase()) {

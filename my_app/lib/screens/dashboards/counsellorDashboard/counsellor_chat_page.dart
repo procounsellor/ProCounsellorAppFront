@@ -6,6 +6,7 @@ import 'counsellor_chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../../optimizations/api_cache.dart';
 
 class ChatsPage extends StatefulWidget {
   final String counsellorId;
@@ -33,9 +34,19 @@ class _ChatsPageState extends State<ChatsPage> {
 
   Future<void> fetchChats() async {
     try {
-      final response = await http.get(Uri.parse(
-          '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/clients'));
+      String cacheKey = "chats_${widget.counsellorId}";
+      String apiUrl =
+          "${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/clients";
 
+      // ✅ Step 1: Check Cache First
+      var cachedChats = await ApiCache.get(cacheKey);
+      if (cachedChats != null) {
+        print("✅ Loaded chat list from cache");
+        _updateChatList(cachedChats);
+      }
+
+      // ✅ Step 2: Fetch Data from API
+      final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final List<dynamic> clients = json.decode(response.body);
 
@@ -47,11 +58,13 @@ class _ChatsPageState extends State<ChatsPage> {
               client['photo'] ?? 'https://via.placeholder.com/150';
 
           try {
+            // ✅ Check if chat exists
             final chatExistsResponse = await http.get(Uri.parse(
                 '${ApiUtils.baseUrl}/api/chats/exists?userId=$userId&counsellorId=${widget.counsellorId}'));
 
             if (chatExistsResponse.statusCode == 200 &&
                 json.decode(chatExistsResponse.body) == true) {
+              // ✅ Start or fetch existing chat
               final chatResponse = await http.post(Uri.parse(
                   '${ApiUtils.baseUrl}/api/chats/start-chat?userId=$userId&counsellorId=${widget.counsellorId}'));
 
@@ -59,6 +72,7 @@ class _ChatsPageState extends State<ChatsPage> {
                 final chatData = json.decode(chatResponse.body);
                 final chatId = chatData['chatId'];
 
+                // ✅ Fetch chat messages
                 final messagesResponse = await http.get(
                   Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'),
                 );
@@ -67,47 +81,8 @@ class _ChatsPageState extends State<ChatsPage> {
                   final messages =
                       json.decode(messagesResponse.body) as List<dynamic>;
 
-                  String lastMessage = 'No messages yet';
-                  String timestamp = 'N/A';
-                  bool isSeen = true;
-                  String senderId = '';
-
-                  if (messages.isNotEmpty) {
-                    var lastMsg = messages.last;
-                    senderId = lastMsg['senderId'] ?? '';
-
-                    if (lastMsg.containsKey('text') &&
-                        lastMsg['text'] != null) {
-                      lastMessage = lastMsg['text'];
-                    } else if (lastMsg.containsKey('fileUrl') &&
-                        lastMsg['fileUrl'] != null) {
-                      String fileType = lastMsg['fileType'] ?? 'unknown';
-
-                      if (fileType.startsWith('image/')) {
-                        lastMessage = "📷 Image";
-                      } else if (fileType.startsWith('video/')) {
-                        lastMessage = "🎥 Video";
-                      } else {
-                        lastMessage = "📄 File";
-                      }
-                    }
-
-                    timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-                      DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
-                    );
-                    isSeen = lastMsg['isSeen'] ?? true;
-                  }
-
-                  return {
-                    'id': chatId,
-                    'userId': userId,
-                    'name': clientName,
-                    'photoUrl': clientPhotoUrl,
-                    'lastMessage': lastMessage,
-                    'timestamp': timestamp,
-                    'isSeen': isSeen,
-                    'senderId': senderId,
-                  };
+                  return _processChatData(
+                      chatId, userId, clientName, clientPhotoUrl, messages);
                 }
               }
             }
@@ -117,14 +92,14 @@ class _ChatsPageState extends State<ChatsPage> {
           return null;
         }).toList();
 
+        // ✅ Wait for all chat data to be processed
         final chatDetails = await Future.wait(chatFutures);
-        setState(() {
-          chats = chatDetails.whereType<Map<String, dynamic>>().toList();
-          chats.sort((a, b) => b['timestamp']
-              .compareTo(a['timestamp'])); // Sort latest chats to top
-          filteredChats = List.from(chats);
-          isLoading = false;
-        });
+
+        // ✅ Store updated chats in cache
+        await ApiCache.set(cacheKey, chatDetails, persist: true);
+
+        // ✅ Update UI with latest chat data
+        _updateChatList(chatDetails);
       } else {
         throw Exception("Failed to fetch chatting clients");
       }
@@ -136,6 +111,58 @@ class _ChatsPageState extends State<ChatsPage> {
         SnackBar(content: Text("Error: $e")),
       );
     }
+  }
+
+  Map<String, dynamic> _processChatData(String chatId, String userId,
+      String clientName, String clientPhotoUrl, List<dynamic> messages) {
+    String lastMessage = 'No messages yet';
+    String timestamp = 'N/A';
+    bool isSeen = true;
+    String senderId = '';
+
+    if (messages.isNotEmpty) {
+      var lastMsg = messages.last;
+      senderId = lastMsg['senderId'] ?? '';
+
+      if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+        lastMessage = lastMsg['text'];
+      } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
+        String fileType = lastMsg['fileType'] ?? 'unknown';
+
+        if (fileType.startsWith('image/')) {
+          lastMessage = "📷 Image";
+        } else if (fileType.startsWith('video/')) {
+          lastMessage = "🎥 Video";
+        } else {
+          lastMessage = "📄 File";
+        }
+      }
+
+      timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
+        DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
+      );
+      isSeen = lastMsg['isSeen'] ?? true;
+    }
+
+    return {
+      'id': chatId,
+      'userId': userId,
+      'name': clientName,
+      'photoUrl': clientPhotoUrl,
+      'lastMessage': lastMessage,
+      'timestamp': timestamp,
+      'isSeen': isSeen,
+      'senderId': senderId,
+    };
+  }
+
+  void _updateChatList(List<dynamic> chatDetails) {
+    setState(() {
+      chats = chatDetails.whereType<Map<String, dynamic>>().toList();
+      chats.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+      filteredChats = List.from(chats);
+      isLoading = false;
+    });
   }
 
   void _listenToRealtimeMessages() {
@@ -166,10 +193,15 @@ class _ChatsPageState extends State<ChatsPage> {
                 );
                 chats[index]['isSeen'] = lastMessageData['isSeen'] ?? true;
                 chats[index]['senderId'] = lastMessageData['senderId'] ?? '';
+
                 // Move updated chat to the top
                 final updatedChat = chats.removeAt(index);
                 chats.insert(0, updatedChat);
                 filteredChats = List.from(chats);
+
+                // ✅ Update Cache with Latest Messages
+                String cacheKey = "chats_${widget.counsellorId}";
+                ApiCache.set(cacheKey, chats, persist: true);
               });
             } else {
               print("⚠️ Chat ID Not Found in List: $chatId");

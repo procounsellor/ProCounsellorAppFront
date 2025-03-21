@@ -24,6 +24,7 @@ class VerificationPage extends StatefulWidget {
 class _VerificationPageState extends State<VerificationPage> {
   List<String> otpDigits = List.filled(6, "");
   bool isButtonEnabled = false;
+  bool isLoading = false;
   final FocusNode firstOtpFieldFocusNode = FocusNode();
   final AuthService _apiService = AuthService();
   int _resendTimer = 18;
@@ -65,6 +66,7 @@ class _VerificationPageState extends State<VerificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: Column(
         children: [
@@ -167,7 +169,16 @@ class _VerificationPageState extends State<VerificationPage> {
                       ),
                       minimumSize: Size(double.infinity, 48),
                     ),
-                    child: Text('VERIFY OTP'),
+                    child: isLoading
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text('VERIFY OTP'),
                   ),
                   SizedBox(height: 24),
                   Align(
@@ -240,6 +251,10 @@ class _VerificationPageState extends State<VerificationPage> {
 
   Future<void> _handleVerification() async {
     try {
+      setState(() {
+        isLoading = true; // ✅ Show loader
+        isButtonEnabled = false; // ✅ Disable button
+      });
       String otp = otpDigits.join();
       final response =
           await _apiService.verifyAndSignup(widget.phoneNumber, otp);
@@ -270,7 +285,10 @@ class _VerificationPageState extends State<VerificationPage> {
             } else {
               print("Authentication failed.");
             }
-
+            setState(() {
+              isLoading = false; // ✅ Hide loader
+              isButtonEnabled = true; // ✅ Re-enable button
+            });
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
@@ -312,6 +330,10 @@ class _VerificationPageState extends State<VerificationPage> {
           );
         }
       } else {
+        setState(() {
+          isLoading = false; // ✅ Hide loader
+          isButtonEnabled = true; // ✅ Re-enable button
+        });
         showErrorDialog('Invalid or expired OTP. Please try again.');
       }
     } catch (e) {

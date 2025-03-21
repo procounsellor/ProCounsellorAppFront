@@ -71,13 +71,14 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.9,
+                childAspectRatio: 0.8, // Ensures a balanced aspect ratio
                 shrinkWrap:
-                    true, // Prevent GridView from taking infinite height
+                    true, // Prevents GridView from taking infinite height
                 physics: NeverScrollableScrollPhysics(), // Grid doesn't scroll
                 children: allowedStates.map((state) {
                   final isSelected = widget.userDetails.userInterestedStates
                       .contains(state['name']);
+
                   return GestureDetector(
                     onTap: () {
                       setState(() {
@@ -92,22 +93,26 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                     },
                     child: Column(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: isSelected ? Colors.white : Colors.white,
-                              width: 2,
+                        Expanded(
+                          // Ensures images scale dynamically
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: isSelected ? Colors.white : Colors.white,
+                                width: 2,
+                              ),
                             ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.asset(
-                              state['image']!,
-                              fit: BoxFit
-                                  .cover, // Ensures the image fills the card
-                              width: MediaQuery.sizeOf(context).width / 2 - 58,
-                              height: MediaQuery.sizeOf(context).width / 2 - 70,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.asset(
+                                state['image']!,
+                                fit: BoxFit
+                                    .cover, // Ensures the image fills the card
+                                width: double.infinity / 2 -
+                                    20, // Makes it responsive
+                                height: double.infinity / 2 - 20,
+                              ),
                             ),
                           ),
                         ),
@@ -119,7 +124,7 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                               ? Colors.orangeAccent
                               : Colors.grey.shade300,
                         ),
-                        SizedBox(height: 8), // Space between card and text
+                        SizedBox(height: 8),
                         Text(
                           state['name']!,
                           style: TextStyle(
@@ -129,7 +134,6 @@ class _GetUserDetailsStep2State extends State<GetUserDetailsStep2> {
                                 isSelected ? Colors.orangeAccent : Colors.black,
                           ),
                         ),
-                        SizedBox(height: 20), // Extra spacing below each item
                       ],
                     ),
                   );
