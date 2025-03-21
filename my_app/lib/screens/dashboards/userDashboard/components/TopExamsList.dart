@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+// import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class TopExamsList extends StatefulWidget {
   @override
@@ -104,22 +105,21 @@ class _TopExamsListState extends State<TopExamsList> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Top Exams in India & Abroad",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              // Text(
+              //   "Top Exams in India & Abroad",
+              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // ),
               GestureDetector(
                 onTap: () {
                   // ✅ Future implementation: Navigate to full exam list page
                   print("See More clicked!");
                 },
                 child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18, // ✅ Small, non-intrusive size
-                  color:
-                      Colors.grey[700], // ✅ Subtle color to blend with design
+                  Icons.double_arrow_rounded,
+                  size: 36,
+                  color: Colors.greenAccent,
                 ),
               ),
             ],

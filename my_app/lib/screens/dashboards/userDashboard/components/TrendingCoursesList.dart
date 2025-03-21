@@ -105,20 +105,20 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
         children: [
           // 🔹 Header with "See More" icon
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Trending Courses",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              // Text(
+              //   "Trending Courses",
+              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // ),
               GestureDetector(
                 onTap: () {
                   print("See More clicked! Future navigation here.");
                 },
                 child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Colors.grey[700],
+                  Icons.double_arrow_rounded,
+                  size: 36,
+                  color: Colors.greenAccent,
                 ),
               ),
             ],

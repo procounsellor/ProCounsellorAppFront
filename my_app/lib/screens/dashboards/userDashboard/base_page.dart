@@ -12,6 +12,7 @@ import 'profile_page.dart';
 import 'user_state_notifier.dart'; // Import UserStateNotifier
 import 'package:firebase_database/firebase_database.dart';
 import 'chat_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -223,7 +224,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         forceMaterialTransparency: true,
         title: Text(
           "Pro Counsellor",
-          style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         actions: [
           Stack(
