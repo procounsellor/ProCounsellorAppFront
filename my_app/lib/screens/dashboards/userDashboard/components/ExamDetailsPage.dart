@@ -121,74 +121,77 @@ class _ExamDetailsPageState extends State<ExamDetailsPage> {
       ),
       body: Stack(
         children: [
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : examDetails == null
-                  ? Center(child: Text('No information found.'))
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 10),
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: Colors.grey.shade300, width: 2),
-                              borderRadius: BorderRadius.circular(12),
-                              image: DecorationImage(
-                                image: AssetImage(imageAsset),
-                                fit: BoxFit.cover,
+          Positioned.fill(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : examDetails == null
+                    ? Center(child: Text('No information found.'))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 10),
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.grey.shade300, width: 2),
+                                borderRadius: BorderRadius.circular(12),
+                                image: DecorationImage(
+                                  image: AssetImage(imageAsset),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            widget.examName.toUpperCase(),
-                            textAlign: TextAlign.left,
-                            style: GoogleFonts.outfit(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.grey[400],
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          ...examDetails!.entries.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    entry.key.toUpperCase(),
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.deepOrange,
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    entry.value.toString(),
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 14,
-                                      height: 1.5,
-                                      color: Colors.grey[800],
-                                    ),
-                                  ),
-                                ],
+                            SizedBox(height: 12),
+                            Text(
+                              widget.examName.toUpperCase(),
+                              textAlign: TextAlign.left,
+                              style: GoogleFonts.outfit(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.grey[400],
+                                letterSpacing: 1.2,
                               ),
-                            );
-                          }).toList(),
-                        ],
+                            ),
+                            SizedBox(height: 20),
+                            ...examDetails!.entries.map((entry) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      entry.key.toUpperCase(),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      entry.value.toString(),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        height: 1.5,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        ),
                       ),
-                    ),
+          ),
 
-          // Top-right floating ❓ info button
+          // ✅ Floating ❓ Button stays properly aligned now
           Positioned(
             top: 10,
             right: 10,

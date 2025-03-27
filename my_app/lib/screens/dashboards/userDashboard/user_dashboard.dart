@@ -588,6 +588,7 @@ class _UserDashboardState extends State<UserDashboard>
                         children: [
                           SizedBox(height: 10),
                           UpcomingDeadlinesTicker(),
+                          SizedBox(height: 10),
                           Text(
                             "Top Rated Counsellors",
                             style: GoogleFonts.outfit(
