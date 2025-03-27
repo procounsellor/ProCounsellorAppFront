@@ -1,0 +1,23 @@
+{
+  "India": [
+    {
+      "name": "NATA",
+      "level": "UG",
+      "description": "National Aptitude Test in Architecture"
+    },
+    {
+      "name": "JEE Main Paper 2",
+      "level": "UG",
+      "description": "Architecture entrance under JEE"
+    }
+  ],
+  "Abroad": {
+    "usa": [
+      {
+        "name": "GRE (Architecture)",
+        "level": "PG",
+        "description": "GRE required for architecture PG courses"
+      }
+    ]
+  }
+}

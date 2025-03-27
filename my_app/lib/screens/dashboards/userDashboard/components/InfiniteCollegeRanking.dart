@@ -44,12 +44,23 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
         _displayedColleges = _collegeList.take(_loadedCount).toList();
       });
     } else {
-      String jsonString =
-          await rootBundle.loadString('data/updated_college_ranking.json');
-      List<dynamic> jsonData = json.decode(jsonString);
-      _collegeList = jsonData.cast<Map<String, dynamic>>();
-      print(_collegeList);
-      await _fetchUnsplashImages(); // ✅ Fetch Unsplash Images
+      try {
+        String jsonString = await rootBundle
+            .loadString('assets/data/updated_college_ranking.json');
+        List<dynamic> jsonData = json.decode(jsonString);
+        _collegeList = jsonData.cast<Map<String, dynamic>>();
+        print(_collegeList);
+        // process data
+      } catch (e) {
+        print("❌ Error loading JSON: $e");
+      }
+
+      // String jsonString =
+      //     await rootBundle.loadString('data/updated_college_ranking.json');
+      // List<dynamic> jsonData = json.decode(jsonString);
+      // _collegeList = jsonData.cast<Map<String, dynamic>>();
+      // print(_collegeList);
+      // await _fetchUnsplashImages(); // ✅ Fetch Unsplash Images
     }
   }
 
@@ -83,7 +94,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
 
   /// **Loads More Colleges Dynamically**
   void loadMoreColleges() {
-    print(".......loading");
+    // print(".......loading");
     if (_isLoading || _loadedCount >= _collegeList.length) return;
 
     setState(() => _isLoading = true);
@@ -127,15 +138,15 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
           ),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  college["image"],
-                  height: 80,
-                  width: 100,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              // ClipRRect(
+              //   borderRadius: BorderRadius.circular(10),
+              //   child: Image.network(
+              //     college["image"],
+              //     height: 80,
+              //     width: 100,
+              //     fit: BoxFit.cover,
+              //   ),
+              // ),
               SizedBox(width: 12),
               Expanded(
                 child: Column(

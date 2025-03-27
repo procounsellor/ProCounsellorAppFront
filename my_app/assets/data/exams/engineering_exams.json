@@ -1,0 +1,213 @@
+{
+    "India": [
+        {
+            "name": "JEE Main",
+            "level": "UG",
+            "organization": "NTA",
+            "description": "Entry to NITs, IIITs, and eligibility for JEE Advanced"
+        },
+        {
+            "name": "JEE Advanced",
+            "level": "UG",
+            "organization": "IITs",
+            "description": "Required for admission into IITs"
+        },
+        {
+            "name": "BITSAT",
+            "level": "UG",
+            "organization": "BITS Pilani",
+            "description": "Admission into BITS campuses"
+        },
+        {
+            "name": "VITEEE",
+            "level": "UG",
+            "organization": "VIT",
+            "description": "For admission to VIT campuses"
+        },
+        {
+            "name": "SRMJEEE",
+            "level": "UG",
+            "organization": "SRM University",
+            "description": "For SRM campuses"
+        },
+        {
+            "name": "COMEDK UGET",
+            "level": "UG",
+            "organization": "Karnataka Private Colleges",
+            "description": "For private engineering colleges in Karnataka"
+        },
+        {
+            "name": "MET",
+            "level": "UG",
+            "organization": "Manipal",
+            "description": "Manipal Entrance Test"
+        },
+        {
+            "name": "WBJEE",
+            "level": "UG",
+            "organization": "WBJEEB",
+            "description": "West Bengal State Entrance"
+        },
+        {
+            "name": "MHT CET",
+            "level": "UG",
+            "organization": "Maharashtra CET Cell",
+            "description": "Maharashtra state colleges"
+        },
+        {
+            "name": "KEAM",
+            "level": "UG",
+            "organization": "Kerala CEE",
+            "description": "Kerala engineering entrance"
+        },
+        {
+            "name": "TNEA",
+            "level": "UG",
+            "organization": "Anna University",
+            "description": "Tamil Nadu admissions based on 12th marks"
+        },
+        {
+            "name": "AP EAMCET",
+            "level": "UG",
+            "organization": "APSCHE",
+            "description": "Andhra Pradesh engineering entrance"
+        },
+        {
+            "name": "TS EAMCET",
+            "level": "UG",
+            "organization": "TSCHE",
+            "description": "Telangana engineering entrance"
+        },
+        {
+            "name": "AMUEEE",
+            "level": "UG",
+            "organization": "AMU",
+            "description": "Aligarh Muslim University entrance"
+        },
+        {
+            "name": "CUSAT CAT",
+            "level": "UG",
+            "organization": "Cochin University",
+            "description": "Cochin University entrance"
+        },
+        {
+            "name": "IIITH UGEE",
+            "level": "UG",
+            "organization": "IIIT Hyderabad",
+            "description": "Research-based admission"
+        },
+        {
+            "name": "GATE",
+            "level": "PG",
+            "organization": "IITs",
+            "description": "Postgraduate admissions and PSU jobs"
+        }
+    ],
+    "Abroad": {
+        "USA": [
+            {
+                "name": "SAT",
+                "level": "UG",
+                "description": "For UG admission in US universities"
+            },
+            {
+                "name": "ACT",
+                "level": "UG",
+                "description": "Alternative to SAT"
+            },
+            {
+                "name": "TOEFL",
+                "level": "UG/PG",
+                "description": "English proficiency test"
+            },
+            {
+                "name": "IELTS",
+                "level": "UG/PG",
+                "description": "English proficiency test"
+            },
+            {
+                "name": "GRE",
+                "level": "PG",
+                "description": "Required for MS/MEngg programs"
+            }
+        ],
+        "UK": [
+            {
+                "name": "UCAS",
+                "level": "UG",
+                "description": "Centralized admission portal"
+            },
+            {
+                "name": "ENGAA",
+                "level": "UG",
+                "description": "Cambridge Engineering Admission"
+            },
+            {
+                "name": "MAT",
+                "level": "UG",
+                "description": "Math admission test for Oxford"
+            },
+            {
+                "name": "IELTS",
+                "level": "UG/PG",
+                "description": "English proficiency test"
+            }
+        ],
+        "Canada": [
+            {
+                "name": "IELTS",
+                "level": "UG/PG",
+                "description": "English language requirement"
+            },
+            {
+                "name": "TOEFL",
+                "level": "UG/PG",
+                "description": "English language requirement"
+            },
+            {
+                "name": "SAT",
+                "level": "UG",
+                "description": "Optional for some universities"
+            }
+        ],
+        "Australia": [
+            {
+                "name": "ATAR",
+                "level": "UG",
+                "description": "Australian Tertiary Admission Rank"
+            },
+            {
+                "name": "IELTS",
+                "level": "UG/PG",
+                "description": "English proficiency test"
+            },
+            {
+                "name": "TOEFL",
+                "level": "UG/PG",
+                "description": "English proficiency test"
+            }
+        ],
+        "Germany": [
+            {
+                "name": "TestAS",
+                "level": "UG",
+                "description": "Aptitude test for international students"
+            },
+            {
+                "name": "IELTS",
+                "level": "UG/PG",
+                "description": "English language proficiency"
+            },
+            {
+                "name": "TestDaF",
+                "level": "UG/PG",
+                "description": "German language proficiency"
+            },
+            {
+                "name": "DSH",
+                "level": "UG/PG",
+                "description": "German language exam for admission"
+            }
+        ]
+    }
+}

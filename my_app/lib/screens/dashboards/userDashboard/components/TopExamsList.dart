@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ExamsPage.dart';
 // import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class TopExamsList extends StatefulWidget {
@@ -11,12 +12,21 @@ class TopExamsList extends StatefulWidget {
 
 class _TopExamsListState extends State<TopExamsList> {
   final List<Map<String, String>> _topExams = [
-    {"name": "JEE Advanced", "keyword": "exam education"},
-    {"name": "NEET", "keyword": "medicine study"},
-    {"name": "CAT", "keyword": "mba business"},
-    {"name": "SAT", "keyword": "exam study"},
-    {"name": "IELTS", "keyword": "english test"},
-    {"name": "TOEFL", "keyword": "language learning"},
+    {
+      "name": "JEE Advanced",
+      "image": "assets/images/homepage/trending_exams/jee.png"
+    },
+    {"name": "NEET", "image": "assets/images/homepage/trending_exams/neet.png"},
+    {"name": "CAT", "image": "assets/images/homepage/trending_exams/cat.png"},
+    {"name": "SAT", "image": "assets/images/homepage/trending_exams/sat.png"},
+    {
+      "name": "IELTS",
+      "image": "assets/images/homepage/trending_exams/ielts.png"
+    },
+    {
+      "name": "TOEFL",
+      "image": "assets/images/homepage/trending_exams/toefl.png"
+    },
   ];
 
   List<Map<String, String>> _examImages = [];
@@ -24,65 +34,6 @@ class _TopExamsListState extends State<TopExamsList> {
   @override
   void initState() {
     super.initState();
-    _loadCachedExams();
-  }
-
-  /// **Loads Cached Data or Fetches New Data**
-  Future<void> _loadCachedExams() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? cachedData = prefs.getString("cached_exam_images");
-
-    if (cachedData != null) {
-      try {
-        List<dynamic> decodedData = json.decode(cachedData);
-        setState(() {
-          _examImages = decodedData.map<Map<String, String>>((item) {
-            return {
-              "name": item["name"].toString(),
-              "image": item["image"].toString(),
-            };
-          }).toList();
-        });
-      } catch (e) {
-        print("❌ Error parsing cached exams: $e");
-        await _fetchExamImages(); // Fallback to API if cache is corrupted
-      }
-    } else {
-      await _fetchExamImages();
-    }
-  }
-
-  /// **Fetches Exam Images from Unsplash**
-  Future<void> _fetchExamImages() async {
-    List<Map<String, String>> fetchedExams = [];
-    String unsplashApiKey =
-        "nyo0kWYlUFOZGmzcya9tVx2ZefwACQ38BdfKTl-XrRA"; // ✅ Hardcoded API Key
-
-    for (var exam in _topExams) {
-      final response = await http.get(Uri.parse(
-          "https://api.unsplash.com/photos/random?query=${exam['keyword']}&client_id=$unsplashApiKey"));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        fetchedExams.add({
-          "name": exam["name"]!,
-          "image": data["urls"]["small"],
-        });
-      } else {
-        fetchedExams.add({
-          "name": exam["name"]!,
-          "image": "https://via.placeholder.com/100", // Default image
-        });
-      }
-    }
-
-    // ✅ Update State & Cache Data
-    setState(() {
-      _examImages = fetchedExams;
-    });
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("cached_exam_images", json.encode(fetchedExams));
   }
 
   @override
@@ -114,7 +65,10 @@ class _TopExamsListState extends State<TopExamsList> {
               GestureDetector(
                 onTap: () {
                   // ✅ Future implementation: Navigate to full exam list page
-                  print("See More clicked!");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ExamsPage()),
+                  );
                 },
                 child: Icon(
                   Icons.double_arrow_rounded,
@@ -139,9 +93,7 @@ class _TopExamsListState extends State<TopExamsList> {
                 childAspectRatio: 0.9, // Keeps image & text proportionate
               ),
               itemBuilder: (context, index) {
-                final exam = _examImages.isNotEmpty
-                    ? _examImages[index]
-                    : _topExams[index];
+                final exam = _topExams[index];
                 return Column(
                   children: [
                     ClipRRect(
@@ -153,8 +105,7 @@ class _TopExamsListState extends State<TopExamsList> {
                             0.20, // Dynamic height
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: NetworkImage(exam["image"] ??
-                                "https://via.placeholder.com/100"),
+                            image: AssetImage(exam["image"]!),
                             fit: BoxFit.cover,
                           ),
                         ),

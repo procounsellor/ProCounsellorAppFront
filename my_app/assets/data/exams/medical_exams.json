@@ -1,0 +1,31 @@
+{
+  "India": [
+    {
+      "name": "NEET UG",
+      "level": "UG",
+      "description": "National Eligibility Entrance Test for Undergraduate medical courses"
+      
+    },
+    {
+      "name": "AIIMS MBBS",
+      "level": "UG",
+      "description": "All India Institute of Medical Sciences entrance"
+    }
+  ],
+  "Abroad": {
+    "usa": [
+      {
+        "name": "MCAT",
+        "level": "UG",
+        "description": "Medical College Admission Test for the US"
+      }
+    ],
+    "uk": [
+      {
+        "name": "UCAT",
+        "level": "UG",
+        "description": "University Clinical Aptitude Test for UK medical schools"
+      }
+    ]
+  }
+}
