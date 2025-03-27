@@ -1,0 +1,22 @@
+class ExamEntry {
+  final String name;
+  final String level;
+  final String description;
+  final String? organization;
+
+  ExamEntry({
+    required this.name,
+    required this.level,
+    required this.description,
+    this.organization,
+  });
+
+  factory ExamEntry.fromJson(Map<String, dynamic> json) {
+    return ExamEntry(
+      name: json['name'],
+      level: json['level'],
+      description: json['description'],
+      organization: json['organization'] ?? '',
+    );
+  }
+}

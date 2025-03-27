@@ -1,0 +1,922 @@
+[
+  {
+    "name": "JEE Main",
+    "information": {
+      "level": "UG",
+      "description": "JEE Main is conducted by NTA for admission to NITs, IIITs, and other centrally funded institutes. It's also a qualifier for JEE Advanced.",
+      "organization": "National Testing Agency (NTA)",
+      "exam_type": "Entrance Examination",
+      "eligibility": "10+2 with Physics, Chemistry, Mathematics",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://jeemain.nta.nic.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "3 hours",
+      "subjects": [
+        "Physics",
+        "Chemistry",
+        "Mathematics"
+      ],
+      "marking_scheme": "4 marks for correct, -1 for incorrect"
+    }
+  },
+  {
+    "name": "JEE Advanced",
+    "information": {
+      "level": "UG",
+      "description": "JEE Advanced is required for admission into the IITs. Only top JEE Main scorers are eligible.",
+      "organization": "IITs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "Top JEE Main rankers",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://jeeadv.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "6 hours (2 papers)",
+      "subjects": [
+        "Physics",
+        "Chemistry",
+        "Mathematics"
+      ],
+      "marking_scheme": "Variable; partial marking for multiple-correct"
+    }
+  },
+  {
+    "name": "BITSAT",
+    "information": {
+      "level": "UG",
+      "description": "BITSAT is the Birla Institute of Technology and Science Admission Test conducted for admissions to integrated first-degree programs at BITS Pilani and its other campuses.",
+      "organization": "BITS Pilani",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "VITEEE",
+    "information": {
+      "level": "UG",
+      "description": "VITEEE is the VIT Engineering Entrance Examination conducted by Vellore Institute of Technology for admission to various engineering courses.",
+      "organization": "VIT",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "SRMJEEE",
+    "information": {
+      "level": "UG",
+      "description": "For SRM campuses",
+      "organization": "SRM University",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "COMEDK UGET",
+    "information": {
+      "level": "UG",
+      "description": "For private engineering colleges in Karnataka",
+      "organization": "Karnataka Private Colleges",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "MET",
+    "information": {
+      "level": "UG",
+      "description": "Manipal Entrance Test",
+      "organization": "Manipal",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "WBJEE",
+    "information": {
+      "level": "UG",
+      "description": "West Bengal State Entrance",
+      "organization": "WBJEEB",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "MHT CET",
+    "information": {
+      "level": "UG",
+      "description": "Maharashtra state colleges",
+      "organization": "Maharashtra CET Cell",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "KEAM",
+    "information": {
+      "level": "UG",
+      "description": "Kerala engineering entrance",
+      "organization": "Kerala CEE",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TNEA",
+    "information": {
+      "level": "UG",
+      "description": "Tamil Nadu admissions based on 12th marks",
+      "organization": "Anna University",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "AP EAMCET",
+    "information": {
+      "level": "UG",
+      "description": "Andhra Pradesh engineering entrance",
+      "organization": "APSCHE",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TS EAMCET",
+    "information": {
+      "level": "UG",
+      "description": "Telangana engineering entrance",
+      "organization": "TSCHE",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "AMUEEE",
+    "information": {
+      "level": "UG",
+      "description": "Aligarh Muslim University entrance",
+      "organization": "AMU",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "CUSAT CAT",
+    "information": {
+      "level": "PG",
+      "description": "CAT is an MBA entrance exam used by IIMs and top B-schools across India.",
+      "organization": "IIMs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "Bachelor’s Degree with at least 50%",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://iimcat.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "2 hours",
+      "subjects": [
+        "VARC",
+        "DILR",
+        "QA"
+      ],
+      "marking_scheme": "3 marks for correct, -1 for incorrect (MCQs)"
+    }
+  },
+  {
+    "name": "IIITH UGEE",
+    "information": {
+      "level": "UG",
+      "description": "Research-based admission",
+      "organization": "IIIT Hyderabad",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "GATE",
+    "information": {
+      "level": "PG",
+      "description": "Postgraduate admissions and PSU jobs",
+      "organization": "IITs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "SAT",
+    "information": {
+      "level": "UG",
+      "description": "For UG admission in US universities",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "ACT",
+    "information": {
+      "level": "UG",
+      "description": "Alternative to SAT",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TOEFL",
+    "information": {
+      "level": "UG/PG",
+      "description": "English proficiency test",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "IELTS",
+    "information": {
+      "level": "UG/PG",
+      "description": "English proficiency test",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "GRE",
+    "information": {
+      "level": "PG",
+      "description": "Required for MS/MEngg programs",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "UCAS",
+    "information": {
+      "level": "UG",
+      "description": "Centralized admission portal",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "ENGAA",
+    "information": {
+      "level": "UG",
+      "description": "Cambridge Engineering Admission",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "MAT",
+    "information": {
+      "level": "UG",
+      "description": "Math admission test for Oxford",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "IELTS",
+    "information": {
+      "level": "UG/PG",
+      "description": "English proficiency test",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "IELTS",
+    "information": {
+      "level": "UG/PG",
+      "description": "English language requirement",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TOEFL",
+    "information": {
+      "level": "UG/PG",
+      "description": "English language requirement",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "SAT",
+    "information": {
+      "level": "UG",
+      "description": "Optional for some universities",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "ATAR",
+    "information": {
+      "level": "UG",
+      "description": "Australian Tertiary Admission Rank",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "IELTS",
+    "information": {
+      "level": "UG/PG",
+      "description": "English proficiency test",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TOEFL",
+    "information": {
+      "level": "UG/PG",
+      "description": "English proficiency test",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TestAS",
+    "information": {
+      "level": "UG",
+      "description": "Aptitude test for international students",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "IELTS",
+    "information": {
+      "level": "UG/PG",
+      "description": "English language proficiency",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "TestDaF",
+    "information": {
+      "level": "UG/PG",
+      "description": "German language proficiency",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "DSH",
+    "information": {
+      "level": "UG/PG",
+      "description": "German language exam for admission",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "NEET UG",
+    "information": {
+      "level": "UG",
+      "description": "NEET UG is India's only medical entrance test for MBBS, BDS, and AYUSH courses.",
+      "organization": "NTA",
+      "exam_type": "Entrance Examination",
+      "eligibility": "10+2 with PCB, English",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://neet.nta.nic.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "3 hours 20 minutes",
+      "subjects": [
+        "Physics",
+        "Chemistry",
+        "Biology"
+      ],
+      "marking_scheme": "4 marks for correct, -1 for incorrect"
+    }
+  },
+  {
+    "name": "AIIMS MBBS",
+    "information": {
+      "level": "UG",
+      "description": "AIIMS MBBS was an entrance exam for the All India Institute of Medical Sciences, now merged into NEET UG for uniformity in medical admissions.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "MCAT",
+    "information": {
+      "level": "PG",
+      "description": "CAT is an MBA entrance exam used by IIMs and top B-schools across India.",
+      "organization": "IIMs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "Bachelor’s Degree with at least 50%",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://iimcat.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "2 hours",
+      "subjects": [
+        "VARC",
+        "DILR",
+        "QA"
+      ],
+      "marking_scheme": "3 marks for correct, -1 for incorrect (MCQs)"
+    }
+  },
+  {
+    "name": "UCAT",
+    "information": {
+      "level": "PG",
+      "description": "CAT is an MBA entrance exam used by IIMs and top B-schools across India.",
+      "organization": "IIMs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "Bachelor’s Degree with at least 50%",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://iimcat.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "2 hours",
+      "subjects": [
+        "VARC",
+        "DILR",
+        "QA"
+      ],
+      "marking_scheme": "3 marks for correct, -1 for incorrect (MCQs)"
+    }
+  },
+  {
+    "name": "CLAT",
+    "information": {
+      "level": "UG/PG",
+      "description": "CLAT is used by 22 NLUs for undergraduate and postgraduate law admissions.",
+      "organization": "Consortium of NLUs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "10+2 for UG, LLB for PG",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://consortiumofnlus.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "2 hours",
+      "subjects": [
+        "English",
+        "Current Affairs",
+        "Legal Aptitude",
+        "Reasoning",
+        "Math"
+      ],
+      "marking_scheme": "1 mark for correct, -0.25 for incorrect"
+    }
+  },
+  {
+    "name": "AILET",
+    "information": {
+      "level": "UG",
+      "description": "AILET is the All India Law Entrance Test conducted by NLU Delhi for its 5-year B.A. LL.B (Hons.), LL.M and Ph.D. programs.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "LSAT",
+    "information": {
+      "level": "UG",
+      "description": "LSAT is the Law School Admission Test used for law school admissions in the USA and accepted by some Indian universities.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "CAT",
+    "information": {
+      "level": "PG",
+      "description": "CAT is an MBA entrance exam used by IIMs and top B-schools across India.",
+      "organization": "IIMs",
+      "exam_type": "Entrance Examination",
+      "eligibility": "Bachelor’s Degree with at least 50%",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://iimcat.ac.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "2 hours",
+      "subjects": [
+        "VARC",
+        "DILR",
+        "QA"
+      ],
+      "marking_scheme": "3 marks for correct, -1 for incorrect (MCQs)"
+    }
+  },
+  {
+    "name": "XAT",
+    "information": {
+      "level": "PG",
+      "description": "XAT (Xavier Aptitude Test) is conducted by XLRI Jamshedpur for admission into management programs of more than 150 B-schools in India.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "GMAT",
+    "information": {
+      "level": "PG",
+      "description": "GMAT is a globally recognized entrance exam for MBA programs, accepted by business schools worldwide including in the USA and Europe.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "NATA",
+    "information": {
+      "level": "UG",
+      "description": "NATA is the National Aptitude Test in Architecture conducted by the Council of Architecture (CoA) for admission to undergraduate architecture programs.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  },
+  {
+    "name": "JEE Main Paper 2",
+    "information": {
+      "level": "UG",
+      "description": "JEE Main is conducted by NTA for admission to NITs, IIITs, and other centrally funded institutes. It's also a qualifier for JEE Advanced.",
+      "organization": "National Testing Agency (NTA)",
+      "exam_type": "Entrance Examination",
+      "eligibility": "10+2 with Physics, Chemistry, Mathematics",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "https://jeemain.nta.nic.in",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "3 hours",
+      "subjects": [
+        "Physics",
+        "Chemistry",
+        "Mathematics"
+      ],
+      "marking_scheme": "4 marks for correct, -1 for incorrect"
+    }
+  },
+  {
+    "name": "GRE (Architecture)",
+    "information": {
+      "level": "PG",
+      "description": "The GRE is a general graduate school entrance exam, often required for architecture graduate programs abroad.",
+      "organization": "",
+      "exam_type": "Entrance Examination",
+      "eligibility": "",
+      "mode": "Online or Offline",
+      "frequency": "Once a year",
+      "official_website": "",
+      "exam_date": "2025-06-23",
+      "registration_deadline": "2025-04-24",
+      "duration": "",
+      "subjects": [],
+      "marking_scheme": ""
+    }
+  }
+]

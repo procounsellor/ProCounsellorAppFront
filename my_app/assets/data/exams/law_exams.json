@@ -1,0 +1,23 @@
+{
+  "India": [
+    {
+      "name": "CLAT",
+      "level": "UG",
+      "description": "Common Law Admission Test for National Law Universities"
+    },
+    {
+      "name": "AILET",
+      "level": "UG",
+      "description": "All India Law Entrance Test"
+    }
+  ],
+  "Abroad": {
+    "usa": [
+      {
+        "name": "LSAT",
+        "level": "UG",
+        "description": "Law School Admission Test for US law schools"
+      }
+    ]
+  }
+}

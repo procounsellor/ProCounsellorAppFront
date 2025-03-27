@@ -1,0 +1,23 @@
+{
+  "India": [
+    {
+      "name": "CAT",
+      "level": "PG",
+      "description": "Common Admission Test for MBA programs"
+    },
+    {
+      "name": "XAT",
+      "level": "PG",
+      "description": "Xavier Aptitude Test"
+    }
+  ],
+  "Abroad": {
+    "usa": [
+      {
+        "name": "GMAT",
+        "level": "PG",
+        "description": "Graduate Management Admission Test"
+      }
+    ]
+  }
+}
