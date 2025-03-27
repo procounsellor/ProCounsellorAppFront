@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,7 +10,8 @@ class UpcomingDeadlinesTicker extends StatefulWidget {
       _UpcomingDeadlinesTickerState();
 }
 
-class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker> {
+class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
+    with SingleTickerProviderStateMixin {
   final List<Map<String, String>> _deadlines = [
     {"title": "JEE Advanced Registration", "date": "April 15, 2025"},
     {"title": "NEET Application Deadline", "date": "March 20, 2025"},
@@ -19,25 +21,61 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker> {
   ];
 
   int _currentIndex = 0;
+  bool _showFront = true;
+
   late Timer _timer;
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _loadCachedDeadlines();
-    _startTicker();
-  }
 
-  /// **Starts Auto-Updating Ticker**
-  void _startTicker() {
-    _timer = Timer.periodic(Duration(seconds: 4), (timer) {
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % _deadlines.length;
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 700),
+    );
+
+    double start = 0, end = pi;
+
+    _animation = Tween<double>(begin: start, end: end).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ))
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.forward ||
+            status == AnimationStatus.reverse) {
+          // After animation completes, update index
+          Future.delayed(Duration(milliseconds: 350), () {
+            if (!mounted) return;
+            setState(() {
+              _currentIndex = (_currentIndex + 1) % _deadlines.length;
+            });
+          });
+        }
+      });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _timer = Timer.periodic(Duration(seconds: 4), (_) {
+        if (!_controller.isAnimating) {
+          rotateClock
+              ? _controller.forward(from: 0)
+              : _controller.reverse(from: 1);
+          rotateClock = !rotateClock;
+        }
       });
     });
   }
 
-  /// **Loads Cached Deadlines (If Available)**
+  bool rotateClock = true;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _timer.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadCachedDeadlines() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? cachedData = prefs.getString("cached_deadlines");
@@ -60,45 +98,117 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker> {
     }
   }
 
-  /// **Disposes Timer When Widget is Removed**
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+  Widget _buildFace({
+    required String imagePath,
+    required String text,
+    required bool textOnLeft,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Stack(
+      alignment: textOnLeft ? Alignment.centerLeft : Alignment.centerRight,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            imagePath,
+            width: double.infinity,
+            height: 100,
+            fit: BoxFit.cover,
+          ),
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin:
+                    textOnLeft ? Alignment.centerLeft : Alignment.centerRight,
+                end: textOnLeft ? Alignment.centerRight : Alignment.centerLeft,
+                colors: [
+                  Colors.black.withOpacity(0.4),
+                  Colors.transparent,
+                ],
+                stops: [0.0, 0.65],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          width: screenWidth * 0.6,
+          height: 100,
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          alignment: textOnLeft ? Alignment.centerLeft : Alignment.centerRight,
+          child: Text(
+            text,
+            textAlign: textOnLeft ? TextAlign.left : TextAlign.right,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 4,
+                  color: Colors.black87,
+                  offset: Offset(1, 1),
+                )
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.access_time, color: Colors.orange.shade700, size: 20),
-          SizedBox(width: 10),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 500),
-              child: Text(
-                "${_deadlines[_currentIndex]['title']} - ${_deadlines[_currentIndex]['date']}",
-                key: ValueKey<String>(_deadlines[_currentIndex]['title']!),
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final frontIndex = _currentIndex % _deadlines.length;
+    final backIndex = (_currentIndex) % _deadlines.length;
+
+    final frontData = _deadlines[frontIndex];
+    final backData = _deadlines[backIndex];
+
+    return Center(
+      child: SizedBox(
+        height: 100,
+        width: screenWidth,
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            final isFirstHalf = _animation.value <= pi / 2;
+            final showFront = isFirstHalf;
+
+            final rotationY = _animation.value;
+            final isBack = rotationY > pi / 2;
+
+            final face = showFront
+                ? _buildFace(
+                    imagePath: 'assets/images/deadline.png',
+                    text: "${frontData['title']} • ${frontData['date']}",
+                    textOnLeft: true,
+                  )
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..rotateY(pi), // flip horizontally
+                    child: _buildFace(
+                      imagePath: 'assets/images/deadline2.png',
+                      text: "${backData['title']} • ${backData['date']}",
+                      textOnLeft: false,
+                    ),
+                  );
+
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(rotationY),
+              child: face,
+            );
+          },
+        ),
       ),
     );
   }

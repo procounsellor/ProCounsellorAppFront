@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ExamsPage.dart';
+import 'ExamDetailsPage.dart';
+
 // import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class TopExamsList extends StatefulWidget {
@@ -14,18 +16,33 @@ class _TopExamsListState extends State<TopExamsList> {
   final List<Map<String, String>> _topExams = [
     {
       "name": "JEE Advanced",
-      "image": "assets/images/homepage/trending_exams/jee.png"
+      "image": "assets/images/homepage/trending_exams/jee.png",
+      "category": "Engineering"
     },
-    {"name": "NEET", "image": "assets/images/homepage/trending_exams/neet.png"},
-    {"name": "CAT", "image": "assets/images/homepage/trending_exams/cat.png"},
-    {"name": "SAT", "image": "assets/images/homepage/trending_exams/sat.png"},
+    {
+      "name": "NEET UG",
+      "image": "assets/images/homepage/trending_exams/neet.png",
+      "category": "Medical"
+    },
+    {
+      "name": "CAT",
+      "image": "assets/images/homepage/trending_exams/cat.png",
+      "category": "Management"
+    },
+    {
+      "name": "SAT",
+      "image": "assets/images/homepage/trending_exams/sat.png",
+      "category": "Engineering"
+    },
     {
       "name": "IELTS",
-      "image": "assets/images/homepage/trending_exams/ielts.png"
+      "image": "assets/images/homepage/trending_exams/ielts.png",
+      "category": "Engineering"
     },
     {
       "name": "TOEFL",
-      "image": "assets/images/homepage/trending_exams/toefl.png"
+      "image": "assets/images/homepage/trending_exams/toefl.png",
+      "category": "Engineering"
     },
   ];
 
@@ -94,31 +111,43 @@ class _TopExamsListState extends State<TopExamsList> {
               ),
               itemBuilder: (context, index) {
                 final exam = _topExams[index];
-                return Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: MediaQuery.of(context).size.width *
-                            0.20, // Dynamic width
-                        height: MediaQuery.of(context).size.width *
-                            0.20, // Dynamic height
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(exam["image"]!),
-                            fit: BoxFit.cover,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ExamDetailsPage(
+                          examName: exam['name']!,
+                          category: exam['category']!
+                              .toLowerCase(), // Ensure it's lowercase
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.20,
+                          height: MediaQuery.of(context).size.width * 0.20,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(exam["image"]!),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      exam["name"]!,
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                      SizedBox(height: 5),
+                      Text(
+                        exam["name"]!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
