@@ -1,0 +1,1488 @@
+[
+  {
+    "name": "Indian Institute of Technology Madras",
+    "city": "Chennai",
+    "rank": 1,
+    "state": "Tamil Nadu",
+    "description": {
+      "overview": "Indian Institute of Technology Madras (IIT Madras), established in 1959 with technical and financial assistance from the German government, is India\u2019s top-ranked engineering institute. The 620-acre campus is surrounded by lush greenery and is home to deer, blackbucks, and monkeys, making it one of the most beautiful IIT campuses. The institute offers undergraduate, postgraduate, and doctoral programs in engineering, sciences, humanities, and management. IIT Madras is known for its world-class infrastructure, including state-of-the-art research labs, a massive central library with over 5 lakh books and journals, and advanced computing centers. The institute is a pioneer in cutting-edge research, particularly in areas like artificial intelligence, robotics, renewable energy, and nanotechnology. The IIT Madras Research Park is the first of its kind in India, fostering collaborations between industry and academia. The placement opportunities at IIT Madras are among the best in the country, with students securing offers from leading tech giants like Google, Microsoft, Apple, Amazon, and Intel, as well as consulting firms such as McKinsey, BCG, and Goldman Sachs. The average package ranges between INR 20-25 LPA, with international offers exceeding INR 1 crore per annum. Campus life is dynamic, with a perfect balance of academics and extracurricular activities. IIT Madras has over 100 student clubs in technology, arts, music, dance, and sports. The Saarang cultural fest is one of the largest student-run festivals in India, featuring international artists, live concerts, and competitions. Shaastra, the technical fest, showcases innovative projects, hackathons, and robotic competitions. The institute boasts an illustrious alumni network, including Sundar Pichai (CEO, Google), Kris Gopalakrishnan (Co-founder, Infosys), and Bhavish Aggarwal (Co-founder, Ola). Many IIT Madras graduates have gone on to establish successful startups and contribute significantly to the global tech industry. The campus has a thriving entrepreneurial ecosystem, with several incubators and funding programs to support student startups. With its strong research culture, global collaborations, and vibrant student community, IIT Madras remains a dream destination for engineering aspirants in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Artificial Intelligence",
+          "Robotics",
+          "Renewable Energy",
+          "Nanotechnology"
+        ],
+        "global_collaborations": [
+          "MIT",
+          "Stanford",
+          "Oxford"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "620 acres",
+        "library": "Over 5 lakh books and journals",
+        "research_labs": "State-of-the-art research centers and computing facilities"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Robotics",
+          "Nanotechnology",
+          "Sustainable Energy"
+        ],
+        "startup_ecosystem": "IIT Madras Research Park supports industry-academia collaboration and incubates startups"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Apple",
+          "Amazon",
+          "McKinsey",
+          "Goldman Sachs"
+        ],
+        "average_package": "INR 20-25 LPA",
+        "highest_package": {
+          "domestic": "INR 1 crore+",
+          "international": "INR 2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "100+ clubs in technology, arts, music, dance, and sports",
+        "festivals": {
+          "cultural_fest": "Saarang - One of India\u2019s largest student-run cultural festivals",
+          "technical_fest": "Shaastra - Showcasing hackathons, robotics, and AI projects"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Sundar Pichai (CEO, Google)",
+          "Kris Gopalakrishnan (Co-founder, Infosys)",
+          "Bhavish Aggarwal (Co-founder, Ola)"
+        ],
+        "entrepreneurship": "Strong ecosystem with incubators supporting student startups"
+      },
+      "reputation": "With its strong research culture, global collaborations, and vibrant student community, IIT Madras remains a dream destination for engineering aspirants in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Delhi",
+    "city": "New Delhi",
+    "rank": 2,
+    "state": "Delhi",
+    "description": {
+      "overview": "IIT Delhi, established in 1961, is a premier institute for technology and research, located in the heart of the capital city. Spread across 325 acres, the campus provides a highly competitive academic environment, with world-class faculty, cutting-edge research labs, and an expansive library with millions of books and e-resources. The institute offers B.Tech, M.Tech, MBA, and Ph.D. programs, with strong emphasis on interdisciplinary learning. It has global collaborations with top universities like MIT, Stanford, and Oxford, enabling student exchange programs and joint research projects. IIT Delhi is particularly known for its expertise in artificial intelligence, cybersecurity, sustainable energy, and nanotechnology. Placements at IIT Delhi are outstanding, with recruiters like Google, Facebook, Tesla, Morgan Stanley, and Deutsche Bank offering lucrative roles. The highest domestic package exceeds INR 2 crore, while international offers reach up to INR 4 crore. The average CTC is around INR 25-30 LPA. The campus life is lively, with students actively participating in sports, cultural events, and entrepreneurship programs. The annual cultural festival Rendezvous is one of North India\u2019s biggest college fests, featuring international artists, stand-up comedians, and music bands. The technical fest Tryst showcases AI-driven projects, drone racing, and hackathons. IIT Delhi\u2019s notable alumni include Raghuram Rajan (former RBI Governor), Sachin Bansal (Co-founder, Flipkart), and Binny Bansal (Co-founder, Flipkart). The institute has a robust startup ecosystem, with over 100 successful startups originating from its incubation centers, including Zomato, PolicyBazaar, and Snapdeal. With its prestigious reputation, international collaborations, and strong industry links, IIT Delhi is one of the most sought-after engineering institutes in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Artificial Intelligence",
+          "Cybersecurity",
+          "Sustainable Energy",
+          "Nanotechnology"
+        ],
+        "global_collaborations": [
+          "MIT",
+          "Stanford",
+          "Oxford"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "325 acres",
+        "library": "Millions of books and e-resources",
+        "research_labs": "Advanced labs for AI, cybersecurity, and materials research"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Cybersecurity",
+          "Sustainable Energy",
+          "Nanotechnology"
+        ],
+        "startup_ecosystem": "Over 100 successful startups have emerged from its incubators, including Zomato and PolicyBazaar"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Facebook",
+          "Tesla",
+          "Morgan Stanley",
+          "Deutsche Bank"
+        ],
+        "average_package": "INR 25-30 LPA",
+        "highest_package": {
+          "domestic": "INR 2 crore+",
+          "international": "INR 4 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active participation in sports, cultural events, and entrepreneurship programs",
+        "festivals": {
+          "cultural_fest": "Rendezvous - North India\u2019s biggest college fest",
+          "technical_fest": "Tryst - Featuring AI-driven projects, drone racing, and hackathons"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Raghuram Rajan (former RBI Governor)",
+          "Sachin Bansal (Co-founder, Flipkart)",
+          "Binny Bansal (Co-founder, Flipkart)"
+        ],
+        "entrepreneurship": "IIT Delhi has a thriving startup culture, with numerous unicorns emerging from its incubation centers"
+      },
+      "reputation": "With its prestigious reputation, international collaborations, and strong industry links, IIT Delhi is one of the most sought-after engineering institutes in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Bombay",
+    "city": "Mumbai",
+    "rank": 3,
+    "state": "Maharashtra",
+    "description": {
+      "overview": "Founded in 1958, IIT Bombay is a global leader in engineering education and research. Located in the bustling city of Mumbai, the campus is spread across 550 acres in Powai, surrounded by lakes and hills, offering a scenic and lively environment for students. IIT Bombay is known for its world-class research facilities, especially in machine learning, data science, aerospace, quantum computing, and material sciences. The Powai startup ecosystem, fueled by IIT Bombay graduates, has produced companies like Ola, PharmEasy, and Housing.com. The institute maintains academic collaborations with international universities, including Stanford, Cambridge, and ETH Zurich. Placements at IIT Bombay are among the best in India, with recruiters like Google, Microsoft, Apple, McKinsey, Goldman Sachs, and SpaceX hiring top talent. The highest package touches INR 3-4 crore per annum, and the average salary is around INR 30 LPA. The campus offers an exciting student life, with over 50+ clubs, focusing on music, drama, robotics, and coding. The cultural festival Mood Indigo is Asia\u2019s largest college festival, hosting international artists, EDM nights, and Bollywood celebrities. Techfest, the premier technical event, attracts participants from across India for robotics, AI challenges, and drone racing. IIT Bombay has an impressive alumni base, including Nandan Nilekani (Co-founder, Infosys), Parag Agrawal (former CEO, Twitter), and Manohar Parrikar (former Defence Minister of India). The entrepreneurship cell at IIT Bombay has incubated over 200 startups, making it one of the most successful incubators in India. With its academic rigor, top-notch placements, vibrant culture, and innovation-driven mindset, IIT Bombay is one of the best institutes for aspiring engineers and entrepreneurs.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Machine Learning",
+          "Data Science",
+          "Aerospace",
+          "Quantum Computing",
+          "Material Sciences"
+        ],
+        "global_collaborations": [
+          "Stanford",
+          "Cambridge",
+          "ETH Zurich"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "550 acres",
+        "library": "Extensive digital and physical resources",
+        "research_labs": "Advanced research in quantum computing, aerospace, and material sciences"
+      },
+      "research": {
+        "focus_areas": [
+          "Machine Learning",
+          "Quantum Computing",
+          "Aerospace",
+          "Data Science"
+        ],
+        "startup_ecosystem": "Powai startup ecosystem, incubating successful companies like Ola, PharmEasy, and Housing.com"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Apple",
+          "McKinsey",
+          "Goldman Sachs",
+          "SpaceX"
+        ],
+        "average_package": "INR 30 LPA",
+        "highest_package": {
+          "domestic": "INR 3 crore+",
+          "international": "INR 4 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Over 50+ clubs focused on music, drama, robotics, and coding",
+        "festivals": {
+          "cultural_fest": "Mood Indigo - Asia\u2019s largest college festival",
+          "technical_fest": "Techfest - Premier event for robotics, AI challenges, and drone racing"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Nandan Nilekani (Co-founder, Infosys)",
+          "Parag Agrawal (former CEO, Twitter)",
+          "Manohar Parrikar (former Defence Minister of India)"
+        ],
+        "entrepreneurship": "IIT Bombay\u2019s entrepreneurship cell has incubated over 200 startups, making it one of India\u2019s most successful startup incubators"
+      },
+      "reputation": "With its academic rigor, top-notch placements, vibrant culture, and innovation-driven mindset, IIT Bombay is one of the best institutes for aspiring engineers and entrepreneurs."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Kanpur",
+    "city": "Kanpur",
+    "rank": 4,
+    "state": "Uttar Pradesh",
+    "description": {
+      "overview": "Established in 1959, IIT Kanpur is one of India\u2019s most prestigious engineering institutions, known for its strong academic rigor, research-driven curriculum, and world-class faculty. The campus, spread over 1055 acres, is one of the largest among IITs and provides a highly disciplined and intellectually stimulating environment. IIT Kanpur offers undergraduate, postgraduate, and PhD programs in engineering, sciences, humanities, and management. It is one of the few IITs with an aeronautics department, making it a top choice for aerospace engineering enthusiasts. The institute has international collaborations with MIT, Harvard, and the University of California, facilitating research and student exchange programs. The placement statistics at IIT Kanpur are consistently impressive, with recruiters like Google, Microsoft, Tesla, Goldman Sachs, Amazon, and Tata Group offering high-paying jobs. The highest international package can go up to INR 2-3 crore, while the average package is around INR 20-25 LPA. The institute has one of the best coding cultures among IITs, making its students highly sought after in the tech industry. Campus life at IIT Kanpur is vibrant and filled with extracurricular activities. The Antaragni cultural fest is one of North India\u2019s biggest college festivals, featuring music concerts, dance performances, and celebrity appearances. Techkriti, the technical fest, attracts thousands of students from across the country for robotics, AI-driven projects, and hackathons. The institute has a state-of-the-art Olympic-standard swimming pool, sports stadium, and multiple research labs. IIT Kanpur\u2019s illustrious alumni network includes Narayana Murthy (Co-founder, Infosys), Rakesh Gangwal (Co-founder, IndiGo Airlines), and Manindra Agrawal (renowned mathematician and scientist). The Startup Incubation and Innovation Centre (SIIC) at IIT Kanpur has produced numerous successful startups in AI, healthcare, and fintech. With academic excellence, top-tier placements, strong research infrastructure, and an entrepreneurial spirit, IIT Kanpur remains one of the most prestigious engineering institutes in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Aerospace Engineering",
+          "Computer Science",
+          "Mathematics",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "MIT",
+          "Harvard",
+          "University of California"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "1055 acres",
+        "library": "Vast collection of academic and research materials",
+        "research_labs": "State-of-the-art labs for aeronautics, AI, and robotics"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Aerospace",
+          "Cybersecurity",
+          "Mathematical Research"
+        ],
+        "startup_ecosystem": "The Startup Incubation and Innovation Centre (SIIC) at IIT Kanpur fosters startups in AI, healthcare, and fintech"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Tesla",
+          "Goldman Sachs",
+          "Amazon",
+          "Tata Group"
+        ],
+        "average_package": "INR 20-25 LPA",
+        "highest_package": {
+          "domestic": "INR 1 crore+",
+          "international": "INR 2-3 crore"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in music, sports, arts, and coding",
+        "festivals": {
+          "cultural_fest": "Antaragni - One of North India\u2019s biggest cultural festivals",
+          "technical_fest": "Techkriti - Known for robotics competitions, AI-driven projects, and hackathons"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Narayana Murthy (Co-founder, Infosys)",
+          "Rakesh Gangwal (Co-founder, IndiGo Airlines)",
+          "Manindra Agrawal (renowned mathematician)"
+        ],
+        "entrepreneurship": "IIT Kanpur has produced numerous successful startups in AI, healthcare, and fintech"
+      },
+      "reputation": "With academic excellence, top-tier placements, strong research infrastructure, and an entrepreneurial spirit, IIT Kanpur remains one of the most prestigious engineering institutes in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Kharagpur",
+    "city": "Kharagpur",
+    "rank": 5,
+    "state": "West Bengal",
+    "description": {
+      "overview": "Established in 1951, IIT Kharagpur (IIT-KGP) is the oldest IIT in India and is renowned for its rich legacy, academic brilliance, and strong industry connections. The largest IIT campus in India, spanning 2100 acres, IIT-KGP is a city in itself, with its own railway station, hospital, post office, and residential townships. IIT Kharagpur offers B.Tech, M.Tech, MBA, PhD, and dual-degree programs across a wide range of disciplines. It is known for its School of Law (Rajiv Gandhi School of Intellectual Property Law), making it the only IIT with a dedicated law school. The institute has strong international tie-ups with Stanford, Oxford, and Imperial College London, facilitating global exposure for students. IIT Kharagpur has one of the highest placement records in India. Recruiters like Google, Microsoft, Facebook, Qualcomm, JP Morgan, and Shell hire from the campus, offering domestic packages exceeding INR 1.5 crore and international offers reaching INR 3 crore. The average salary package is around INR 18-22 LPA. Campus life at IIT-KGP is exciting and culturally rich. The Spring Fest, one of India\u2019s largest and oldest cultural festivals, features star-studded concerts, fashion shows, and gaming tournaments. The Kshitij technical fest is a hub for robotics, hackathons, and AI-driven projects. IIT-KGP has over 150 student-run societies, ranging from quizzing and debate clubs to coding and dance groups. The notable alumni of IIT Kharagpur include Arvind Kejriwal (Chief Minister of Delhi), Sundar Pichai (CEO, Google & Alphabet), and Vinod Gupta (Philanthropist & Entrepreneur). The Technology Incubation and Entrepreneurship Training Society (TIETS) at IIT KGP supports over 200 startups, making it a leader in entrepreneurial innovation. With its legacy, diverse academic offerings, top-tier placements, and a thriving student culture, IIT Kharagpur remains one of the most prestigious IITs in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Mechanical Engineering",
+          "Computer Science",
+          "Biotechnology",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "Stanford",
+          "MIT",
+          "Cambridge University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "2100 acres",
+        "library": "One of the largest academic libraries in India with extensive digital and physical resources",
+        "research_labs": "Cutting-edge labs for AI, nanotechnology, and sustainable engineering"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Biotechnology",
+          "Renewable Energy",
+          "Cybersecurity"
+        ],
+        "startup_ecosystem": "The Entrepreneurship Cell and incubation center at IIT Kharagpur support numerous startups in AI, healthcare, and green technology"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Apple",
+          "Goldman Sachs",
+          "Amazon",
+          "Tata Group"
+        ],
+        "average_package": "INR 18-22 LPA",
+        "highest_package": {
+          "domestic": "INR 1.2 crore+",
+          "international": "INR 2.5-3.5 crore"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in robotics, sports, music, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Spring Fest - One of India\u2019s biggest college cultural festivals",
+          "technical_fest": "Kshitij - Known for hackathons, robotics competitions, and AI projects"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Arvind Kejriwal (Chief Minister of Delhi)",
+          "Sundar Pichai (CEO, Google)",
+          "Vinod Gupta (Philanthropist & Entrepreneur)"
+        ],
+        "entrepreneurship": "IIT Kharagpur has produced successful startups in AI, fintech, and sustainable energy"
+      },
+      "reputation": "With a legacy of excellence, global collaborations, and strong placements, IIT Kharagpur continues to be a top-tier engineering institute in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Roorkee",
+    "city": "Roorkee",
+    "rank": 6,
+    "state": "Uttarakhand",
+    "description": {
+      "overview": "Established in 1847 as the Thomason College of Civil Engineering, IIT Roorkee is India\u2019s oldest technical institute and is known for its strong foundation in engineering, research, and innovation. The 365-acre campus is located in the scenic foothills of the Himalayas, providing a serene and inspiring environment for students. IIT Roorkee offers B.Tech, M.Tech, MBA, PhD, and integrated dual-degree programs, with civil engineering, computer science, and mechanical engineering being among the most sought-after branches. It has research collaborations with NASA, CERN, and ISRO, making it a hub for cutting-edge scientific advancements. Placements at IIT Roorkee are highly competitive, with top companies like Google, Microsoft, Intel, Cisco, Tata, and Deloitte recruiting students. The highest salary package reaches INR 2 crore per annum, while the average package stands at INR 18-22 LPA. IIT Roorkee is also known for government job placements, as PSUs (Public Sector Units) like ONGC, ISRO, and DRDO actively recruit from the campus. The student life at IIT Roorkee is engaging and culturally rich. The Thomso cultural fest is one of India\u2019s most celebrated college festivals, featuring Bollywood nights, international music acts, and gaming marathons. The Cognizance technical fest is a playground for AI, robotics, and hackathons. The campus is equipped with state-of-the-art research labs, sports complexes, and a beautiful central library. The distinguished alumni network of IIT Roorkee includes G. D. Agrawal (renowned environmentalist), Ajit Gupta (Founder, Speedera Networks), and Pradip Baijal (former Chairman, TRAI). The institute has a strong focus on entrepreneurship, with its TIDES Business Incubator nurturing startups in AI, fintech, and sustainability. With a legacy spanning over 175 years, strong research culture, excellent placements, and a beautiful campus, IIT Roorkee continues to be a top choice for engineering aspirants in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Civil Engineering",
+          "Computer Science",
+          "Electrical Engineering",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "Harvard",
+          "ETH Zurich",
+          "University of Tokyo"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "365 acres",
+        "library": "Mahatma Gandhi Central Library with over 4 lakh books and vast digital resources",
+        "research_labs": "Advanced labs in earthquake engineering, AI, and nanotechnology"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Civil Engineering",
+          "Water Resources",
+          "Renewable Energy"
+        ],
+        "startup_ecosystem": "The TIDES Business Incubator fosters startups in technology, infrastructure, and sustainability"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Intel",
+          "TCS",
+          "L&T"
+        ],
+        "average_package": "INR 15-20 LPA",
+        "highest_package": {
+          "domestic": "INR 1 crore+",
+          "international": "INR 2-2.5 crore"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Clubs for coding, robotics, entrepreneurship, music, and photography",
+        "festivals": {
+          "cultural_fest": "Thomso - One of the most anticipated cultural festivals in North India",
+          "technical_fest": "Cognizance - Features tech competitions, AI challenges, and research summits"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Gopalswamy Doraiswamy Naidu (Industrialist)",
+          "Narayana Murthy (Founder, Infosys)",
+          "Raghunath Anant Mashelkar (Scientist)"
+        ],
+        "entrepreneurship": "IIT Roorkee alumni have founded successful startups in AI, deep tech, and infrastructure"
+      },
+      "reputation": "With a rich history, strong research culture, and high placement rates, IIT Roorkee remains one of India\u2019s premier engineering institutes."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Guwahati",
+    "city": "Guwahati",
+    "rank": 7,
+    "state": "Assam",
+    "description": {
+      "overview": "Founded in 1994, IIT Guwahati is one of the fastest-growing IITs and is known for its stunning campus, cutting-edge research, and strong academic programs. Spread over 700 acres, the campus is located along the Brahmaputra River, offering breathtaking natural beauty with hills, lakes, and lush greenery. IIT Guwahati offers B.Tech, M.Tech, PhD, and interdisciplinary research programs, excelling in fields like AI, nanotechnology, and biosciences. It has international collaborations with leading institutions like the University of Adelaide, Kyoto University, and Imperial College London, enhancing its research profile. Placements at IIT Guwahati have been exceptional, with top companies like Google, Microsoft, Goldman Sachs, Amazon, and Flipkart hiring students. The highest package goes up to INR 1.5 crore, while the average package is around INR 18-22 LPA. The coding culture is strong, with many students securing international internships and research opportunities. Student life at IIT Guwahati is lively and vibrant, with a strong focus on cultural and technical activities. Alcheringa, the cultural festival, is one of the largest fests in Northeast India, attracting celebrities and artists. Techniche, the technical fest, is a hub for robotics, AI, and innovation competitions. The campus also has state-of-the-art sports complexes, research labs, and hostels with modern amenities. Notable alumni include Umesh Vaidya (MIT Professor & Researcher), Partha Pratim Chakraborty (AI Scientist), and several startup founders in AI and fintech. The IITG Startup Incubation Centre has supported many successful startups in deep tech, healthcare, and sustainability. With its stunning campus, research-oriented approach, top placements, and excellent student culture, IIT Guwahati is one of the most sought-after IITs in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Electronics and Communication",
+          "Biosciences",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "University of Melbourne",
+          "University of Adelaide",
+          "Nanyang Technological University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "700 acres",
+        "library": "Lakshminath Bezbaruah Central Library with a vast collection of books, journals, and e-resources",
+        "research_labs": "State-of-the-art labs in AI, robotics, and advanced materials"
+      },
+      "research": {
+        "focus_areas": [
+          "AI",
+          "Biomedical Engineering",
+          "Sustainable Energy",
+          "Data Science"
+        ],
+        "startup_ecosystem": "IIT Guwahati\u2019s incubation center fosters innovation in AI, healthcare, and green energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Flipkart",
+          "Qualcomm",
+          "Goldman Sachs"
+        ],
+        "average_package": "INR 14-18 LPA",
+        "highest_package": {
+          "domestic": "INR 80 LPA+",
+          "international": "INR 2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in coding, robotics, music, photography, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Alcheringa - One of Northeast India's biggest cultural fests",
+          "technical_fest": "Techniche - Features hackathons, robotics competitions, and AI projects"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Abhas Mitra (Astrophysicist)",
+          "Kangkan Halder (AI Researcher)",
+          "Manash Pratim Barman (Entrepreneur)"
+        ],
+        "entrepreneurship": "IIT Guwahati has produced successful startups in AI, healthcare, and clean energy"
+      },
+      "reputation": "With a rapidly growing reputation, IIT Guwahati is recognized for its excellence in research, innovation, and strong industry connections."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "National Institute of Technology, Tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "rank": 8,
+    "state": "Tamil Nadu",
+    "description": {
+      "overview": "Established in 1964, NIT Trichy is the top-ranked NIT in India, known for its strong engineering programs, exceptional faculty, and industry collaborations. The 800-acre campus is one of the largest among NITs, featuring world-class infrastructure and research facilities. NIT Trichy offers B.Tech, M.Tech, MBA, MCA, and PhD programs, excelling in mechanical engineering, computer science, and electrical engineering. It has global tie-ups with universities in the US, UK, and Germany, enabling students to participate in international research projects and semester exchanges. Placements at NIT Trichy are among the best in India. Top recruiters like Google, Microsoft, L&T, Tata Steel, and Qualcomm hire from the campus, with the highest package exceeding INR 50 LPA and an average package of around INR 12-15 LPA. A strong alumni network in the tech and manufacturing sectors further enhances job opportunities. Campus life at NIT Trichy is vibrant, with a variety of cultural and technical activities. Festember, the cultural festival, is one of South India\u2019s biggest college fests, featuring music concerts, dance performances, and literary events. Pragyan, the technical fest, is renowned for hackathons, AI-driven competitions, and robotics challenges. The campus is also equipped with state-of-the-art sports complexes, research centers, and an advanced computing center. Notable alumni include K. Radhakrishnan (Former ISRO Chairman), Rajesh Gopinathan (Former CEO, TCS), and Natarajan Chandrasekaran (Chairman, Tata Sons). The NIT Trichy Incubation Center supports numerous startups in AI, fintech, and automation, fostering entrepreneurship and innovation. With its strong academic programs, excellent placements, world-class infrastructure, and a dynamic student community, NIT Trichy remains the top choice among NITs.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Mechanical Engineering",
+          "Computer Science",
+          "Electronics and Communication",
+          "Data Science"
+        ],
+        "global_collaborations": [
+          "Carnegie Mellon University",
+          "National University of Singapore",
+          "RWTH Aachen University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "800 acres",
+        "library": "One of the largest technical libraries in India with vast digital and physical resources",
+        "research_labs": "Advanced labs in AI, renewable energy, and materials science"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Sustainable Energy",
+          "IoT",
+          "Cybersecurity"
+        ],
+        "startup_ecosystem": "The Centre for Entrepreneurship Development and Incubation (CEDI) supports startups in AI, fintech, and sustainable technology"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "TCS",
+          "L&T",
+          "Qualcomm"
+        ],
+        "average_package": "INR 10-15 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 1.5-2 crore"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in robotics, coding, music, entrepreneurship, and sports",
+        "festivals": {
+          "cultural_fest": "Festember - One of South India's most celebrated cultural fests",
+          "technical_fest": "Pragyan - Known for tech competitions, hackathons, and AI challenges"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "K. Radhakrishnan (Former ISRO Chairman)",
+          "Ravi Kumar S (CEO, Cognizant)",
+          "Ramesh Govindan (Professor, USC)"
+        ],
+        "entrepreneurship": "NIT Trichy has produced successful startups in AI, automotive tech, and sustainability"
+      },
+      "reputation": "With a strong academic foundation, cutting-edge research, and impressive placements, NIT Tiruchirappalli remains the top-ranked NIT and a leading engineering institute in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Hyderabad",
+    "city": "Hyderabad",
+    "rank": 9,
+    "state": "Telangana",
+    "description": {
+      "overview": "Founded in 2008, IIT Hyderabad is a new-generation IIT that has rapidly gained prominence for its strong research output, academic excellence, and industry connections. Spread over 576 acres, the campus is known for its modern architecture and sustainable infrastructure. IIT Hyderabad offers B.Tech, M.Tech, MSc, PhD, and interdisciplinary programs, specializing in AI, data science, robotics, and bioengineering. It has strong collaborations with Japanese universities, enabling student exchanges and research tie-ups. The institute is a pioneer in AI and IoT research, making it a top choice for tech aspirants. Placements at IIT Hyderabad are highly competitive, with companies like Google, Microsoft, Amazon, Goldman Sachs, and Uber offering packages as high as INR 80 LPA, with an average package of INR 16-20 LPA. The AI and machine learning courses at IIT Hyderabad are among the best in India, attracting international recruiters and top research opportunities. Student life at IIT Hyderabad is filled with extracurricular activities and innovation-driven events. Elan & \u03b7Vision, the annual cultural and technical fest, is a grand event featuring music concerts, robotics competitions, and coding hackathons. The campus has an innovation lab, sports complexes, and top-tier research facilities, making it a hub for future technologists. Notable alumni include founders of AI-driven startups, researchers in quantum computing, and fintech entrepreneurs. The IIT Hyderabad Research Park has incubated over 100 startups, making it one of the best IITs for entrepreneurship and innovation. With cutting-edge research, modern infrastructure, exceptional placements, and a strong focus on AI and emerging technologies, IIT Hyderabad is quickly becoming a top destination for tech enthusiasts in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Artificial Intelligence",
+          "Data Science",
+          "Biomedical Engineering",
+          "Robotics"
+        ],
+        "global_collaborations": [
+          "University of Tokyo",
+          "Carnegie Mellon University",
+          "National University of Singapore"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "576 acres",
+        "library": "State-of-the-art library with extensive digital and physical resources",
+        "research_labs": "Advanced research labs in AI, robotics, and nanotechnology"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Quantum Computing",
+          "IoT",
+          "Renewable Energy"
+        ],
+        "startup_ecosystem": "The iTIC Incubator at IIT Hyderabad supports startups in AI, healthcare, and clean technology"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Uber",
+          "Qualcomm",
+          "Goldman Sachs"
+        ],
+        "average_package": "INR 15-20 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in AI, robotics, music, photography, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Elan & \u03b7Vision - A blend of cultural and technical events",
+          "technical_fest": "TechFest - Features AI challenges, robotics competitions, and research summits"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Prof. Deepak John Mathew (Academic & Researcher)",
+          "Sai Krishna (Founder, Scapic)",
+          "Ramesh Loganathan (Entrepreneur & Innovator)"
+        ],
+        "entrepreneurship": "IIT Hyderabad has nurtured startups in AI, deep tech, and sustainability"
+      },
+      "reputation": "With a futuristic approach to education, strong research culture, and top-tier placements, IIT Hyderabad is emerging as a leader in India's tech ecosystem."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "National Institute of Technology Karnataka, Surathkal",
+    "city": "Surathkal",
+    "rank": 10,
+    "state": "Karnataka",
+    "description": {
+      "overview": "Established in 1960, the National Institute of Technology Karnataka (NITK) Surathkal is one of India\u2019s premier engineering institutions, known for its academic excellence, research contributions, and industry collaborations. Located along the Arabian Sea in Mangalore, Karnataka, the 295-acre campus offers a unique coastal environment, combining scenic beauty with a vibrant academic atmosphere. NITK Surathkal offers B.Tech, M.Tech, MBA, MCA, MSc, and PhD programs across various engineering, science, and management disciplines. The institute excels in mechanical, computer science, electrical, and civil engineering, with cutting-edge research in artificial intelligence, cybersecurity, sustainable energy, and ocean engineering. It has strong global collaborations with universities in the US, Europe, and Australia, enabling student exchanges and joint research projects. Placements at NITK Surathkal are among the best in India, with top companies like Google, Microsoft, Amazon, Tata Steel, L&T, Qualcomm, and Deloitte recruiting students. The highest package has exceeded INR 50 LPA, while the average package ranges from INR 12-15 LPA. The institute has a strong reputation in both tech and core engineering sectors, making its graduates highly sought after by multinational companies and public sector units (PSUs) like ISRO, BHEL, and ONGC. Student life at NITK Surathkal is dynamic, with numerous cultural and technical activities. Incident, the annual cultural festival, is one of South India\u2019s largest college fests, featuring celebrity performances, music concerts, and literary events. Engineer, the technical fest, is a hub for hackathons, AI-driven competitions, robotics challenges, and coding events. The campus boasts a state-of-the-art innovation center, modern research labs, a beachfront lighthouse, and extensive sports facilities, including a dedicated surfing club. Notable alumni of NITK Surathkal include Satya Nadella (CEO, Microsoft), Rajeev Madhavan (Entrepreneur & Venture Capitalist), and several leaders in academia, government, and corporate sectors. The NITK Technology Incubation Centre supports numerous startups in deep tech, renewable energy, and fintech, fostering entrepreneurship among students. With its excellent academic programs, top-tier placements, cutting-edge research, and a vibrant student community, NITK Surathkal continues to be one of the most prestigious engineering institutes in India, offering a perfect blend of academics, innovation, and campus life.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Mechanical Engineering",
+          "Electronics and Communication",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "National University of Singapore",
+          "RWTH Aachen University",
+          "University of California, Berkeley"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "295 acres",
+        "library": "Well-equipped central library with extensive digital and physical resources",
+        "research_labs": "Cutting-edge labs in AI, renewable energy, and ocean engineering"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Cybersecurity",
+          "Ocean Engineering",
+          "Renewable Energy"
+        ],
+        "startup_ecosystem": "The STEP Incubation Centre at NITK supports startups in AI, fintech, and sustainability"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Cisco",
+          "Qualcomm",
+          "TCS"
+        ],
+        "average_package": "INR 12-16 LPA",
+        "highest_package": {
+          "domestic": "INR 50 LPA+",
+          "international": "INR 1.8 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Various clubs in robotics, coding, music, entrepreneurship, and adventure sports",
+        "festivals": {
+          "cultural_fest": "Incident - One of the biggest cultural festivals in South India",
+          "technical_fest": "Engineer - Features robotics competitions, hackathons, and AI summits"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Sundar Pichai (CEO, Google)",
+          "K. Radhakrishnan (Former ISRO Chairman)",
+          "Pradeep Kar (Entrepreneur)"
+        ],
+        "entrepreneurship": "NITK alumni have founded successful startups in AI, deep tech, and energy solutions"
+      },
+      "reputation": "With a legacy of technical excellence, strong industry connections, and impressive placements, NITK Surathkal continues to be one of the most prestigious engineering institutes in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Jadavpur University",
+    "city": "Kolkata",
+    "rank": 11,
+    "state": "West Bengal",
+    "description": {
+      "overview": "Established in 1955, Jadavpur University (JU) is one of India\u2019s leading public research universities, known for its academic excellence, research contributions, and strong industry connections. Located in Kolkata, West Bengal, the university has a 96-acre main campus and a 58-acre second campus in Salt Lake, offering a vibrant academic and cultural environment. JU offers undergraduate, postgraduate, and PhD programs across engineering, science, arts, and management disciplines. It is particularly renowned for its engineering faculty, consistently ranked among the top in India, with specializations in computer science, electrical, mechanical, and civil engineering. The university is also a leader in humanities, literature, and film studies, making it one of the few institutions excelling in both technical and liberal arts education. It has strong global collaborations with universities in the US, UK, Germany, and Japan, facilitating student exchanges and joint research initiatives. Placements at Jadavpur University are among the best for a state university, with top recruiters like Google, Microsoft, Amazon, Tata Steel, Cognizant, and Deloitte hiring graduates. The highest package has exceeded INR 1 crore per annum, while the average package for engineering students ranges from INR 10-15 LPA. The university is also known for producing top researchers, policymakers, and academicians who contribute significantly to various fields. Student life at Jadavpur University is diverse and culturally rich, with a strong emphasis on student activism, literature, and performing arts. Srijan, the annual cultural festival, features music concerts, theatre performances, debates, and literary events, attracting participants from across India. The technical fest, Convolution, hosts hackathons, AI-driven competitions, robotics contests, and coding events. The university campus is home to one of the most vibrant student communities in India, with numerous clubs focusing on poetry, music, filmmaking, robotics, and social activism. The distinguished alumni network of Jadavpur University includes Amartya Sen (Nobel Laureate in Economics), Sam Pitroda (Telecom Innovator), and several prominent authors, filmmakers, scientists, and corporate leaders. The university\u2019s incubation and entrepreneurship cell supports startups in AI, renewable energy, and social impact ventures, fostering innovation and research-driven entrepreneurship. With its outstanding academic programs, top placements, cutting-edge research, and a rich cultural legacy, Jadavpur University remains one of India\u2019s most prestigious institutions, offering a holistic educational experience that blends technical expertise with intellectual and creative pursuits.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D.",
+          "B.A.",
+          "B.Sc."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Mechanical Engineering",
+          "Electrical Engineering",
+          "Data Science"
+        ],
+        "global_collaborations": [
+          "Harvard University",
+          "University of Cambridge",
+          "University of Sydney"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "96 acres",
+        "library": "One of the largest academic libraries in West Bengal, with extensive digital and physical resources",
+        "research_labs": "State-of-the-art labs for AI, nanotechnology, and renewable energy research"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Renewable Energy",
+          "Cybersecurity",
+          "Humanities Research"
+        ],
+        "startup_ecosystem": "The Jadavpur University Incubation Centre fosters innovation in AI, healthcare, and clean energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "TCS",
+          "Reliance",
+          "Flipkart"
+        ],
+        "average_package": "INR 10-14 LPA",
+        "highest_package": {
+          "domestic": "INR 50 LPA+",
+          "international": "INR 1.5 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in robotics, literature, coding, music, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Sanskriti - A vibrant cultural fest celebrating art, music, and literature",
+          "technical_fest": "Srijan - Known for tech competitions, hackathons, and AI challenges"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Leander Paes (Tennis Champion)",
+          "Samir Paul (Tech Entrepreneur)",
+          "Srijit Mukherji (Filmmaker)"
+        ],
+        "entrepreneurship": "Jadavpur University has nurtured startups in AI, fintech, and sustainable technology"
+      },
+      "reputation": "With a legacy of academic excellence, interdisciplinary research, and strong industry connections, Jadavpur University continues to be a leading institution in India."
+    },
+    "category": "Multidisciplinary"
+  },
+  {
+    "name": "Vellore Institute of Technology",
+    "city": "Vellore",
+    "rank": 12,
+    "state": "Tamil Nadu",
+    "description": {
+      "overview": "Established in 1984, Vellore Institute of Technology (VIT) is one of India\u2019s top private universities, known for its academic excellence, world-class infrastructure, and strong industry partnerships. With campuses in Vellore, Chennai, Bhopal, and Andhra Pradesh, VIT offers a dynamic learning environment for students across engineering, management, and sciences. The 372-acre Vellore campus is the flagship, featuring modern research labs, smart classrooms, a vast central library, and state-of-the-art sports facilities. VIT offers undergraduate, postgraduate, and PhD programs, with top disciplines including computer science, mechanical, electrical, and biotechnology engineering. The university is a pioneer in AI, data science, cyber-physical systems, and robotics, making it a preferred choice for tech enthusiasts. VIT has collaborations with over 300 international universities, including Harvard, Stanford, and MIT, facilitating global exchange programs, dual degrees, and joint research initiatives. Placements at VIT are among the best for a private university, with companies like Microsoft, Google, Amazon, Deloitte, and Tata Consultancy Services actively recruiting. The highest package has exceeded INR 1 crore per annum, while the average package stands at INR 8-12 LPA. VIT also has a record of placing students in top international firms through its internship and training programs. The student life at VIT is dynamic and engaging, with over 150 student-run clubs covering music, dance, coding, entrepreneurship, and social impact. Riviera, the annual cultural fest, is one of the largest in South India, featuring celebrity performances, music concerts, fashion shows, and literary events. Gravitas, the technical fest, hosts hackathons, AI challenges, robotics competitions, and startup expos, attracting participants from across India. VIT\u2019s distinguished alumni network includes top executives in multinational companies, startup founders, and research scientists contributing to AI, cybersecurity, and sustainable energy. The university\u2019s Technology Business Incubator (TBI) has supported over 200 startups, making VIT a hub for innovation and entrepreneurship. With its cutting-edge academic programs, top-tier placements, global collaborations, and vibrant campus life, VIT continues to be one of India\u2019s most sought-after private universities, offering students a holistic and industry-aligned education.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D.",
+          "B.Sc.",
+          "BBA"
+        ],
+        "specializations": [
+          "Computer Science",
+          "Artificial Intelligence",
+          "Biotechnology",
+          "Cybersecurity"
+        ],
+        "global_collaborations": [
+          "Harvard University",
+          "Purdue University",
+          "National University of Singapore"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "372 acres",
+        "library": "Extensive digital and physical library resources",
+        "research_labs": "State-of-the-art labs in AI, robotics, and renewable energy"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Robotics",
+          "Internet of Things",
+          "Sustainable Energy"
+        ],
+        "startup_ecosystem": "The VIT Technology Business Incubator (VIT-TBI) fosters startups in AI, healthcare, and fintech"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Microsoft",
+          "Amazon",
+          "Deloitte",
+          "Accenture",
+          "TCS",
+          "Infosys"
+        ],
+        "average_package": "INR 8-12 LPA",
+        "highest_package": {
+          "domestic": "INR 50 LPA+",
+          "international": "INR 1 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Diverse clubs in robotics, music, dance, coding, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Riviera - One of India's largest cultural festivals",
+          "technical_fest": "Gravitas - A premier tech fest featuring hackathons and AI challenges"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Krishna Kumar (Founder, Simplilearn)",
+          "Bhargav Sri Prakash (Entrepreneur & Innovator)",
+          "Sujith Kumar (HR Head, Infosys)"
+        ],
+        "entrepreneurship": "VIT has nurtured successful startups in AI, e-commerce, and sustainable technology"
+      },
+      "reputation": "With a strong focus on industry-oriented education, world-class infrastructure, and impressive placements, VIT continues to be one of India's leading private engineering institutions."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology (Banaras Hindu University) Varanasi",
+    "city": "Varanasi",
+    "rank": 13,
+    "state": "Uttar Pradesh",
+    "description": {
+      "overview": "Established in 1919 as Banaras Engineering College and later becoming the Institute of Technology in 1968, IIT (BHU) Varanasi is one of India\u2019s oldest and most prestigious engineering institutions, known for its academic excellence, strong research foundation, and deep-rooted heritage. The 400-acre campus, located in the spiritual and cultural city of Varanasi, blends modern infrastructure with historic significance, providing students with a unique and inspiring learning environment. IIT (BHU) offers undergraduate, postgraduate, and PhD programs across engineering, sciences, and interdisciplinary fields, with top disciplines including electrical, mechanical, computer science, and metallurgical engineering. The institute is a leader in research areas like nanotechnology, artificial intelligence, materials science, and renewable energy, with collaborations with global universities such as MIT, Stanford, and Tokyo Institute of Technology, facilitating research partnerships and student exchange programs. Placements at IIT (BHU) are among the best in India, with top recruiters like Google, Microsoft, Amazon, Goldman Sachs, Tata Group, and ISRO offering lucrative job opportunities. The highest international package exceeds INR 2 crore per annum, while the average package stands at INR 22-25 LPA. The institute has a strong legacy of producing tech entrepreneurs, scientists, and industry leaders who have made significant contributions globally. Student life at IIT (BHU) is dynamic, with a vibrant mix of cultural and technical activities. KashiYatra, the cultural fest, is one of North India\u2019s largest college festivals, featuring Bollywood performances, dance battles, and music concerts, while Technex, the technical fest, attracts participants from across the country for robotics competitions, AI-driven projects, and coding hackathons. The campus is equipped with state-of-the-art research centers, sports complexes, innovation labs, and a central library with extensive academic resources. IIT (BHU) boasts an illustrious alumni network, including notable personalities like Nikesh Arora (former SoftBank President), Krishan Kant (former Vice President of India), and Duvvuri Subbarao (former RBI Governor). The Malviya Centre for Innovation at IIT (BHU) actively supports startups in AI, fintech, and green energy, making the institute a hub for entrepreneurship and technological advancements. With its legacy of excellence, world-class research opportunities, outstanding placements, and rich student culture, IIT (BHU) Varanasi continues to be one of India\u2019s most prestigious engineering institutes, offering a transformative academic and professional journey for aspiring engineers.s",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Electrical Engineering",
+          "Metallurgical Engineering",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "MIT",
+          "University of Cambridge",
+          "University of Tokyo"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "1,300 acres (as part of BHU)",
+        "library": "Centralized library with vast academic resources and digital access",
+        "research_labs": "Advanced labs for AI, materials science, and quantum computing"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Materials Science",
+          "Renewable Energy",
+          "Quantum Computing"
+        ],
+        "startup_ecosystem": "The Malviya Centre for Innovation Incubation and Entrepreneurship supports startups in deep tech, healthcare, and clean energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Goldman Sachs",
+          "TCS",
+          "Mahindra"
+        ],
+        "average_package": "INR 15-18 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in robotics, coding, literature, music, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Kashiyatra - A grand celebration of culture, arts, and music",
+          "technical_fest": "Technex - India's second-oldest technical fest with AI challenges, hackathons, and robotics competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Nikesh Arora (Former SoftBank COO)",
+          "Manick Sorcar (Laser and Light Artist)",
+          "Gyanesh Pandey (Co-founder, Husk Power Systems)"
+        ],
+        "entrepreneurship": "IIT (BHU) Varanasi has produced several startups in AI, fintech, and sustainable energy"
+      },
+      "reputation": "With a legacy of over a century, a strong research foundation, and top-tier placements, IIT (BHU) Varanasi continues to be a leading institution in engineering and technology education."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology (Indian School of Mines)",
+    "city": "Dhanbad",
+    "rank": 14,
+    "state": "Jharkhand",
+    "description": {
+      "overview": "Established in 1926 as the Indian School of Mines (ISM) and later upgraded to an IIT in 2016, IIT (ISM) Dhanbad is one of India\u2019s premier engineering institutions, known for its excellence in earth sciences, mining, and petroleum engineering, alongside strong programs in computer science, electrical, and mechanical engineering. Spread over 218 acres, the campus is located in Dhanbad, the coal capital of India, and is equipped with world-class research facilities, smart classrooms, and modern laboratories. IIT (ISM) offers undergraduate, postgraduate, and PhD programs across various disciplines, excelling in areas like data science, energy engineering, artificial intelligence, and geophysics. The institute has international collaborations with universities like Pennsylvania State University, RWTH Aachen, and Curtin University, enabling research partnerships, student exchanges, and joint projects. Placements at IIT (ISM) are among the best in India, with top recruiters like Google, Microsoft, Schlumberger, Amazon, Tata Steel, ONGC, and BHEL offering lucrative job opportunities. The highest salary package goes beyond INR 1.5 crore per annum, while the average package stands at INR 18-22 LPA, with strong placement records in core engineering and technology sectors. The institute also has a significant presence in government and PSU recruitments, with organizations like Coal India, ISRO, and NTPC actively hiring from the campus. Student life at IIT (ISM) is vibrant, with cultural and technical fests like Srijan and Concetto being major attractions. Srijan, the cultural festival, features star-studded concerts, literary events, and fashion shows, while Concetto, the technical fest, is a platform for robotics, AI hackathons, and industrial problem-solving challenges. The campus boasts modern sports complexes, research centers, and an incubation hub that nurtures startups in deep tech, renewable energy, and industrial automation. IIT (ISM) has a distinguished alumni network, including prominent figures like Partha S. Ghosh (Global Strategy Consultant), Narayan Das (Former Director, Coal India), and several CEOs and technocrats in the mining, petroleum, and IT industries. The Atal Community Innovation Centre at IIT (ISM) supports entrepreneurial ventures, fostering a culture of innovation and industry collaboration. With its legacy of excellence, top-tier placements, cutting-edge research, and a thriving student ecosystem, IIT (ISM) Dhanbad remains one of India\u2019s most prestigious engineering institutes, offering a world-class education and promising career opportunities to aspiring engineers and technologists.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Mining Engineering",
+          "Computer Science",
+          "Petroleum Engineering",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "Colorado School of Mines",
+          "University of Alberta",
+          "Curtin University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "218 acres",
+        "library": "Extensive central library with rich digital and physical resources",
+        "research_labs": "Advanced labs in AI, geophysics, and sustainable mining technologies"
+      },
+      "research": {
+        "focus_areas": [
+          "Mining Technology",
+          "Artificial Intelligence",
+          "Renewable Energy",
+          "Geosciences"
+        ],
+        "startup_ecosystem": "The Atal Incubation Centre at IIT (ISM) Dhanbad fosters innovation in AI, mining technology, and sustainable energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Schlumberger",
+          "Amazon",
+          "Reliance",
+          "Tata Steel"
+        ],
+        "average_package": "INR 12-15 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 1.5 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in robotics, coding, mining research, music, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Srijan - A grand celebration of culture, music, and arts",
+          "technical_fest": "Concetto - A leading tech fest featuring AI challenges, hackathons, and mining innovations"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Sundar Pichai (Google CEO, studied here briefly)",
+          "Dinesh Kumar Sarraf (Former ONGC Chairman)",
+          "Rajeev Gautam (CEO, Honeywell UOP)"
+        ],
+        "entrepreneurship": "IIT (ISM) Dhanbad has nurtured startups in AI, geospatial analytics, and energy solutions"
+      },
+      "reputation": "With a legacy in mining and earth sciences, a strong research focus, and excellent placements, IIT (ISM) Dhanbad continues to be a top institution for engineering and technology education."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "National Institute of Technology Rourkela",
+    "city": "Rourkela",
+    "rank": 15,
+    "state": "Odisha",
+    "description": {
+      "overview": "Established in 1961, National Institute of Technology Rourkela (NIT Rourkela) is one of India\u2019s top engineering institutions, known for its academic excellence, research-driven approach, and industry collaborations. Spread across 647 acres, the campus is one of the most beautiful and well-equipped among NITs, featuring smart classrooms, advanced research centers, and modern hostels. NIT Rourkela offers undergraduate, postgraduate, and PhD programs in engineering, sciences, management, and humanities, excelling in fields like computer science, mechanical, electrical, and metallurgical engineering. The institute has global collaborations with universities in the USA, Germany, and Japan, facilitating student exchange programs and joint research initiatives. Placements at NIT Rourkela are among the best in the country, with top recruiters like Google, Microsoft, Amazon, Tata Steel, Qualcomm, and L&T offering high-paying jobs. The highest package goes up to INR 50 LPA, while the average salary package stands at INR 12-15 LPA, with strong placement records in both core engineering and IT sectors. The institute also has a strong presence in PSU recruitments, with companies like ONGC, IOCL, and BHEL hiring graduates. Student life at NIT Rourkela is dynamic, with a wide range of cultural, technical, and sports activities. Innovision, the technical fest, attracts students from all over India for robotics competitions, AI-driven projects, and hackathons, while Nitrutsav, the cultural fest, features music concerts, dance performances, and literary events. The campus has world-class sports facilities, including an Olympic-standard swimming pool, a sports complex, and multiple student-run clubs focusing on coding, entrepreneurship, and robotics. Notable alumni of NIT Rourkela include Vishal Kumar (Co-founder, Arya.ai), Sandip Das (Former CEO, Maxis Communications), and many successful technocrats and entrepreneurs in diverse industries. The institute\u2019s Centre for Innovation and Incubation actively supports startups in AI, fintech, and sustainable technology, fostering a culture of entrepreneurship and innovation. With its strong academic framework, excellent placements, cutting-edge research, and vibrant student ecosystem, NIT Rourkela continues to be one of the most prestigious engineering institutions in India, attracting top talent and shaping future leaders in science and technology.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D.",
+          "M.Sc."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Mechanical Engineering",
+          "Electrical Engineering",
+          "Data Science"
+        ],
+        "global_collaborations": [
+          "University of Texas",
+          "NTU Singapore",
+          "University of Alberta"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "647 acres",
+        "library": "A well-equipped central library with digital and physical academic resources",
+        "research_labs": "Advanced research labs in AI, nanotechnology, and sustainable energy"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Materials Science",
+          "Renewable Energy",
+          "Cybersecurity"
+        ],
+        "startup_ecosystem": "The Foundation for Technology and Business Incubation (FTBI) at NIT Rourkela fosters startups in AI, fintech, and green technology"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "TCS",
+          "Reliance",
+          "Goldman Sachs"
+        ],
+        "average_package": "INR 10-14 LPA",
+        "highest_package": {
+          "domestic": "INR 55 LPA+",
+          "international": "INR 1.2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in robotics, coding, music, literature, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Nitrutsav - A vibrant cultural and arts festival",
+          "technical_fest": "Innovision - One of India's leading technical fests with AI projects, hackathons, and robotics competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Ajit Andhare (COO, Viacom18 Studios)",
+          "Ramesh Natarajan (CEO, Redington)",
+          "Krishna Kishore (IAS Officer)"
+        ],
+        "entrepreneurship": "NIT Rourkela has supported startups in AI, robotics, and fintech through its incubation center"
+      },
+      "reputation": "With a legacy of technical excellence, cutting-edge research, and strong industry connections, NIT Rourkela continues to be one of India's top engineering institutions."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Indian Institute of Technology Indore",
+    "city": "Indore",
+    "rank": 16,
+    "state": "Madhya Pradesh",
+    "description": {
+      "overview": "Established in 2009, Indian Institute of Technology Indore (IIT Indore) is one of the fastest-growing IITs, recognized for its academic excellence, research-driven approach, and strong industry partnerships. Spread across a sprawling 501-acre campus, IIT Indore boasts state-of-the-art infrastructure, modern research labs, and world-class faculty. The institute offers B.Tech, M.Tech, MSc, PhD, and interdisciplinary programs, excelling in fields like computer science, artificial intelligence, nanotechnology, and mechanical engineering. It has established global collaborations with institutions like Purdue University, Nanyang Technological University, and the University of Melbourne, providing students with research opportunities and international exposure. Placements at IIT Indore are highly competitive, with top recruiters like Google, Microsoft, Amazon, Goldman Sachs, and Tata Motors offering packages as high as INR 80 LPA, while the average salary package stands at INR 18-22 LPA. The institute has a strong presence in research and development, with collaborations with ISRO, DRDO, and CSIR, making it a hub for cutting-edge scientific advancements. The student life at IIT Indore is vibrant, with numerous cultural, technical, and sports activities. Fluxus, the annual cultural and technical fest, attracts students from across India, featuring music concerts, coding hackathons, and AI competitions. The campus is equipped with world-class sports facilities, hostels with modern amenities, and a thriving entrepreneurial ecosystem. IIT Indore\u2019s alumni network includes rising entrepreneurs, AI researchers, and technology leaders, with its Incubation Centre supporting startups in AI, robotics, and sustainable technology. With a strong academic foundation, outstanding placements, a research-driven culture, and a rapidly growing reputation, IIT Indore is emerging as one of the top destinations for engineering and technology education in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D.",
+          "M.Sc."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Mechanical Engineering",
+          "Electrical Engineering",
+          "Data Science & AI"
+        ],
+        "global_collaborations": [
+          "University of Oxford",
+          "Carnegie Mellon University",
+          "NTU Singapore"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "501 acres",
+        "library": "A modern digital library with extensive research publications and academic resources",
+        "research_labs": "State-of-the-art labs in AI, nanotechnology, and quantum computing"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Cybersecurity",
+          "Quantum Computing",
+          "Sustainable Energy"
+        ],
+        "startup_ecosystem": "The IIT Indore Incubation Centre supports startups in AI, deep tech, and renewable energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Goldman Sachs",
+          "TCS",
+          "Adobe"
+        ],
+        "average_package": "INR 15-18 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 1.8 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in coding, robotics, music, literature, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Fluxus - One of India's fastest-growing cultural festivals",
+          "technical_fest": "Techfest - Features AI challenges, hackathons, and robotics competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Several alumni working at top tech firms and research institutions worldwide"
+        ],
+        "entrepreneurship": "IIT Indore has fostered startups in AI, blockchain, and green energy through its incubation programs"
+      },
+      "reputation": "With rapid growth, strong research initiatives, and impressive placements, IIT Indore has established itself as a top-tier engineering institution in India."
+    },
+    "category": "Engineering"
+  },
+  {
+    "name": "Anna University",
+    "city": "Chennai",
+    "rank": 17,
+    "state": "Tamil Nadu",
+    "description": {
+      "overview": "Established in 1978, Anna University is one of India\u2019s premier technical institutions, renowned for its academic excellence, cutting-edge research, and strong industry collaborations. Located in Chennai, Tamil Nadu, the university has a sprawling campus that houses world-class infrastructure, advanced research centers, and a vibrant student community. Anna University offers undergraduate, postgraduate, and doctoral programs in engineering, technology, management, and applied sciences, with specializations in fields such as artificial intelligence, aerospace engineering, biotechnology, and data science. The university has strong international collaborations with institutions like MIT, NUS, and the University of Melbourne, facilitating student exchange programs, joint research initiatives, and global exposure. The placement record at Anna University is outstanding, with recruiters like Google, Microsoft, TCS, Infosys, and Amazon offering high-paying job opportunities. The highest packages go up to INR 40 LPA, while the average package ranges between INR 8-12 LPA. The university also has a strong track record of government job placements, with PSUs and defense organizations like ISRO, DRDO, and BHEL actively recruiting from the campus. Student life at Anna University is dynamic and engaging, with numerous technical, cultural, and sports events held throughout the year. Techofes, the annual cultural fest, attracts students from across India with music concerts, dance performances, and literary events, while Kurukshetra, the technical fest, is known for robotics competitions, hackathons, and AI-driven challenges. The university also boasts extensive sports facilities, innovation labs, and incubation centers that nurture entrepreneurial talent. Notable alumni include former ISRO Chairman Dr. K. Sivan, Sundar Pichai (CEO, Google & Alphabet), and A. Sivathanu Pillai (Chief Architect of BrahMos). With its strong academic foundation, excellent placement record, cutting-edge research initiatives, and a legacy of producing global leaders, Anna University remains one of the top destinations for engineering and technology education in India.",
+      "academics": {
+        "programs_offered": [
+          "B.E.",
+          "B.Tech",
+          "M.E.",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Electronics & Communication",
+          "Mechanical Engineering",
+          "Artificial Intelligence"
+        ],
+        "global_collaborations": [
+          "MIT",
+          "Stanford",
+          "Nanyang Technological University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "189 acres",
+        "library": "A vast central library with digital access to research papers and academic resources",
+        "research_labs": "State-of-the-art labs for AI, nanotechnology, and biotechnology"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Biotechnology",
+          "Renewable Energy",
+          "Cybersecurity"
+        ],
+        "startup_ecosystem": "Anna University has a thriving incubation center supporting startups in AI, robotics, and clean energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "TCS",
+          "Cognizant",
+          "Infosys"
+        ],
+        "average_package": "INR 6-10 LPA",
+        "highest_package": {
+          "domestic": "INR 39 LPA+",
+          "international": "INR 1.2 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Numerous clubs in coding, robotics, music, literature, and entrepreneurship",
+        "festivals": {
+          "cultural_fest": "Techofes - A popular cultural and entertainment festival",
+          "technical_fest": "Kurukshetra - A renowned technical fest featuring hackathons and AI competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "A.P.J. Abdul Kalam (Former President of India)",
+          "Krishnakumar Natarajan (Co-founder, Mindtree)",
+          "Anand Chandrasekaran (Ex-CPO, Snapdeal)"
+        ],
+        "entrepreneurship": "Anna University has fostered numerous startups in AI, software development, and sustainable energy"
+      },
+      "reputation": "With its legacy of excellence, strong industry ties, and research contributions, Anna University remains one of India's most prestigious technical institutions."
+    },
+    "category": "Multidisciplinary"
+  },
+  {
+    "name": "Institute of Chemical Technology",
+    "city": "Mumbai",
+    "rank": 18,
+    "state": "Maharashtra",
+    "description": {
+      "overview": "Established in 1933, the Institute of Chemical Technology (ICT), Mumbai, is one of India\u2019s premier institutions for chemical engineering, pharmaceuticals, biotechnology, and applied sciences. Known for its strong academic rigor, pioneering research, and industry collaborations, ICT has produced some of the finest scientists, entrepreneurs, and industry leaders in the country. The institute offers undergraduate, postgraduate, and doctoral programs in chemical engineering, polymer technology, food engineering, and pharmaceutical sciences, among others. ICT has global research partnerships with institutions like MIT, Stanford, and the University of Manchester, facilitating joint research, student exchanges, and technological advancements. The placement record at ICT is exceptional, with top recruiters like Reliance Industries, Tata Chemicals, BASF, Unilever, Pfizer, and Dr. Reddy\u2019s Laboratories offering lucrative job opportunities. The highest salary package exceeds INR 30 LPA, while the average package ranges between INR 10-15 LPA. ICT is also known for its deep ties with the Indian chemical and pharmaceutical industries, providing students with unparalleled exposure to real-world applications and industrial training. The vibrant student life at ICT includes numerous technical and cultural events, with Vortex being the institute\u2019s flagship technical festival, featuring competitions in chemical innovation, process design, and sustainability. Manzar, the cultural fest, attracts top musicians, performers, and artists, creating a dynamic campus environment. The institute also has state-of-the-art research labs, incubation centers, and pilot plants that foster innovation and entrepreneurship. Notable alumni include Dr. Raghunath Mashelkar (former Director General, CSIR), Mukesh Ambani (Chairman, Reliance Industries), and Man Mohan Sharma (Padma Vibhushan Awardee & Renowned Chemical Engineer). With its legacy of academic excellence, groundbreaking research, top-tier placements, and significant contributions to the chemical and pharmaceutical industries, ICT Mumbai remains one of the most prestigious institutions for chemical and applied sciences education in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Chem.Eng.",
+          "B.Tech",
+          "M.Chem.Eng.",
+          "M.Tech",
+          "Ph.D.",
+          "M.Sc."
+        ],
+        "specializations": [
+          "Chemical Engineering",
+          "Pharmaceutical Sciences",
+          "Polymer Science",
+          "Food Engineering"
+        ],
+        "global_collaborations": [
+          "Harvard University",
+          "MIT",
+          "University of Manchester"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "16 acres",
+        "library": "A well-stocked library with digital access to international research journals",
+        "research_labs": "State-of-the-art research facilities in chemical engineering, nanotechnology, and sustainable energy"
+      },
+      "research": {
+        "focus_areas": [
+          "Chemical Engineering",
+          "Biotechnology",
+          "Pharmaceutical Sciences",
+          "Renewable Energy"
+        ],
+        "startup_ecosystem": "ICT Mumbai has an incubation center supporting chemical technology and biotech startups"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Reliance Industries",
+          "Tata Chemicals",
+          "HUL",
+          "Pfizer",
+          "Dr. Reddy\u2019s",
+          "Johnson & Johnson"
+        ],
+        "average_package": "INR 8-12 LPA",
+        "highest_package": {
+          "domestic": "INR 35 LPA+",
+          "international": "INR 1 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Clubs focused on research, entrepreneurship, sustainability, and cultural activities",
+        "festivals": {
+          "cultural_fest": "Manzar - A vibrant cultural and entertainment festival",
+          "technical_fest": "Vortex - A leading chemical and tech fest featuring innovation challenges and competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Mukesh Ambani (Chairman, Reliance Industries)",
+          "Anant Pai (Founder, Amar Chitra Katha)",
+          "Raghunath Mashelkar (Eminent Scientist & Padma Vibhushan Awardee)"
+        ],
+        "entrepreneurship": "ICT Mumbai has played a key role in fostering startups in pharmaceuticals, chemicals, and energy sciences"
+      },
+      "reputation": "With a strong research focus, industry connections, and notable alumni, ICT Mumbai remains one of the best institutions in India for chemical engineering and related fields."
+    },
+    "category": "Pharma"
+  },
+  {
+    "name": "Amrita Vishwa Vidyapeetham",
+    "city": "Coimbatore",
+    "rank": 19,
+    "state": "Tamil Nadu",
+    "description": {
+      "overview": "Established in 2003, Amrita Vishwa Vidyapeetham is a multidisciplinary, research-intensive university known for its strong academic programs, innovation-driven approach, and global collaborations. With campuses in Coimbatore, Amritapuri, Bengaluru, Chennai, Kochi, and Mysuru, it offers undergraduate, postgraduate, and doctoral programs in engineering, medicine, management, social sciences, arts, and more. Amrita has international partnerships with over 200 top universities, including Harvard, Stanford, and Oxford, facilitating student exchanges, research collaborations, and dual-degree programs. The university is a pioneer in emerging technologies like artificial intelligence, cybersecurity, robotics, and nanotechnology, with cutting-edge research centers driving advancements in these fields. The placement record at Amrita is impressive, with companies like Google, Microsoft, Intel, Cisco, TCS, and Amazon recruiting students. The highest salary package exceeds INR 50 LPA, while the average package ranges between INR 8-12 LPA. The university is also known for its humanitarian initiatives and sustainable development projects, aligning with its core mission of social responsibility. Student life at Amrita is vibrant, with cultural and technical fests like Anokha (Coimbatore), Vidyut (Amritapuri), and Pragati (Bengaluru) fostering creativity, innovation, and leadership. The university is equipped with state-of-the-art research labs, incubation centers, and world-class sports facilities. Notable alumni include successful entrepreneurs, AI researchers, and global industry leaders. With its focus on academic excellence, top-tier placements, strong industry collaborations, and a commitment to social impact, Amrita Vishwa Vidyapeetham continues to be one of the most prestigious universities in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D.",
+          "M.Sc.",
+          "BBA"
+        ],
+        "specializations": [
+          "Computer Science",
+          "Electronics & Communication",
+          "Artificial Intelligence",
+          "Cybersecurity"
+        ],
+        "global_collaborations": [
+          "University at Buffalo",
+          "UC San Diego",
+          "Harvard University"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "400 acres",
+        "library": "A modern digital library with access to international journals and research papers",
+        "research_labs": "State-of-the-art labs in AI, robotics, healthcare technology, and sustainability"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Cybersecurity",
+          "Biotechnology",
+          "Sustainable Energy"
+        ],
+        "startup_ecosystem": "Amrita TBI (Technology Business Incubator) supports startups in AI, healthcare, and green technology"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "TCS",
+          "Cognizant",
+          "Infosys"
+        ],
+        "average_package": "INR 6-10 LPA",
+        "highest_package": {
+          "domestic": "INR 50 LPA+",
+          "international": "INR 1 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in coding, robotics, music, entrepreneurship, and social service",
+        "festivals": {
+          "cultural_fest": "Amritotsavam - A vibrant cultural and entertainment festival",
+          "technical_fest": "Anokha - A premier technical fest with hackathons and AI challenges"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "Numerous alumni working at top MNCs and research institutions"
+        ],
+        "entrepreneurship": "Amrita has fostered startups in AI, fintech, and sustainable development through its incubation programs"
+      },
+      "reputation": "With strong research output, global collaborations, and top-notch placements, Amrita Vishwa Vidyapeetham has established itself as a leading university in India."
+    },
+    "category": "Multidisciplinary"
+  },
+  {
+    "name": "Indian Institute of Technology, Mandi",
+    "city": "Mandi",
+    "rank": 20,
+    "state": "Himachal Pradesh",
+    "description": {
+      "overview": "Established in 2009, Indian Institute of Technology Mandi is one of the fastest-growing IITs, known for its strong focus on research, innovation, and interdisciplinary education. Nestled in the scenic Himalayan region, the 538-acre campus offers a serene yet intellectually stimulating environment for students. IIT Mandi offers B.Tech, M.Tech, MSc, MBA, and PhD programs, excelling in fields such as artificial intelligence, data science, bioengineering, and renewable energy. The institute has strong research collaborations with global universities like TU9 (Germany), Purdue University, and the University of California, enabling international exposure and cutting-edge advancements. Placements at IIT Mandi have been outstanding, with recruiters like Google, Microsoft, Amazon, Intel, ISRO, and Tata hiring students. The highest salary package exceeds INR 80 LPA, while the average package is around INR 15-18 LPA. The institute\u2019s emphasis on entrepreneurship is reflected in its Technology Innovation Hub (TIH) and incubators that support startups in AI, IoT, robotics, and sustainable technologies. Student life at IIT Mandi is vibrant, with cultural and technical fests like Exodia and Xpecto providing platforms for innovation, coding, and performing arts. The campus is equipped with modern research labs, an advanced supercomputing facility, and top-tier sports complexes. Distinguished alumni include AI researchers, startup founders, and leaders in sustainable energy. With its rapid growth, exceptional research output, top-tier placements, and a strong focus on emerging technologies, IIT Mandi is establishing itself as one of the most sought-after IITs in India.",
+      "academics": {
+        "programs_offered": [
+          "B.Tech",
+          "M.Tech",
+          "MBA",
+          "Ph.D."
+        ],
+        "specializations": [
+          "Computer Science",
+          "Electrical Engineering",
+          "Data Science",
+          "Robotics"
+        ],
+        "global_collaborations": [
+          "TU9 Universities (Germany)",
+          "University of Washington",
+          "MIT"
+        ]
+      },
+      "infrastructure": {
+        "campus_size": "538 acres",
+        "library": "A well-equipped digital and physical library with extensive research materials",
+        "research_labs": "Advanced labs for AI, robotics, sustainable energy, and nanotechnology"
+      },
+      "research": {
+        "focus_areas": [
+          "Artificial Intelligence",
+          "Renewable Energy",
+          "Cybersecurity",
+          "Climate Science"
+        ],
+        "startup_ecosystem": "IIT Mandi Catalyst, its incubation center, supports startups in AI, biotech, and green energy"
+      },
+      "placements": {
+        "top_recruiters": [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Goldman Sachs",
+          "TCS",
+          "Intel"
+        ],
+        "average_package": "INR 14-18 LPA",
+        "highest_package": {
+          "domestic": "INR 60 LPA+",
+          "international": "INR 1.8 crore+"
+        }
+      },
+      "campus_life": {
+        "student_clubs": "Active clubs in coding, robotics, entrepreneurship, and adventure sports",
+        "festivals": {
+          "cultural_fest": "Exodia - A vibrant cultural festival featuring music, dance, and competitions",
+          "technical_fest": "Xpecto - A leading tech fest with hackathons, AI challenges, and robotics competitions"
+        }
+      },
+      "alumni": {
+        "notable_alumni": [
+          "A growing network of IIT Mandi graduates in top companies and research institutions"
+        ],
+        "entrepreneurship": "IIT Mandi has fostered numerous startups in AI, sustainable energy, and biotech through its Catalyst incubator"
+      },
+      "reputation": "With a strong research focus, global partnerships, and rapid growth in reputation, IIT Mandi is emerging as a top-tier institute for engineering and innovation in India."
+    },
+    "category": "Engineering"
+  }
+]

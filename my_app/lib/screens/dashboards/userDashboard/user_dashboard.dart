@@ -14,6 +14,7 @@ import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
 import 'components/TopExamsList.dart';
 import 'components/TopFormsList.dart';
 import 'components/TrendingCoursesList.dart';
+import 'components/TopColleges.dart';
 import 'components/UpcomingDeadlinesTicker.dart';
 // import 'components/InfiniteScrollJsonLoader.dart';
 import 'components/InfiniteCollegeRanking.dart';
@@ -627,8 +628,12 @@ class _UserDashboardState extends State<UserDashboard>
                           TopNewsCarousel(),
                           SizedBox(height: 10),
 
-                          TrendingHeader(title: "Top Colleges"),
+                          TrendingHeader(title: "Top Events"),
                           CollegeCarousel(),
+                          SizedBox(height: 10),
+
+                          TrendingHeader(title: "Top Colleges"),
+                          TopCollegesList(),
                           SizedBox(height: 10),
 
                           const TrendingHeader(title: "Trending Exams"),
