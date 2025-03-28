@@ -104,7 +104,9 @@ flutter:
     - assets/sounds/ringtone.mp3
     - assets/data/
     - assets/data/updated_college_ranking.json
+    - assets/data/colleges/college_ranking.json
     - assets/images/homepage/trending_exams/
+    - assets/images/homepage/trending_colleges/
     - assets/images/homepage/trending_exams/exams_page/Medical/
     - assets/images/homepage/trending_exams/exams_page/Engineering/
     - assets/images/homepage/trending_exams/exams_page/Law/
