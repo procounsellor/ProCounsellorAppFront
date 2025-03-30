@@ -175,41 +175,83 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding:
+                const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
+                    // Banner Image
                     ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          imagePath,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Image.asset(
-                              'assets/images/homepage/trending_colleges/fallback.png',
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            );
-                          },
-                        )),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        widget.collegeName.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[700]),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        imagePath.replaceFirst('.png', '_banner.png'),
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(
+                            'assets/images/homepage/trending_colleges/fallback_banner.png',
+                            height: 160,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                      ),
+                    ),
+                    // Logo with white circular background
+                    Positioned(
+                      bottom: -40,
+                      left: 16,
+                      child: Container(
+                        padding: EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            )
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            imagePath,
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                'assets/images/homepage/trending_colleges/fallback.png',
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
+                SizedBox(height: 40), // Make space for logo overlap
+
+                // Added extra spacing because image overlaps
+                Center(
+                  child: Text(
+                    widget.collegeName.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ),
+
                 SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -246,7 +288,7 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.greenAccent, Colors.green],
+                    colors: [Colors.greenAccent, Colors.greenAccent],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
