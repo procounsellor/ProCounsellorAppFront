@@ -116,13 +116,21 @@ class _CollegesPageState extends State<CollegesPage> {
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundColor: isSelected
-                                ? Colors.orange
-                                : Colors.grey.shade300,
-                            child: Text(
-                              category[0],
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 18),
+                            backgroundColor: Colors.white,
+                            backgroundImage: AssetImage(
+                              'assets/images/$category.jpg',
+                            ),
+                            onBackgroundImageError: (_, __) {},
+                            child: Image.asset(
+                              'assets/images/$category.jpg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Text(
+                                  category[0],
+                                  style: TextStyle(
+                                      color: Colors.orange, fontSize: 18),
+                                );
+                              },
                             ),
                           ),
                           SizedBox(height: 6),

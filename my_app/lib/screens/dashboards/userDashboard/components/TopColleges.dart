@@ -46,7 +46,7 @@ class _TopCollegesListState extends State<TopCollegesList> {
       "name": "Indian Institute of Technology Roorkee",
       "showName": "IIT Roorkee",
       "image":
-          "assets/images/homepage/trending_colleges/indian_institute_of_technology_roorkee.png",
+          "assets/images/homepage/trending_colleges/indian_institute_of_technology_roorkee.webp",
     },
   ];
 
