@@ -4,6 +4,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:my_app/screens/dashboards/userDashboard/headersText/TrendingHeader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'CollegeDetailsPage.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 typedef MyBuilder = void Function(
     BuildContext context, void Function() methodFromChild);
@@ -38,7 +40,8 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
   /// **Loads the JSON file from assets**
   Future<void> _loadColleges() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? cachedData = prefs.getString("cached_colleges");
+    //String? cachedData = prefs.getString("cached_colleges");
+    String? cachedData = null;
 
     if (cachedData != null) {
       List<dynamic> jsonData = json.decode(cachedData);
@@ -62,7 +65,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
             .map((college) => college['category'] as String)
             .toSet()
             .toList();
-        print(_collegeList);
+        //print(_collegeList);
         // process data
       } catch (e) {
         print("❌ Error loading JSON: $e");
@@ -196,97 +199,89 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
                   child: Column(
                 children: [
                   for (int j = i; j < categorizedColleges[key]!.length; j += 2)
-                    Container(
-                      margin: EdgeInsets.only(
-                          top: 2,
-                          bottom: 2,
-                          left: i == 1 ? 2 : 0,
-                          right: i == 0 ? 2 : 0),
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        // borderRadius: BorderRadius.circular(12),
-                        // boxShadow: [
-                        //   BoxShadow(
-                        //     color: Colors.grey.withOpacity(0.3),
-                        //     spreadRadius: 2,
-                        //     blurRadius: 6,
-                        //     offset: Offset(0, 2),
-                        //   ),
-                        // ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black12),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CollegeDetailsPage(
+                              collegeName: categorizedColleges[key]![j]['name'],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(
+                            top: 2,
+                            bottom: 2,
+                            left: i == 1 ? 2 : 0,
+                            right: i == 0 ? 2 : 0),
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          //border: Border.all(color: Colors.black12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 150,
+                              decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 image: DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image:
-                                        AssetImage("assets/images/a$j.jpg"))),
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Container(
-                                margin: EdgeInsets.all(5),
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 2),
-                                decoration: BoxDecoration(
+                                  fit: BoxFit.cover,
+                                  image: AssetImage("assets/images/a$j.jpg"),
+                                ),
+                              ),
+                              child: Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Container(
+                                  margin: EdgeInsets.all(5),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(5)),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      ratings[j],
-                                      style: TextStyle(
-                                          fontSize: 10, color: Colors.black54),
-                                    ),
-                                    Icon(
-                                      Icons.star,
-                                      color: Colors.black38,
-                                      size: 10,
-                                    ),
-                                    Text(
-                                      "|",
-                                      style: TextStyle(
-                                          fontSize: 8, color: Colors.black26),
-                                    ),
-                                    SizedBox(
-                                      width: 2,
-                                    ),
-                                    Text(noOfRatings[j],
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.black54))
-                                  ],
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(ratings[j],
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.black54)),
+                                      Icon(Icons.star,
+                                          color: Colors.black38, size: 10),
+                                      Text("|",
+                                          style: TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.black26)),
+                                      SizedBox(width: 2),
+                                      Text(noOfRatings[j],
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.black54)),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Text(
-                            categorizedColleges[key]![j]["name"],
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            categorizedColleges[key]![j]["category"],
-                            style: TextStyle(
-                                fontSize: 14, color: Colors.grey[600]),
-                          ),
-                          SizedBox(height: 4),
-                          // Text(
-                          //   categorizedColleges[key][j]["description"],
-                          //   maxLines: 2,
-                          //   overflow: TextOverflow.ellipsis,
-                          //   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                          // ),
-                        ],
+                            Text(
+                              categorizedColleges[key]![j]["name"],
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              categorizedColleges[key]![j]["category"],
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    )
                 ],
 
                 // } else {
@@ -297,7 +292,13 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
               ))
           ]),
         ]),
-      if (_isLoading) Center(child: CircularProgressIndicator())
+      if (_isLoading)
+        Center(
+          child: LoadingAnimationWidget.staggeredDotsWave(
+            color: Colors.deepOrangeAccent,
+            size: 50,
+          ),
+        )
     ]);
     //   ),
     // );

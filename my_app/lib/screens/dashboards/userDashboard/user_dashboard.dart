@@ -6,20 +6,19 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:indexed/indexed.dart';
 import 'dart:convert';
 import 'dart:async';
-import 'components/CollegeCarousel.dart';
+import 'components/TopEvents.dart';
 import '../../../services/api_utils.dart';
 import 'search_page.dart';
 import 'details_page.dart';
 import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
 import 'components/TopExamsList.dart';
-import 'components/TopFormsList.dart';
 import 'components/TrendingCoursesList.dart';
 import 'components/TopColleges.dart';
 import 'components/UpcomingDeadlinesTicker.dart';
-// import 'components/InfiniteScrollJsonLoader.dart';
 import 'components/InfiniteCollegeRanking.dart';
 import 'headersText/TrendingHeader.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'components/StateTagSelector.dart';
 
 class UserDashboard extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -56,52 +55,8 @@ class _UserDashboardState extends State<UserDashboard>
   late Animation<Offset> _animation;
   late AnimationController _pageController;
   late Animation<Offset> _pageAnimation;
-  // late PageController _pageController; // ✅ Declare separately
-  // late AnimationController _animationController;
-  // late Animation<Offset> _slideAnimation; // ✅ Name changed to avoid confusion
 
   @override
-  // void initState() {
-  //   super.initState();
-  //   _fetchTopCounsellorsAccordingToInterest();
-  //   _listenToCounsellorStates();
-  //   _fetchCounsellorsByState();
-
-  //   // ✅ Initialize Animation Controller
-  //   _animationController = AnimationController(
-  //     duration: Duration(milliseconds: 300),
-  //     vsync: this,
-  //   );
-
-  //   _slideAnimation = Tween<Offset>(
-  //     begin: Offset(0, 0),
-  //     end: Offset(0, -1),
-  //   ).animate(_animationController);
-
-  //   // ✅ Initialize PageController separately
-  //   _pageController = PageController();
-  //   _pageAnimation = Tween<Offset>(
-  //     begin: Offset(0, 0),
-  //     end: Offset(0, 0.05),
-  //   ).animate(CurvedAnimation(
-  //     parent:
-  //         _animationController, // ✅ Corrected: Must use _animationController
-  //     curve: Curves.easeInOut,
-  //   ));
-
-  //   // ✅ Delay animations until widget tree is built
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     if (_pageController.hasClients) {
-  //       _pageController.animateToPage(
-  //         1,
-  //         duration: Duration(milliseconds: 300),
-  //         curve: Curves.easeInOut,
-  //       );
-  //     }
-  //   });
-
-  //   _startSearchHintCycle();
-  // }
   late void Function() myMethod;
   void _onScroll() {
     if (_scrollController.position.pixels >=
@@ -170,8 +125,9 @@ class _UserDashboardState extends State<UserDashboard>
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
+        if (!mounted) return;
         setState(() {
-          _topRatedCounsellors = data; // Map to your model if needed
+          _topRatedCounsellors = data;
         });
       } else if (response.statusCode == 404) {
         print('No counsellors found for the user.');
@@ -214,6 +170,8 @@ class _UserDashboardState extends State<UserDashboard>
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body) as List<dynamic>;
+          if (!mounted) return;
+
           setState(() {
             _stateCounsellors[state] = data;
           });
@@ -227,22 +185,6 @@ class _UserDashboardState extends State<UserDashboard>
     }
   }
 
-  // void _toggleState(String state) {
-  //   //if (!mounted || _pageController.isAnimating || _pageController.isCompleted) return;
-  //   setState(() {
-  //     if (_activeStates.contains(state)) {
-  //       _activeStates.remove(state);
-  //       if (_pageController.status != AnimationStatus.dismissed) {
-  //         _pageController.reverse(); // Transition back to original position
-  //       }
-  //     } else {
-  //       _activeStates.add(state);
-  //       if (_pageController.status != AnimationStatus.completed) {
-  //         _pageController.forward(); // Move lists down with transition
-  //       }
-  //     }
-  //   });
-  // }
   void _toggleState(String state) {
     setState(() {
       if (_activeStates.contains(state)) {
@@ -354,37 +296,11 @@ class _UserDashboardState extends State<UserDashboard>
             ),
             SizedBox(height: 10),
             // State Tags
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _stateCounsellors.keys.map((state) {
-                  final isActive = _activeStates.contains(state);
-                  return GestureDetector(
-                    onTap: () => _toggleState(state),
-                    child: Container(
-                      margin: EdgeInsets.only(right: 8.0), // Space between tags
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: !isActive
-                            ? Color(0xffeeeeee)
-                            : Colors.orange[100], // Transparent background
-
-                        borderRadius:
-                            BorderRadius.circular(5), // Rounded border
-                      ),
-                      child: Text(
-                        state,
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+            StateTagSelector(
+              stateCounsellors: _stateCounsellors,
+              activeStates: _activeStates,
+              onToggleState: _toggleState,
             ),
-
             SizedBox(height: 20),
             Expanded(
               child: ListView(
@@ -629,7 +545,7 @@ class _UserDashboardState extends State<UserDashboard>
                           SizedBox(height: 10),
 
                           TrendingHeader(title: "Top Events"),
-                          CollegeCarousel(),
+                          EventCarousel(),
                           SizedBox(height: 10),
 
                           TrendingHeader(title: "Top Colleges"),

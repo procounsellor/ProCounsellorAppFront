@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Global Tech Summit 2025",
+    "imageUrl": "assets/images/homepage/trending_events/Global_Tech_Summit_2025.png",
+    "description": "A premier conference bringing together technology leaders, innovators, and enthusiasts to discuss the future of digital transformation.",
+    "venue": "International Convention Centre, New Delhi",
+    "date": "2025-06-15",
+    "time": "10:00 AM - 5:00 PM",
+    "organizer": "TechWorld India",
+    "article": "The Global Tech Summit 2025 is set to be one of the most influential gatherings of the year, uniting thought leaders, tech enthusiasts, policymakers, and startup visionaries under one roof. This year\u2019s theme \u2014 *'Innovating for a Resilient Digital Future'* \u2014 emphasizes the role of emerging technologies in shaping a sustainable tomorrow.\n\nThe summit will feature keynote addresses from globally acclaimed figures in AI, Blockchain, Quantum Computing, and Cloud Infrastructure. Attendees can participate in over 50 hands-on workshops, explore startup showcases, and network with over 10,000 delegates from around the globe.\n\nKey Highlights:\n- **Fireside chat** with Elon Musk (virtual)\n- **Panel discussion** on \u2018AI Regulation and Ethics\u2019\n- **Live Demos** from leading tech startups\n- **Innovation Lab Hackathon**: 24-hour competition for college teams\n- **Investor Pitch Zone** for emerging ventures\n\nWhether you're a developer, a student, an entrepreneur, or a corporate leader, Global Tech Summit 2025 offers an unmatched opportunity to learn, connect, and innovate.\n\n*Join us in New Delhi this June and be part of the revolution shaping tomorrow\u2019s world.*"
+  },
+  {
+    "name": "AI & Machine Learning Expo",
+    "imageUrl": "assets/images/homepage/trending_events/AI_&_Machine_Learning_Expo.png",
+    "description": "Explore the latest advancements in Artificial Intelligence, Data Science, and Machine Learning with top industry experts.",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "2025-07-02",
+    "time": "9:30 AM - 6:00 PM",
+    "organizer": "AI Global Network",
+    "article": "The AI & Machine Learning Expo 2025 promises to be a knowledge-packed day dedicated to cutting-edge applications in automation, deep learning, and data intelligence. Participants will gain insights into predictive analytics, responsible AI, and real-world implementations from global leaders in the field. Keynote talks by Google Brain researchers and industry demos will complement hands-on coding workshops and panel debates on AI governance. This is a must-attend for data scientists, engineers, researchers, and students looking to stay ahead of the curve."
+  },
+  {
+    "name": "International Youth Festival",
+    "imageUrl": "assets/images/homepage/trending_events/International_Youth_Festival.png",
+    "description": "Celebrate youth, creativity, and cultural diversity with performances, workshops, and interactive sessions from across the globe.",
+    "venue": "Jawaharlal Nehru Stadium, Delhi",
+    "date": "2025-08-10",
+    "time": "4:00 PM - 10:00 PM",
+    "organizer": "Global Youth Foundation",
+    "article": "The International Youth Festival 2025 is a vibrant fusion of global youth cultures, designed to celebrate diversity through music, dance, food, and art. Over 30 countries will be represented through cultural performances, workshops on sustainable leadership, creative expression zones, and a Youth Speak Forum. Food stalls featuring global cuisines and interactive art installations will provide a carnival vibe. The evening will conclude with a massive live concert featuring emerging artists from around the world. Youth empowerment, peacebuilding, and unity are at the heart of this electrifying event."
+  },
+  {
+    "name": "Startup Incubation Week",
+    "imageUrl": "assets/images/homepage/trending_events/Startup_Incubation_Week.png",
+    "description": "A 7-day bootcamp for budding entrepreneurs to refine their ideas, network with investors, and pitch to VCs.",
+    "venue": "T-Hub, Hyderabad",
+    "date": "2025-05-20",
+    "time": "10:00 AM - 6:00 PM",
+    "organizer": "Startup India",
+    "article": "Startup Incubation Week 2025 is a high-energy, week-long accelerator program for early-stage founders. From validating MVPs to fundraising strategies, participants will receive mentorship from India\u2019s top entrepreneurs and VCs. Sessions will cover lean startup methodology, product-market fit, go-to-market plans, and legal compliance. Founders will compete in a final pitch day with \u20b910 lakh in seed funding up for grabs. The event also includes panel discussions with angel investors and masterclasses in growth hacking. It\u2019s a launchpad for India\u2019s next generation of change-makers."
+  },
+  {
+    "name": "National Cultural Carnival",
+    "imageUrl": "assets/images/homepage/trending_events/National_Cultural_Carnival.png",
+    "description": "A colorful blend of music, dance, food, and traditions from all states of India in one grand celebration.",
+    "venue": "India Gate Lawns, New Delhi",
+    "date": "2025-09-01",
+    "time": "12:00 PM - 9:00 PM",
+    "organizer": "Ministry of Culture",
+    "article": "The National Cultural Carnival 2025 brings together the heart of India in a celebration like no other. Every Indian state will showcase its vibrant folk arts, music, handicrafts, and street food in a sprawling open-air venue at India Gate. Expect performances of Kathakali, Bihu, Lavani, Ghoomar, and more on the central stage, while interactive workshops for pottery, rangoli, and mehendi engage visitors. A cultural parade, storytelling corners, and regional art exhibits make this a wholesome experience for families, tourists, and culture lovers alike."
+  },
+  {
+    "name": "Design Thinking Bootcamp",
+    "imageUrl": "assets/images/homepage/trending_events/Design_Thinking_Bootcamp.png",
+    "description": "Hands-on training in user-centric innovation, product design, and creative problem-solving methodologies.",
+    "venue": "NID Ahmedabad",
+    "date": "2025-04-18",
+    "time": "10:00 AM - 4:00 PM",
+    "organizer": "CreativeLabs",
+    "article": "This intensive Design Thinking Bootcamp introduces participants to the 5-stage process of empathize, define, ideate, prototype, and test. It\u2019s geared toward students, developers, entrepreneurs, and anyone looking to adopt human-centric innovation. Participants will work in teams to tackle real-world challenges, receive design mentorship, and present their prototypes. Hosted at the prestigious National Institute of Design, the event also features sessions on UX/UI principles, journey mapping, and product storytelling. All attendees receive a toolkit and certificate upon completion."
+  },
+  {
+    "name": "Cybersecurity Conference",
+    "imageUrl": "assets/images/homepage/trending_events/Cybersecurity_Conference.png",
+
+    "venue": "Cybercity Convention Center, Gurugram",
+    "date": "2025-07-28",
+    "time": "9:00 AM - 5:00 PM",
+    "organizer": "Infosec Alliance",
+    "article": "The Cybersecurity Conference 2025 is your gateway to mastering digital security in a post-pandemic world. With rising data breaches and AI-powered cyberattacks, this event equips attendees with the latest tools, techniques, and frameworks. Sessions include ethical hacking demos, zero trust architectures, and defense strategies for cloud platforms. Participate in red team vs. blue team drills, meet cybersecurity vendors, and get certified via fast-track CEH and CISSP workshops. This conference is ideal for IT professionals, CISO teams, and ethical hackers."
+  }
+]

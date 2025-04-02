@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../headersText/no_data_placeholder.dart';
 
 class CollegeDetailsPage extends StatefulWidget {
   final String collegeName;
@@ -153,8 +154,11 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
   Widget build(BuildContext context) {
     if (collegeData == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.collegeName)),
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+        ),
+        body: const NoDataPlaceholder(),
       );
     }
 

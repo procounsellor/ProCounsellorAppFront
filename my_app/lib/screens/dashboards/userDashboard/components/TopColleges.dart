@@ -87,9 +87,9 @@ class _TopCollegesListState extends State<TopCollegesList> {
                   );
                 },
                 child: Icon(
-                  Icons.double_arrow_rounded,
+                  Icons.apps,
                   size: 36,
-                  color: Colors.deepPurpleAccent,
+                  color: Colors.greenAccent,
                 ),
               ),
             ],
