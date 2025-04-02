@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'Courses/CoursesPage.dart';
 
 class TrendingCoursesList extends StatefulWidget {
   @override
@@ -26,6 +27,11 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
     _loadCachedCourses();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   /// **Loads Cached Data or Fetches New Data**
   Future<void> _loadCachedCourses() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -34,14 +40,16 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
     if (cachedData != null) {
       try {
         List<dynamic> decodedData = json.decode(cachedData);
-        setState(() {
-          _courseImages = decodedData.map<Map<String, String>>((item) {
-            return {
-              "name": item["name"].toString(),
-              "image": item["image"].toString(),
-            };
-          }).toList();
-        });
+        if (mounted) {
+          setState(() {
+            _courseImages = decodedData.map<Map<String, String>>((item) {
+              return {
+                "name": item["name"].toString(),
+                "image": item["image"].toString(),
+              };
+            }).toList();
+          });
+        }
       } catch (e) {
         print("❌ Error parsing cached courses: $e");
         await _fetchCourseImages();
@@ -54,20 +62,26 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
   /// **Fetches Course Images from Unsplash**
   Future<void> _fetchCourseImages() async {
     List<Map<String, String>> fetchedCourses = [];
-    String unsplashApiKey =
-        "nyo0kWYlUFOZGmzcya9tVx2ZefwACQ38BdfKTl-XrRA"; // ✅ Hardcoded API Key
+    String unsplashApiKey = "nyo0kWYlUFOZGmzcya9tVx2ZefwACQ38BdfKTl-XrRA";
 
     for (var course in _trendingCourses) {
-      final response = await http.get(Uri.parse(
-          "https://api.unsplash.com/photos/random?query=${course['keyword']}&client_id=$unsplashApiKey"));
+      try {
+        final response = await http.get(Uri.parse(
+            "https://api.unsplash.com/photos/random?query=${course['keyword']}&client_id=$unsplashApiKey"));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        fetchedCourses.add({
-          "name": course["name"]!,
-          "image": data["urls"]["small"],
-        });
-      } else {
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          fetchedCourses.add({
+            "name": course["name"]!,
+            "image": data["urls"]["small"],
+          });
+        } else {
+          fetchedCourses.add({
+            "name": course["name"]!,
+            "image": "https://via.placeholder.com/100",
+          });
+        }
+      } catch (e) {
         fetchedCourses.add({
           "name": course["name"]!,
           "image": "https://via.placeholder.com/100",
@@ -75,7 +89,8 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
       }
     }
 
-    // ✅ Update State & Cache Data
+    if (!mounted) return;
+
     setState(() {
       _courseImages = fetchedCourses;
     });
@@ -107,16 +122,15 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Text(
-              //   "Trending Courses",
-              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              // ),
               GestureDetector(
                 onTap: () {
-                  print("See More clicked! Future navigation here.");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CoursesPage()),
+                  );
                 },
                 child: Icon(
-                  Icons.double_arrow_rounded,
+                  Icons.apps,
                   size: 36,
                   color: Colors.greenAccent,
                 ),
@@ -127,18 +141,17 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
 
           // 🔹 Grid Layout with Smaller Icons
           SizedBox(
-            height: (MediaQuery.of(context).size.width * 0.20 + 40) *
-                2, // Dynamically adjust height
+            height: (MediaQuery.of(context).size.width * 0.20 + 40) * 2,
             child: GridView.builder(
               physics: NeverScrollableScrollPhysics(),
               itemCount: _courseImages.isNotEmpty
                   ? _courseImages.length
                   : _trendingCourses.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // ✅ 3 per row for better visual balance
+                crossAxisCount: 3,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
-                childAspectRatio: 0.8, // ✅ Keeps images square
+                childAspectRatio: 0.8,
               ),
               itemBuilder: (context, index) {
                 final course = _courseImages.isNotEmpty
@@ -149,10 +162,8 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        width: MediaQuery.of(context).size.width *
-                            0.20, // ✅ Adjusted width
-                        height: MediaQuery.of(context).size.width *
-                            0.20, // ✅ Adjusted height
+                        width: MediaQuery.of(context).size.width * 0.20,
+                        height: MediaQuery.of(context).size.width * 0.20,
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             image: NetworkImage(course["image"] ??

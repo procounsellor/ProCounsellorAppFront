@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'deadlines/AllDeadlinesPage.dart';
 
 class UpcomingDeadlinesTicker extends StatefulWidget {
   @override
@@ -13,11 +14,156 @@ class UpcomingDeadlinesTicker extends StatefulWidget {
 class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
     with SingleTickerProviderStateMixin {
   final List<Map<String, String>> _deadlines = [
-    {"title": "JEE Advanced Registration", "date": "April 15, 2025"},
-    {"title": "NEET Application Deadline", "date": "March 20, 2025"},
-    {"title": "CAT Exam Last Date", "date": "November 10, 2025"},
-    {"title": "SAT Registration Closes", "date": "August 5, 2025"},
-    {"title": "IELTS Exam Booking", "date": "June 25, 2025"},
+    {
+      "title": "JEE Advanced Registration",
+      "date": "September 15, 2025",
+      "video": "https://www.youtube.com/watch?v=gx-zsCXHaIM"
+    },
+    {
+      "title": "NEET Application Deadline",
+      "date": "June 12, 2025",
+      "video": "https://www.youtube.com/watch?v=rYKw93Z87JI"
+    },
+    {
+      "title": "CAT Exam Last Date",
+      "date": "October 18, 2025",
+      "video": "https://www.youtube.com/watch?v=P6WEPpuAL-0"
+    },
+    {
+      "title": "SAT Registration Closes",
+      "date": "February 07, 2025",
+      "video": "https://www.youtube.com/watch?v=9eObeYSeAqc"
+    },
+    {
+      "title": "IELTS Exam Booking",
+      "date": "October 04, 2025",
+      "video": "https://www.youtube.com/watch?v=WgANT7LFufY"
+    },
+    {
+      "title": "GATE Application Deadline",
+      "date": "July 14, 2025",
+      "video": "https://www.youtube.com/watch?v=Yu4-xnBP-00"
+    },
+    {
+      "title": "GMAT Registration",
+      "date": "June 09, 2025",
+      "video": "https://www.youtube.com/watch?v=S29HdtySxak"
+    },
+    {
+      "title": "CLAT Registration",
+      "date": "September 09, 2025",
+      "video": "https://www.youtube.com/watch?v=VKXc116xJvU"
+    },
+    {
+      "title": "XAT Exam Deadline",
+      "date": "August 01, 2025",
+      "video": "https://www.youtube.com/watch?v=uNGrA13c5-c"
+    },
+    {
+      "title": "TOEFL Test Booking",
+      "date": "November 19, 2025",
+      "video": "https://www.youtube.com/watch?v=3hDUwmiWOyQ"
+    },
+    {
+      "title": "BITSAT Registration",
+      "date": "August 03, 2025",
+      "video": "https://www.youtube.com/watch?v=KnYxhO7D_7M"
+    },
+    {
+      "title": "AIIMS Nursing Application",
+      "date": "August 06, 2025",
+      "video": "https://www.youtube.com/watch?v=M9bengGYZNA"
+    },
+    {
+      "title": "CUET UG Deadline",
+      "date": "September 02, 2025",
+      "video": "https://www.youtube.com/watch?v=_5Aj4T0h6S8"
+    },
+    {
+      "title": "CUET PG Deadline",
+      "date": "November 08, 2025",
+      "video": "https://www.youtube.com/watch?v=oYzcXJ1bt_0"
+    },
+    {
+      "title": "ICAR AIEEA Registration",
+      "date": "August 31, 2025",
+      "video": "https://www.youtube.com/watch?v=7TSvAGGlchU"
+    },
+    {
+      "title": "NIFT Entrance Application",
+      "date": "August 13, 2025",
+      "video": "http://youtube.com/watch?v=jDptwnCtrqM"
+    },
+    {
+      "title": "NID DAT Deadline",
+      "date": "July 30, 2025",
+      "video": "https://www.youtube.com/watch?v=q1VzDpiq1Gw"
+    },
+    {
+      "title": "LSAT India Deadline",
+      "date": "May 30, 2025",
+      "video": "https://www.youtube.com/watch?v=SZ4Eun70Iv4"
+    },
+    {
+      "title": "CMAT Registration",
+      "date": "July 23, 2025",
+      "video": "https://www.youtube.com/watch?v=uPXiuMTQzJs"
+    },
+    {
+      "title": "SNAP Exam Deadline",
+      "date": "May 19, 2025",
+      "video": "https://www.youtube.com/watch?v=JqfZUXVTCaY"
+    },
+    {
+      "title": "NMAT Registration Closes",
+      "date": "July 26, 2025",
+      "video": "https://www.youtube.com/watch?v=OsPZJpvtHjE"
+    },
+    {
+      "title": "JAM Exam Deadline",
+      "date": "September 16, 2025",
+      "video": "https://www.youtube.com/watch?v=NdEisWHzlW4"
+    },
+    {
+      "title": "UPSC CSE Preliminary Date",
+      "date": "July 14, 2025",
+      "video": "https://www.youtube.com/watch?v=tXJblE90Tbo"
+    },
+    {
+      "title": "SSC CGL Application Closes",
+      "date": "September 13, 2025",
+      "video": "https://www.youtube.com/watch?v=vM2xmiMDMAo"
+    },
+    {
+      "title": "IBPS PO Registration",
+      "date": "June 10, 2025",
+      "video": "https://www.youtube.com/watch?v=VaIM_EoFFqg"
+    },
+    {
+      "title": "RRB NTPC Application",
+      "date": "February 24, 2025",
+      "video": "https://www.youtube.com/watch?v=Iz058RYM5vo"
+    },
+    {
+      "title": "CDS Exam Deadline",
+      "date": "May 14, 2025",
+      "video": "https://www.youtube.com/watch?v=y76Wh388tSE"
+    },
+    {
+      "title": "NDA Application",
+      "date": "March 25, 2025",
+      "video": "https://www.youtube.com/watch?v=ghW_eylqIT8"
+    },
+    {
+      "title": "MAT Exam Date",
+      "date": "August 23, 2025",
+      "video": "https://www.youtube.com/watch?v=vyoT0ipmNiU"
+    },
+    {
+      "title": "UGC NET Registration",
+      "date": "March 07, 2025",
+      "video": "https://www.youtube.com/watch?v=qMWkrT7ZCCU"
+    }
   ];
 
   int _currentIndex = 0;
@@ -169,45 +315,54 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
 
     final frontData = _deadlines[frontIndex];
     final backData = _deadlines[backIndex];
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AllDeadlinesPage(deadlines: _deadlines),
+          ),
+        );
+      },
+      child: Center(
+        child: SizedBox(
+          height: 100,
+          width: screenWidth,
+          child: AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              final isFirstHalf = _animation.value <= pi / 2;
+              final showFront = isFirstHalf;
 
-    return Center(
-      child: SizedBox(
-        height: 100,
-        width: screenWidth,
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            final isFirstHalf = _animation.value <= pi / 2;
-            final showFront = isFirstHalf;
+              final rotationY = _animation.value;
+              final isBack = rotationY > pi / 2;
 
-            final rotationY = _animation.value;
-            final isBack = rotationY > pi / 2;
+              final face = showFront
+                  ? _buildFace(
+                      imagePath: 'assets/images/deadline.png',
+                      text: "${frontData['title']} • ${frontData['date']}",
+                      textOnLeft: true,
+                    )
+                  : Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..rotateY(pi), // flip horizontally
+                      child: _buildFace(
+                        imagePath: 'assets/images/deadline2.png',
+                        text: "${backData['title']} • ${backData['date']}",
+                        textOnLeft: false,
+                      ),
+                    );
 
-            final face = showFront
-                ? _buildFace(
-                    imagePath: 'assets/images/deadline.png',
-                    text: "${frontData['title']} • ${frontData['date']}",
-                    textOnLeft: true,
-                  )
-                : Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..rotateY(pi), // flip horizontally
-                    child: _buildFace(
-                      imagePath: 'assets/images/deadline2.png',
-                      text: "${backData['title']} • ${backData['date']}",
-                      textOnLeft: false,
-                    ),
-                  );
-
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(rotationY),
-              child: face,
-            );
-          },
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY(rotationY),
+                child: face,
+              );
+            },
+          ),
         ),
       ),
     );

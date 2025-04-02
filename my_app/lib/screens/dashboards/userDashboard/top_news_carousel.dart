@@ -41,6 +41,7 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
         final List<dynamic> newsData = json.decode(response.body);
         for (var newsItem in newsData) {
           final news = News.fromJson(newsItem);
+          if (!mounted) return;
           setState(() {
             _newsList.add(news);
           });
@@ -56,9 +57,11 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
   void _startAutoScroll() {
     _timer = Timer.periodic(Duration(seconds: 3), (timer) {
       if (_newsList.isNotEmpty) {
+        if (!mounted) return;
         setState(() {
           _currentPage = (_currentPage + 1) % _newsList.length;
         });
+
         _pageController.animateToPage(
           _currentPage,
           duration: Duration(milliseconds: 500),
@@ -98,7 +101,8 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => NewsDetailsPage(news: _newsList[index]),
+                        builder: (context) =>
+                            NewsDetailsPage(news: _newsList[index]),
                       ),
                     );
                   },
@@ -119,7 +123,8 @@ class _TopNewsCarouselState extends State<TopNewsCarousel> {
                               if (loadingProgress == null) return child;
                               return Center(child: CircularProgressIndicator());
                             },
-                            errorBuilder: (context, error, stackTrace) => Center(
+                            errorBuilder: (context, error, stackTrace) =>
+                                Center(
                               child: Text(
                                 "Failed to load image",
                                 style: TextStyle(color: Colors.grey),

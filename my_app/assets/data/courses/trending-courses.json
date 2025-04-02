@@ -1,0 +1,446 @@
+[
+    {
+        "name": "Data Science & Analytics",
+        "category": "Technology",
+        "description": {
+            "overview": "With the rise of big data, data science has become a lucrative career. The course covers data analysis, statistical modeling, machine learning, and business intelligence.",
+            "top_institutes": ["IIT Madras", "ISI Kolkata", "IIM Bangalore", "BITS Pilani"],
+            "skills_covered": [
+                "Python", "R", "SQL", "Power BI", "Big Data Analytics", 
+                "Statistical Analysis", "Machine Learning", "Deep Learning"
+            ],
+            "job_roles": [
+                "Data Scientist", "Business Analyst", "Data Engineer", 
+                "Machine Learning Engineer", "Big Data Analyst"
+            ],
+            "salary_range": "INR 10-35 LPA",
+            "industry_demand": "Very High - Every sector relies on data-driven decision-making.",
+            "average_course_duration": "6 months - 2 years",
+            "certifications": [
+                "Google Data Analytics Certification", "IBM Data Science Professional Certificate", 
+                "AWS Certified Data Analytics", "Microsoft Azure Data Scientist"
+            ],
+            "popular_online_courses": [
+                "Coursera - Data Science by Johns Hopkins", "Udacity Data Scientist Nanodegree", 
+                "Harvard Data Science (edX)"
+            ],
+            "future_scope": "Data Science will integrate more with AI, automation, and cloud computing for real-time analytics and decision-making.",
+            "market_growth_projection": "Expected to grow by 40% annually, with increasing applications in AI, finance, and healthcare.",
+            "global_demand": "Very High - Data science is a core skill across industries worldwide.",
+            "investment_required": "INR 50,000 - 6 Lacs (varies based on institute)",
+            "eligibility_criteria": "Bachelor’s degree in Computer Science, Mathematics, Statistics, or Engineering.",
+            "top_companies_hiring": [
+                "Google", "Microsoft", "Amazon", "JP Morgan", "Deloitte", "Netflix", "Uber"
+            ],
+            "useful_resources": {
+                "books": [
+                    "The Data Science Handbook", "Hands-On Machine Learning with Scikit-Learn & TensorFlow", 
+                    "Python for Data Analysis by Wes McKinney"
+                ],
+                "websites": ["kaggle.com", "towardsdatascience.com", "analyticsvidhya.com"],
+                "tools": ["Jupyter Notebook", "Google Colab", "TensorFlow", "Hadoop", "Spark"]
+            },
+            "industry_domains": [
+                "Finance", "Healthcare", "E-commerce", "Marketing", "Cybersecurity", "Automobile"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Artificial Intelligence & Machine Learning",
+        "category": "Technology",
+        "description": {
+            "overview": "AI & ML are among the fastest-growing fields in India, with applications in automation, data science, robotics, and predictive analytics. The course focuses on deep learning, neural networks, and AI-driven solutions.",
+            "top_institutes": ["IIT Hyderabad", "IIT Delhi", "IIIT Hyderabad", "Amity University"],
+            "skills_covered": [
+                "Python", "TensorFlow", "Keras", "Deep Learning", 
+                "Natural Language Processing (NLP)", "Computer Vision", 
+                "Reinforcement Learning", "Generative AI", "ChatGPT & LLMs"
+            ],
+            "job_roles": [
+                "AI Engineer", "Machine Learning Engineer", "Data Scientist", 
+                "Deep Learning Engineer", "AI Researcher", "NLP Engineer"
+            ],
+            "salary_range": "INR 8-40 LPA",
+            "industry_demand": "Very High - AI is revolutionizing industries like finance, healthcare, and e-commerce.",
+            "average_course_duration": "6 months - 2 years",
+            "certifications": [
+                "Google TensorFlow Developer Certificate", "IBM AI Engineering Certification",
+                "AWS Certified Machine Learning", "Microsoft AI Fundamentals"
+            ],
+            "popular_online_courses": [
+                "Andrew Ng’s Machine Learning (Coursera)", "Deep Learning Specialization (Coursera)",
+                "MIT AI Ethics and Responsible AI (edX)"
+            ],
+            "future_scope": "AI is evolving towards autonomous systems, generative AI, and advanced robotics, impacting industries worldwide.",
+            "market_growth_projection": "Expected to reach a $300 billion industry by 2030, driven by AI automation and deep learning advancements.",
+            "global_demand": "Very High - AI is a key driver of technological progress worldwide.",
+            "investment_required": "INR 50,000 - 10 Lacs (varies based on institute and specialization)",
+            "eligibility_criteria": "Bachelor’s degree in Computer Science, Engineering, Mathematics, or Statistics.",
+            "top_companies_hiring": [
+                "Google", "Microsoft", "Amazon", "OpenAI", "NVIDIA", "Tesla", "Meta", "Apple"
+            ],
+            "useful_resources": {
+                "books": [
+                    "Deep Learning by Ian Goodfellow", "Pattern Recognition and Machine Learning by Christopher Bishop",
+                    "Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow by Aurélien Géron"
+                ],
+                "websites": ["arxiv.org", "towardsdatascience.com", "paperswithcode.com"],
+                "tools": ["Jupyter Notebook", "Google Colab", "PyTorch", "Hugging Face", "Apache Spark MLlib"]
+            },
+            "industry_domains": [
+                "Healthcare", "Autonomous Vehicles", "Finance", "E-commerce", 
+                "Cybersecurity", "Marketing", "Robotics"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Blockchain & Web3 Development",
+        "category": "Technology",
+        "description": {
+            "overview": "Blockchain technology is disrupting finance, supply chain, and healthcare. The course covers smart contracts, decentralized applications (DApps), DeFi, NFTs, and cryptographic security.",
+            "top_institutes": ["IIT Bombay", "IIIT Hyderabad", "NIT Warangal", "BITS Pilani"],
+            "skills_covered": [
+                "Solidity", "Ethereum", "Hyperledger Fabric", "Cryptography",
+                "Smart Contracts", "DeFi Protocols", "Tokenomics", "Web3.js",
+                "Decentralized Identity", "Zero-Knowledge Proofs"
+            ],
+            "job_roles": [
+                "Blockchain Developer", "Smart Contract Engineer",
+                "DeFi Analyst", "Crypto Security Expert", "Web3 Developer",
+                "NFT Marketplace Developer"
+            ],
+            "salary_range": "INR 10-35 LPA",
+            "industry_demand": "Growing - Blockchain is the backbone of Web3 innovations.",
+            "average_course_duration": "6 months - 2 years",
+            "certifications": [
+                "Certified Blockchain Developer (CBDE)", "Ethereum Developer Certification",
+                "Hyperledger Certified Expert", "Solidity Developer Certification"
+            ],
+            "popular_online_courses": [
+                "Blockchain Specialization (Coursera)", "Ethereum and Solidity (Udemy)",
+                "Decentralized Finance (DeFi) Primer (MIT)"
+            ],
+            "future_scope": "Web3 adoption, metaverse integration, and decentralized governance will expand blockchain applications.",
+            "market_growth_projection": "Expected to reach $1.2 trillion by 2030, driven by DeFi, NFTs, and enterprise blockchain solutions.",
+            "global_demand": "Very High - Blockchain is revolutionizing finance, gaming, and governance.",
+            "investment_required": "INR 50,000 - 5 Lacs (varies based on institute and specialization)",
+            "eligibility_criteria": "Bachelor’s degree in Computer Science, Engineering, or Finance, with a background in coding.",
+            "top_companies_hiring": [
+                "Binance", "Ethereum Foundation", "Coinbase", "Polygon", 
+                "Consensys", "Solana Labs", "Meta", "Microsoft", "IBM"
+            ],
+            "useful_resources": {
+                "books": [
+                    "Mastering Bitcoin by Andreas Antonopoulos", "Mastering Ethereum by Andreas Antonopoulos",
+                    "The Basics of Bitcoins and Blockchains by Antony Lewis"
+                ],
+                "websites": ["ethereum.org", "coindesk.com", "decrypt.co", "soliditylang.org"],
+                "tools": ["Remix IDE", "Hardhat", "Truffle Suite", "Metamask", "Infura", "Alchemy"]
+            },
+            "industry_domains": [
+                "Finance & DeFi", "Supply Chain", "Gaming & NFTs", "Healthcare",
+                "Identity Management", "Government & Public Services"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Cybersecurity & Ethical Hacking",
+        "category": "Technology",
+        "description": {
+            "overview": "With increasing cyber threats, cybersecurity professionals are in high demand. The course covers penetration testing, cryptography, network security, malware analysis, and digital forensics.",
+            "top_institutes": ["IIT Kanpur", "IIIT Delhi", "Amrita Vishwa Vidyapeetham", "UPES Dehradun"],
+            "skills_covered": [
+                "Ethical Hacking", "Kali Linux", "Cyber Forensics", "Cryptography",
+                "Penetration Testing", "Cloud Security", "Threat Intelligence",
+                "Reverse Engineering", "Zero Trust Security", "Bug Bounty Hunting"
+            ],
+            "job_roles": [
+                "Cybersecurity Analyst", "Ethical Hacker", "SOC Analyst",
+                "Penetration Tester", "Malware Analyst", "Cloud Security Engineer",
+                "Incident Response Specialist"
+            ],
+            "salary_range": "INR 8-30 LPA",
+            "industry_demand": "Very High - Increasing cyber threats make this a critical field.",
+            "average_course_duration": "6 months - 2 years",
+            "certifications": [
+                "Certified Ethical Hacker (CEH)", "Offensive Security Certified Professional (OSCP)",
+                "Certified Information Systems Security Professional (CISSP)",
+                "Certified Information Security Manager (CISM)", "CompTIA Security+"
+            ],
+            "popular_online_courses": [
+                "Cybersecurity Specialization (Coursera)", "Ethical Hacking for Beginners (Udemy)",
+                "MIT Cybersecurity Program"
+            ],
+            "future_scope": "Cybersecurity is evolving with AI-based security, Zero Trust frameworks, and blockchain security solutions.",
+            "market_growth_projection": "Expected to reach $400 billion by 2027 due to rising cybercrime and data breaches.",
+            "global_demand": "Very High - Cyber threats affect all industries, from finance to healthcare.",
+            "investment_required": "INR 50,000 - 10 Lacs (varies based on institute and specialization)",
+            "eligibility_criteria": "Bachelor’s degree in Computer Science, IT, or related fields; knowledge of networking is an advantage.",
+            "top_companies_hiring": [
+                "Google", "Microsoft", "IBM", "Cisco", "CrowdStrike", 
+                "Palo Alto Networks", "FireEye", "Darktrace", "Tesla", "Amazon"
+            ],
+            "useful_resources": {
+                "books": [
+                    "The Web Application Hacker’s Handbook by Dafydd Stuttard",
+                    "Metasploit: The Penetration Tester’s Guide by David Kennedy",
+                    "Hacking: The Art of Exploitation by Jon Erickson"
+                ],
+                "websites": ["kali.org", "owasp.org", "hackerone.com", "bugcrowd.com"],
+                "tools": ["Wireshark", "Metasploit", "Burp Suite", "Nmap", "Snort", "Splunk"]
+            },
+            "industry_domains": [
+                "Banking & Finance", "Government Security", "Healthcare IT",
+                "E-commerce & Retail", "Cloud Computing", "Telecommunications"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Digital Marketing & SEO",
+        "category": "Marketing",
+        "description": {
+            "overview": "Digital marketing is essential for business growth in the online world. This course focuses on SEO, social media marketing, content marketing, paid advertising, and conversion optimization strategies.",
+            "top_institutes": ["IIM Bangalore", "IIM Kolkata", "ISB Hyderabad", "NIIT", "Manipal ProLearn"],
+            "skills_covered": [
+                "SEO (Search Engine Optimization)", "Google Ads", "Facebook Ads",
+                "Social Media Marketing", "Affiliate Marketing", "Email Marketing",
+                "Content Marketing", "Conversion Rate Optimization (CRO)",
+                "Google Analytics", "E-commerce Marketing", "Growth Hacking"
+            ],
+            "job_roles": [
+                "SEO Specialist", "Digital Marketing Manager", "Growth Hacker",
+                "Content Strategist", "PPC (Pay-Per-Click) Analyst",
+                "Social Media Manager", "Affiliate Marketing Manager"
+            ],
+            "salary_range": "INR 5-25 LPA",
+            "industry_demand": "Very High - E-commerce, startups, and enterprises are heavily investing in digital marketing.",
+            "average_course_duration": "3 months - 2 years",
+            "certifications": [
+                "Google Digital Marketing Certification", "HubSpot Content Marketing Certification",
+                "Facebook Blueprint Certification", "SEMrush SEO Certification",
+                "Hootsuite Social Media Marketing Certification"
+            ],
+            "popular_online_courses": [
+                "Google Digital Garage - Free Digital Marketing Course",
+                "SEO Specialization by Coursera", "HubSpot Digital Marketing Course",
+                "Udacity Digital Marketing Nanodegree"
+            ],
+            "future_scope": "AI-driven marketing, voice search optimization, personalized content marketing, and automation will shape the future.",
+            "market_growth_projection": "Expected to reach $800 billion by 2027 due to the increasing shift to online platforms.",
+            "global_demand": "High - Every business needs an online presence and marketing strategy.",
+            "investment_required": "INR 30,000 - 5 Lacs (varies based on institute and specialization)",
+            "eligibility_criteria": "No strict prerequisites, but a background in business, marketing, or analytics is beneficial.",
+            "top_companies_hiring": [
+                "Google", "Amazon", "Facebook", "LinkedIn", "HubSpot",
+                "Zomato", "Swiggy", "Netflix", "Flipkart", "Nykaa", "Paytm"
+            ],
+            "useful_resources": {
+                "books": [
+                    "The Art of SEO by Eric Enge",
+                    "Building A StoryBrand by Donald Miller",
+                    "Influence: The Psychology of Persuasion by Robert Cialdini"
+                ],
+                "websites": ["moz.com", "searchengineland.com", "neilpatel.com", "semrush.com"],
+                "tools": ["Google Analytics", "Ahrefs", "SEMrush", "Yoast SEO", "BuzzSumo", "Hootsuite"]
+            },
+            "industry_domains": [
+                "E-commerce", "Finance & Banking", "Healthcare", "Education", "Travel & Hospitality",
+                "Real Estate", "Entertainment & Media"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "UX/UI Design",
+        "category": "Design & Creativity",
+        "description": {
+            "overview": "User Experience (UX) and User Interface (UI) design are crucial for creating engaging digital experiences. This course covers design principles, wireframing, prototyping, usability testing, and interaction design.",
+            "top_institutes": ["NID Ahmedabad", "IIT Bombay", "MIT Institute of Design", "Srishti Institute of Art, Design & Technology", "IIT Hyderabad"],
+            "skills_covered": [
+                "User Research", "Wireframing", "Prototyping",
+                "Visual Design", "Design Thinking", "Information Architecture",
+                "Interaction Design", "Usability Testing", "Responsive Design",
+                "Motion Design", "Mobile & Web Design"
+            ],
+            "job_roles": [
+                "UX Designer", "UI Designer", "Product Designer",
+                "Interaction Designer", "Visual Designer",
+                "UX Researcher", "Design Consultant"
+            ],
+            "salary_range": "INR 7-25 LPA",
+            "industry_demand": "High - Every business needs intuitive and engaging digital experiences.",
+            "average_course_duration": "6 months - 2 years",
+            "certifications": [
+                "Google UX Design Certificate", "NN/g UX Certification",
+                "Adobe Certified Expert (ACE)", "IDF UX Certification"
+            ],
+            "popular_online_courses": [
+                "Google UX Design Professional Certificate (Coursera)",
+                "UX & UI Design Masterclass (Udemy)",
+                "Human-Computer Interaction by Stanford (Coursera)",
+                "Figma UI/UX Design Course (Skillshare)"
+            ],
+            "future_scope": "AI-driven design, augmented reality (AR) interfaces, and voice-based UX will shape the future of UX/UI design.",
+            "market_growth_projection": "Expected to grow at 15% CAGR by 2030 due to digital transformation in businesses.",
+            "global_demand": "High - UX/UI designers are needed across industries from tech startups to large enterprises.",
+            "investment_required": "INR 50,000 - 8 Lacs (varies based on institute and specialization)",
+            "eligibility_criteria": "No strict prerequisites, but a background in design, psychology, or human-computer interaction is beneficial.",
+            "top_companies_hiring": [
+                "Google", "Apple", "Adobe", "Microsoft", "Facebook",
+                "Amazon", "Swiggy", "Zomato", "Netflix", "Paytm", "Byju's"
+            ],
+            "useful_resources": {
+                "books": [
+                    "The Design of Everyday Things by Don Norman",
+                    "Don't Make Me Think by Steve Krug",
+                    "Hooked: How to Build Habit-Forming Products by Nir Eyal"
+                ],
+                "websites": ["uxdesign.cc", "smashingmagazine.com", "nngroup.com", "uxplanet.org"],
+                "tools": ["Figma", "Adobe XD", "Sketch", "InVision", "Axure RP", "Balsamiq", "Proto.io"]
+            },
+            "industry_domains": [
+                "Technology & Software", "E-commerce", "Fintech",
+                "Healthcare", "Gaming", "EdTech", "Media & Entertainment"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Biotechnology & Bioinformatics",
+        "category": "Science & Research",
+        "description": {
+            "overview": "Biotechnology & Bioinformatics integrate biology, computational techniques, and engineering to advance research in medicine, agriculture, and environmental science. The course covers genetic engineering, drug discovery, computational biology, and biostatistics.",
+            "top_institutes": [
+                "IIT Delhi", "IIT Kharagpur", "IISc Bangalore", "BITS Pilani",
+                "Jawaharlal Nehru University (JNU)", "Amity University", "Anna University"
+            ],
+            "skills_covered": [
+                "CRISPR Gene Editing", "Genomics", "Proteomics",
+                "Molecular Biology", "Computational Biology",
+                "Drug Discovery", "Biostatistics", "Next-Gen Sequencing",
+                "Synthetic Biology", "Data Analysis in Bioinformatics"
+            ],
+            "job_roles": [
+                "Biotechnologist", "Genetic Engineer", "Bioinformatics Scientist",
+                "Biomedical Scientist", "Clinical Research Associate",
+                "Pharmaceutical Scientist", "Bioprocess Engineer", "Medical Data Analyst"
+            ],
+            "salary_range": "INR 6-20 LPA",
+            "industry_demand": "Growing - Biotechnology is at the forefront of healthcare, agriculture, and sustainability.",
+            "average_course_duration": "4 years (B.Tech/B.Sc), 2 years (M.Tech/M.Sc), 4-5 years (Ph.D.)",
+            "certifications": [
+                "Certified Clinical Bioinformatics Professional (CCBP)",
+                "Certified Biomedical Engineer (CBME)",
+                "Professional Certificate in Biotechnology (MITx)",
+                "Drug Discovery & Development Certificate (Harvard)"
+            ],
+            "popular_online_courses": [
+                "Introduction to Genomic Data Science (Coursera - Johns Hopkins)",
+                "Bioinformatics Specialization (Coursera - UC San Diego)",
+                "Biotechnology Fundamentals (edX - Harvard)",
+                "Genetic Engineering & CRISPR (Udemy)"
+            ],
+            "future_scope": "Gene editing, personalized medicine, regenerative medicine, and bioinformatics-driven drug discovery will shape the future.",
+            "market_growth_projection": "Expected to grow at 12% CAGR by 2030 due to advancements in healthcare and genetic engineering.",
+            "global_demand": "High - Biotechnology professionals are sought after in pharma, healthcare, and agricultural industries.",
+            "investment_required": "INR 1.5 - 10 Lacs (varies based on specialization and institute)",
+            "eligibility_criteria": "Biology, chemistry, and mathematics background required for undergraduate programs. Research roles often require a Master's or Ph.D.",
+            "top_companies_hiring": [
+                "Biocon", "Serum Institute of India", "Novartis", "Pfizer",
+                "AstraZeneca", "GSK", "Johnson & Johnson", "Thermo Fisher Scientific"
+            ],
+            "useful_resources": {
+                "books": [
+                    "Molecular Biology of the Cell by Alberts",
+                    "Principles of Gene Manipulation by Primrose",
+                    "Introduction to Bioinformatics by Lesk"
+                ],
+                "websites": [
+                    "ncbi.nlm.nih.gov", "ebi.ac.uk", "biostars.org", "nature.com/biotech"
+                ],
+                "tools": [
+                    "BLAST", "Bioconductor", "PyMOL", "Rosetta", "GROMACS",
+                    "MATLAB for Bioinformatics", "R Programming"
+                ]
+            },
+            "industry_domains": [
+                "Pharmaceuticals", "Healthcare", "Agricultural Biotechnology",
+                "Environmental Science", "Bioinformatics", "Genetic Engineering"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    },
+    {
+        "name": "Renewable Energy & Sustainability",
+        "category": "Engineering & Environment",
+        "description": {
+            "overview": "Renewable Energy & Sustainability focuses on sustainable solutions such as solar, wind, hydro, and bioenergy to reduce carbon footprints and promote green energy. The course covers sustainable energy systems, environmental management, and climate change mitigation.",
+            "top_institutes": [
+                "IIT Bombay", "TERI School of Advanced Studies", "IIT Madras", 
+                "Amrita Vishwa Vidyapeetham", "IISc Bangalore", "NIT Trichy", 
+                "Manipal Academy of Higher Education"
+            ],
+            "skills_covered": [
+                "Solar Energy Systems", "Wind Energy Technology", "Energy Auditing",
+                "Sustainability Analysis", "Carbon Footprint Management", 
+                "Smart Grid Technologies", "Hydropower & Biomass Energy", 
+                "Climate Change Mitigation", "Life Cycle Assessment (LCA)", 
+                "Green Building Design"
+            ],
+            "job_roles": [
+                "Renewable Energy Engineer", "Sustainability Consultant", "Environmental Analyst",
+                "Energy Policy Analyst", "Solar Power Engineer", "Wind Turbine Engineer",
+                "Carbon Trading Specialist", "Sustainable Development Officer"
+            ],
+            "salary_range": "INR 7-22 LPA",
+            "industry_demand": "High - Global policies are pushing for clean energy solutions and sustainability.",
+            "average_course_duration": "4 years (B.Tech/B.Sc), 2 years (M.Tech/M.Sc), 4-5 years (Ph.D.)",
+            "certifications": [
+                "Certified Renewable Energy Professional (CREP)",
+                "LEED Green Associate (Leadership in Energy and Environmental Design)",
+                "Solar Energy Engineering (Delft University - edX)",
+                "Wind Energy Systems Certification (Coursera)"
+            ],
+            "popular_online_courses": [
+                "Solar Energy Basics (Coursera - University at Buffalo)",
+                "Renewable Energy and Green Building Entrepreneurship (Duke University - Coursera)",
+                "Energy Principles (edX - University of Queensland)",
+                "Carbon Capture and Storage (MIT - edX)"
+            ],
+            "future_scope": "Growth in smart grids, energy storage, carbon-neutral cities, and sustainable urban planning.",
+            "market_growth_projection": "Expected to grow at 15% CAGR by 2030 due to rising global focus on sustainability.",
+            "global_demand": "Very High - Governments and corporations are investing in renewable energy technologies.",
+            "investment_required": "INR 2 - 12 Lacs (varies based on specialization and institute)",
+            "eligibility_criteria": "Engineering, physics, and environmental science background required for undergraduate programs. Research roles often require a Master's or Ph.D.",
+            "top_companies_hiring": [
+                "Tata Power", "Adani Green Energy", "ReNew Power", "Siemens Gamesa",
+                "Suzlon Energy", "Shell Renewables", "General Electric (GE)",
+                "Schneider Electric", "Tesla Energy", "NextEra Energy"
+            ],
+            "useful_resources": {
+                "books": [
+                    "Renewable Energy: Power for a Sustainable Future by Godfrey Boyle",
+                    "Fundamentals of Renewable Energy Systems by D. Mukherjee",
+                    "Energy and Civilization: A History by Vaclav Smil"
+                ],
+                "websites": [
+                    "energy.gov", "irena.org", "nrel.gov", "climate.nasa.gov"
+                ],
+                "tools": [
+                    "HOMER Energy", "PVWatts Calculator", "RETScreen",
+                    "SAM (System Advisor Model)", "PVsyst", "EnergyPlus"
+                ]
+            },
+            "industry_domains": [
+                "Renewable Energy Production", "Environmental Consulting", 
+                "Energy Policy & Regulations", "Sustainable Infrastructure", 
+                "Carbon Trading & Emission Control", "Green Building & Architecture"
+            ],
+            "course_type": "Hybrid (Online & Offline)"
+        }
+    }    
+]

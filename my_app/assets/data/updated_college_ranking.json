@@ -1,6 +1,6 @@
 [
     {
-        "name": "Indian Institute of Technology, Roorkee",
+        "name": "Indian Institute of Technology Roorkee",
         "city": "Roorkee",
         "rank": 1,
         "state": "Uttarakhand",
@@ -9,7 +9,7 @@
         "image": "https://source.unsplash.com/300x200/?architecture university"
     },
     {
-        "name": "National Institute of Technology, Calicut",
+        "name": "National Institute of Technology Calicut",
         "city": "Kozhikode",
         "rank": 2,
         "state": "Kerala",
@@ -18,7 +18,7 @@
         "image": "https://source.unsplash.com/300x200/?architecture university"
     },
     {
-        "name": "Indian Institute of Technology, Kharagpur",
+        "name": "Indian Institute of Technology Kharagpur",
         "city": "Kharagpur",
         "rank": 3,
         "state": "West Bengal",
@@ -27,7 +27,7 @@
         "image": "https://source.unsplash.com/300x200/?architecture university"
     },
     {
-        "name": "School of Planning and Architecture, New Delhi",
+        "name": "School of Planning and Architecture New Delhi",
         "city": "New Delhi",
         "rank": 4,
         "state": "Delhi",
@@ -36,7 +36,7 @@
         "image": "https://source.unsplash.com/300x200/?architecture university"
     },
     {
-        "name": "National Institute of Technology, Tiruchirappalli",
+        "name": "National Institute of Technology Tiruchirappalli",
         "city": "Tiruchirappalli",
         "rank": 5,
         "state": "Tamil Nadu",
@@ -1539,7 +1539,7 @@
         "image": "https://source.unsplash.com/300x200/?engineering university"
     },
     {
-        "name": "Indian Institute of Technology, Delhi",
+        "name": "Indian Institute of Technology Delhi",
         "city": "New Delhi",
         "rank": 2,
         "state": "Delhi",
@@ -1548,7 +1548,7 @@
         "image": "https://source.unsplash.com/300x200/?engineering university"
     },
     {
-        "name": "Indian Institute of Technology, Bombay",
+        "name": "Indian Institute of Technology Bombay",
         "city": "Mumbai",
         "rank": 3,
         "state": "Maharashtra",
@@ -1566,7 +1566,7 @@
         "image": "https://source.unsplash.com/300x200/?engineering university"
     },
     {
-        "name": "Indian Institute of Technology, Kharagpur",
+        "name": "Indian Institute of Technology Kharagpur",
         "city": "Kharagpur",
         "rank": 5,
         "state": "West Bengal",
@@ -1575,7 +1575,7 @@
         "image": "https://source.unsplash.com/300x200/?engineering university"
     },
     {
-        "name": "Indian Institute of Technology, Roorkee",
+        "name": "Indian Institute of Technology Roorkee",
         "city": "Roorkee",
         "rank": 6,
         "state": "Uttarakhand",
@@ -1701,7 +1701,7 @@
         "image": "https://source.unsplash.com/300x200/?engineering university"
     },
     {
-        "name": "Indian Institute of Technology, Mandi",
+        "name": "Indian Institute of Technology Mandi",
         "city": "Mandi",
         "rank": 20,
         "state": "Himachal Pradesh",

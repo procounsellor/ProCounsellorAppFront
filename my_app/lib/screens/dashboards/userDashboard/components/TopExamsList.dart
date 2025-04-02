@@ -88,7 +88,7 @@ class _TopExamsListState extends State<TopExamsList> {
                   );
                 },
                 child: Icon(
-                  Icons.double_arrow_rounded,
+                  Icons.apps,
                   size: 36,
                   color: Colors.greenAccent,
                 ),
