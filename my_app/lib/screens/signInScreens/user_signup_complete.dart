@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 
+import '../newCallingScreen/save_fcm_token.dart';
+
 final storage = FlutterSecureStorage();
 
 class SignUpCompleteScreen extends StatefulWidget {
@@ -32,6 +34,9 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
     await storage.write(key: "role", value: "user");
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
+    // await FirestoreService.saveFCMTokenUser(widget.userId);
+    // print(FirestoreService.getFCMTokenUser(widget.userId));
+
 
     // Authenticate with Firebase using the custom token
     await FirebaseAuth.instance

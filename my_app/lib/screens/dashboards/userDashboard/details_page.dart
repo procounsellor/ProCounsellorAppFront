@@ -3,10 +3,14 @@ import 'package:http/http.dart' as http; // Import the http package
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
 import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/post_review.dart';
+import 'package:my_app/screens/newCallingScreen/video_call_screen.dart';
 import 'package:my_app/services/call_service.dart';
 import 'package:my_app/services/video_call_service.dart';
 import 'dart:convert'; // For encoding/decoding JSON
 import '../../../services/api_utils.dart';
+import '../../newCallingScreen/audio_call_screen.dart';
+import '../../newCallingScreen/firebase_notification_service.dart';
+import '../../newCallingScreen/save_fcm_token.dart';
 import 'chatting_page.dart';
 import '../../callingScreens/video_call_page.dart';
 
@@ -829,9 +833,36 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                   // Call Button
                                   ElevatedButton.icon(
                                     onPressed: isSubscribed
-                                        ? () {
-                                            _startCall();
-                                          }
+                                        ? () async {
+                                                String receiverId = widget.counsellorId;
+                                                String senderName = widget.userId;
+                                                String channelId =
+                                                    "audio_${DateTime.now().millisecondsSinceEpoch}";
+
+                                                // ✅ Get Receiver's FCM Token from Firestore
+                                                //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+
+                                                await FirebaseNotificationService.sendCallNotification(
+                                                  receiverFCMToken: "",
+                                                  senderName: senderName,
+                                                  channelId: channelId,
+                                                  receiverId: receiverId,
+                                                  callType: "audio"
+                                                );
+
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => AudioCallScreen(
+                                                      channelId: channelId,
+                                                      isCaller: true,
+                                                      callerId: senderName,
+                                                      receiverId:receiverId,
+                                                      onSignOut: widget.onSignOut,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
                                         : null, // Disable button if not subscribed
                                     icon: Icon(Icons.call, size: 16),
                                     label: Text("Call",
@@ -884,9 +915,36 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                   // Video Call Button
                                   ElevatedButton.icon(
                                     onPressed: isSubscribed
-                                        ? () {
-                                            _startVideoCall(context);
-                                          }
+                                        ? () async {
+                                                String receiverId = widget.counsellorId;
+                                                String senderName = widget.userId;
+                                                String channelId =
+                                                    "video_${DateTime.now().millisecondsSinceEpoch}";
+
+                                                // ✅ Get Receiver's FCM Token from Firestore
+                                                //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+
+                                                await FirebaseNotificationService.sendCallNotification(
+                                                  receiverFCMToken: "",
+                                                  senderName: senderName,
+                                                  channelId: channelId,
+                                                  receiverId: receiverId,
+                                                  callType: "video"
+                                                );
+
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => VideoCallScreen(
+                                                      channelId: channelId,
+                                                      isCaller: true,
+                                                      callerId: senderName,
+                                                      receiverId: receiverId,
+                                                      onSignOut: widget.onSignOut,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
                                         : null, // Disable button if not subscribed
                                     icon: Icon(Icons.video_call, size: 16),
                                     label: Text("Video Call",
