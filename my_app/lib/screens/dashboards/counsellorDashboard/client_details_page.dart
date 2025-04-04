@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/callingScreens/call_page.dart';
+import 'package:my_app/screens/newCallingScreen/audio_call_screen.dart';
+import 'package:my_app/screens/newCallingScreen/video_call_screen.dart';
 import 'package:my_app/services/call_service.dart';
+import '../../newCallingScreen/firebase_notification_service.dart';
 import 'counsellor_chatting_page.dart';
 import '../../callingScreens/video_call_page.dart';
 import '../../../services/video_call_service.dart';
@@ -42,6 +45,68 @@ class ClientDetailsPage extends StatelessWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Call failed")));
     }
+  }
+
+  void _startAudioCallAgora(BuildContext context) async{
+    String receiverId = client['userName'];
+    String senderName = counsellorId;
+    String channelId =
+        "audio_${DateTime.now().millisecondsSinceEpoch}";
+
+    // ✅ Get Receiver's FCM Token from Firestore
+    //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+
+    await FirebaseNotificationService.sendCallNotification(
+      receiverFCMToken: "",
+      senderName: senderName,
+      channelId: channelId,
+      receiverId: receiverId,
+      callType: "audio",
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AudioCallScreen(
+          channelId: channelId,
+          isCaller: true,
+          callerId: senderName,
+          receiverId:receiverId,
+          onSignOut: onSignOut,
+        ),
+      ),
+    );
+  }
+
+  void _startVideoCallAgora(BuildContext context) async{
+    String receiverId = client['userName'];
+    String senderName = counsellorId;
+    String channelId =
+        "video_${DateTime.now().millisecondsSinceEpoch}";
+
+    // ✅ Get Receiver's FCM Token from Firestore
+    //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+
+    await FirebaseNotificationService.sendCallNotification(
+      receiverFCMToken: "",
+      senderName: senderName,
+      channelId: channelId,
+      receiverId: receiverId,
+      callType: "video"
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoCallScreen(
+          channelId: channelId,
+          isCaller: true,
+          callerId: senderName,
+          receiverId: receiverId,
+          onSignOut: onSignOut,
+        ),
+      ),
+    );
   }
 
   void _startVideoCall(BuildContext context) async {
@@ -197,7 +262,7 @@ class ClientDetailsPage extends StatelessWidget {
                       style: TextStyle(color: Colors.black, fontSize: 14),
                     ),
                     onPressed: () {
-                      _startCall(context);
+                      _startAudioCallAgora(context);
                     },
                   ),
                   ElevatedButton.icon(
@@ -216,7 +281,7 @@ class ClientDetailsPage extends StatelessWidget {
                       style: TextStyle(color: Colors.black, fontSize: 14),
                     ),
                     onPressed: () {
-                      _startVideoCall(context);
+                      _startVideoCallAgora(context);
                     },
                   ),
                 ],

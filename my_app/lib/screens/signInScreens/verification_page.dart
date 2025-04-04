@@ -8,6 +8,8 @@ import 'package:my_app/services/auth_service.dart';
 import 'dart:convert';
 import 'dart:async';
 
+import '../newCallingScreen/save_fcm_token.dart';
+
 final storage = FlutterSecureStorage();
 
 class VerificationPage extends StatefulWidget {
@@ -275,6 +277,8 @@ class _VerificationPageState extends State<VerificationPage> {
             await storage.write(key: "role", value: role);
             await storage.write(key: "jwtToken", value: jwtToken);
             await storage.write(key: "userId", value: userId);
+            // await FirestoreService.saveFCMTokenUser(userId);
+            // print(FirestoreService.getFCMTokenUser(userId));
 
             // Authenticate with Firebase using the custom token
             await FirebaseAuth.instance

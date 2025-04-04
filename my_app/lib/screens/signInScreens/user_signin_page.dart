@@ -353,7 +353,6 @@ class _UserSignInPageState extends State<UserSignInPage> {
       //
       final response = await http.post(
         Uri.parse('${ApiUtils.baseUrl}/api/auth/generateOtp'),
-        //Uri.parse('http://localhost:8080/api/auth/generateOtp'),
 
         body: {'phoneNumber': phoneNumber},
       );

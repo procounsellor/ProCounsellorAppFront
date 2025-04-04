@@ -7,6 +7,7 @@ import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_pa
 import 'package:my_app/screens/signInScreens/counsellor_signup.dart';
 import 'package:my_app/screens/signInScreens/forgot_password_page.dart';
 import '../../services/auth_service.dart';
+import '../newCallingScreen/save_fcm_token.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -45,6 +46,8 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
           await storage.write(key: "role", value: role);
           await storage.write(key: "jwtToken", value: jwtToken);
           await storage.write(key: "userId", value: userId);
+          //await FirestoreService.saveFCMTokenCounsellor(userId);
+          //print(FirestoreService.getFCMTokenCounsellor(userId));
 
           // Authenticate with Firebase using the custom token
           await FirebaseAuth.instance

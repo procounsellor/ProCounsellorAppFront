@@ -1,25 +1,18 @@
 import 'dart:io';
-
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:my_app/screens/callingScreens/call_layover_manager.dart';
-import 'package:my_app/screens/callingScreens/call_page.dart';
-import 'package:my_app/screens/callingScreens/video_call_page.dart';
-import 'package:my_app/screens/signInScreens/get_user_details_step2.dart';
-import 'package:my_app/screens/signInScreens/user_details.dart';
 import 'package:my_app/screens/signInScreens/user_signin_page.dart';
-
-import 'package:my_app/services/firebase_signaling_service.dart';
 import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
 import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
-
 import 'package:permission_handler/permission_handler.dart';
 
-import 'services/call_service.dart';
+import 'screens/newCallingScreen/incoming_call_screen.dart';
 
 // Initialize secure storage
 final storage = FlutterSecureStorage(
@@ -38,56 +31,52 @@ void main() async {
   } catch (e) {
     debugPrint("Firebase initialization failed: $e");
   }
+
   await requestPermissions();
   await requestNotificationPermission();
+
   runApp(AppRoot());
 }
 
+/// ✅ **Request Camera & Microphone Permissions**
 Future<void> requestPermissions() async {
   if (kIsWeb) return;
 
   if (Platform.isAndroid || Platform.isIOS) {
-    // Request Camera permission
     var cameraStatus = await Permission.camera.request();
-    if (cameraStatus.isDenied) {
-      print("Camera permission is denied.");
-    }
-
-    // Request Microphone permission
     var micStatus = await Permission.microphone.request();
-    if (micStatus.isDenied) {
-      print("Microphone permission is denied.");
-    }
 
-    // Request Photo Library access (iOS only)
+    if (cameraStatus.isDenied) print("❌ Camera permission is denied.");
+    if (micStatus.isDenied) print("❌ Microphone permission is denied.");
+
     if (Platform.isIOS) {
       var photoStatus = await Permission.photos.request();
-      if (photoStatus.isDenied) {
-        print("Photo library permission is denied.");
-      }
+      if (photoStatus.isDenied) print("❌ Photo library permission is denied.");
     }
   }
 }
 
+/// ✅ **Request Notification Permission**
 Future<void> requestNotificationPermission() async {
-  // Web does not need explicit notification permission handling
   if (kIsWeb) return;
 
   if (Platform.isIOS || Platform.isAndroid) {
     var status = await Permission.notification.request();
-    if (status.isDenied) {
-      print("Notification permission is denied.");
-    }
+    if (status.isDenied) print("❌ Notification permission is denied.");
   }
 }
 
+// ✅ Global navigator key to navigate outside widget tree
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// ✅ **Main AppRoot Class**
 class AppRoot extends StatefulWidget {
   @override
   _AppRootState createState() => _AppRootState();
 }
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
-  final FirebaseSignalingService _signalingService = FirebaseSignalingService();
+  final DatabaseReference callRef = FirebaseDatabase.instance.ref("agora_call_signaling");
   String? jwtToken;
   String? userId;
   String? role;
@@ -97,7 +86,82 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeApp();
+    _initializeApp().then((_) {
+      if (userId != null) {
+        listenForIncomingCalls(); // ✅ Only start listening when userId is available
+      } else {
+        print("❌ Error: userId is still null after initialization!");
+      }
+    });
+    //setupFirebaseMessaging();
+  }
+
+  void listenForIncomingCalls() {
+    if (userId == null) {
+      print("❌ Error: userId is null, cannot listen for calls.");
+      return;
+    }
+
+    callRef.child(userId!).onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.value;
+
+      if (data == null) {
+        print("⚠️ No active call found.");
+        return;
+      }
+
+      if (data is Map<dynamic, dynamic>) {
+        String callerName = data["callerName"] ?? "Unknown Caller";
+        String channelId = data["channelId"] ?? "";
+
+        if (channelId.isNotEmpty) {
+          print("📞 Incoming call from: $callerName");
+          navigateToIncomingCallScreen(channelId);
+        } else {
+          print("⚠️ Missing channelId in Firebase data.");
+        }
+      } else {
+        print("⚠️ Unexpected Firebase data format: $data");
+      }
+    });
+  }
+
+
+  /// ✅ **Firebase Messaging for Notifications**
+  // void setupFirebaseMessaging() {
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //     print("📩 Foreground notification received: ${message.notification?.title}");
+  //     processIncomingCall(message);
+  //   });
+
+  //   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+  //     processIncomingCall(message);
+  //   });
+
+  //   FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+  //     if (message != null) processIncomingCall(message);
+  //   });
+  // }
+
+  /// ✅ **Process Incoming Call from FCM**
+  // void processIncomingCall(RemoteMessage message) {
+  //   if (message.data["type"] == "incoming_call" && message.data["channelId"] != null) {
+  //     navigateToIncomingCallScreen(message.data["channelId"]);
+  //   }
+  // }
+
+  /// ✅ **Navigate to Incoming Call Screen**
+  void navigateToIncomingCallScreen(String channelId) {
+    final context = navigatorKey.currentState?.overlay?.context;
+    print(context);
+    if (context != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => IncomingCallScreen(receiverId: userId!, channelId: channelId, onSignOut: restartApp),
+        ),
+      );
+    }
   }
 
   @override
@@ -106,94 +170,28 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // ✅ Detect App Lifecycle Changes
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && userId != null) {
-      _signalingService.clearIncomingCall(userId!);
-    }
-  }
+    Future<void> _initializeApp() async {
+      try {
+        jwtToken = await storage.read(key: "jwtToken");
+        userId = await storage.read(key: "userId");
+        role = await storage.read(key: "role");
 
-  Future<void> _initializeApp() async {
-    try {
-      jwtToken = await storage.read(key: "jwtToken");
-      userId = await storage.read(key: "userId");
-      role = await storage.read(key: "role");
-
-      debugPrint("JWT Token: $jwtToken");
-      debugPrint("User ID: $userId");
-      debugPrint("User Role: $role");
-
-      if (userId != null && (role == "user" || role == "counsellor")) {
-        _startListeningForCalls(context); // ✅ Pass the context correctly
+        if (userId == null) {
+          print("❌ Error: User ID not found in storage!");
+        } else {
+          print("✅ User ID Loaded: $userId");
+        }
+      } catch (e) {
+        print("❌ Error reading secure storage: $e");
       }
-    } catch (e) {
-      debugPrint("Error reading secure storage: $e");
+
+      setState(() {
+        isLoading = false;
+      });
     }
 
-    setState(() {
-      isLoading = false;
-    });
-  }
 
-  // 🔹 Listen for incoming calls globally
-  void _startListeningForCalls(BuildContext context) {
-    final CallService _callService = CallService();
-
-    _signalingService.listenForIncomingCalls(userId!, (callData) {
-      CallOverlayManager.showIncomingCall(
-        callData,
-        context,
-        () {
-          bool isVideoCall = callData['callType'] == 'video';
-
-          CallOverlayManager.removeOverlay();
-
-          // ✅ Use the global navigator key for safe navigation
-          CallOverlayManager.navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => isVideoCall
-                  ? VideoCallPage(
-                      callId: callData['callId'],
-                      id: userId!,
-                      isCaller: false,
-                      callInitiatorId:
-                          callData['senderId'] ?? callData['callerId'],
-                      onSignOut: restartApp,
-                    )
-                  : CallPage(
-                      callId: callData['callId'],
-                      id: userId!,
-                      isCaller: false,
-                      callInitiatorId:
-                          callData['senderId'] ?? callData['callerId'],
-                      onSignOut: restartApp,
-                    ),
-            ),
-          );
-
-          _signalingService.clearIncomingCall(userId!);
-        },
-        () {
-          _signalingService.clearIncomingCall(userId!);
-          _callService.declinedCall(callData['callId']);
-          _signalingService.listenForCallEnd(
-              callData['callId'], _handleCallEnd);
-        },
-      );
-      // ✅ Listen for Call Cancellation (Fixes the issue)
-      _signalingService.listenForCallEnd(callData['callId'], () {
-        print("🚨 Call was canceled before being answered!");
-        CallOverlayManager
-            .removeOverlay(); // ✅ Automatically remove overlay if call is canceled
-      });
-    });
-  }
-
-  void _handleCallEnd() {
-    Navigator.pop(context);
-  }
-
+  /// ✅ **Restart App (Logout & Clear Data)**
   Future<void> restartApp() async {
     await storage.deleteAll();
     setState(() {
@@ -207,71 +205,57 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     if (isLoading) {
       return MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          resizeToAvoidBottomInset: false,
           body: Center(child: CircularProgressIndicator()),
         ),
-        theme: ThemeData(
-          scaffoldBackgroundColor:
-              Colors.white, // Sets default background to white
-        ),
+        theme: ThemeData(scaffoldBackgroundColor: Colors.white),
       );
     }
 
     if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
       return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: CallOverlayManager.navigatorKey,
-          home: UserSignInPage(onSignOut: restartApp));
-      // home: GetUserDetailsStep2(
-      //     userDetails: new UserDetails(userInterestedStates: []),
-      //     userId: "",
-      //     jwtToken: "jwtToken",
-      //     firebaseCustomToken: "firebaseCustomToken",
-      //     onSignOut: restartApp));
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        home: UserSignInPage(onSignOut: restartApp),
+      );
     }
 
     switch (role?.toLowerCase()) {
       case "user":
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
-          navigatorKey: CallOverlayManager.navigatorKey,
           home: BasePage(username: userId!, onSignOut: restartApp),
         );
       case "counsellor":
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
-          navigatorKey: CallOverlayManager.navigatorKey,
-          home:
-              CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
+          home: CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
         );
       case "admin":
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           home: AdminBasePage(onSignOut: restartApp, adminId: userId!),
         );
       default:
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           home: Scaffold(
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    "Invalid Role. Please contact support.",
-                    style: TextStyle(fontSize: 18, color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text("Invalid Role. Please contact support.", style: TextStyle(fontSize: 18, color: Colors.red)),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: restartApp,
                     child: Text("Go to Login"),
-                    style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    ),
+                    style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                   ),
                 ],
               ),
