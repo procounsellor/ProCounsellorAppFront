@@ -9,8 +9,8 @@ import 'package:my_app/screens/customWidgets/video_player_widget.dart';
 import '../../../services/api_utils.dart';
 import '../../../services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert'; // For JSON decoding
-import 'details_page.dart'; // Import CounsellorDetailsPage
+import 'dart:convert';
+import 'details_page.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -269,6 +269,23 @@ class _ChattingPageState extends State<ChattingPage> {
 
   Future<void> _sendFileMessage() async {
     if (selectedFile != null || webFileBytes != null) {
+      int fileSizeBytes = 0;
+ 
+      // 🔥 Check for file size before uploading
+      if (selectedFile != null) {
+        fileSizeBytes = await selectedFile!.length();
+      } else if (webFileBytes != null) {
+        fileSizeBytes = webFileBytes!.length;
+      }
+ 
+      // ✅  Set your max size (e.g., 15MB)
+      const maxSizeInBytes = 10 * 1024 * 1024;
+ 
+      if (fileSizeBytes > maxSizeInBytes) {
+        _showErrorDialog("File too large",
+            "This file exceeds the 10MB limit. Please choose a smaller file.");
+        return; // ❌ Don't proceed with upload
+      }
       // Create a temporary message to show in the UI immediately
       Map<String, dynamic> tempMessage = {
         'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
@@ -281,8 +298,13 @@ class _ChattingPageState extends State<ChattingPage> {
       };
 
       // Add the file message to UI instantly
-      setState(() {
-        messages.insert(0, tempMessage); // Insert at the top
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            messages.add(tempMessage);
+          });
+          _scrollToBottom();
+        }
       });
 
       // Save a copy of the selected file details
@@ -319,6 +341,22 @@ class _ChattingPageState extends State<ChattingPage> {
       }
     }
 }
+
+void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
