@@ -10,12 +10,32 @@ class CourseDetailsPage extends StatelessWidget {
     required this.courseData,
   });
 
+  Widget buildTag(String title) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blueGrey.shade200),
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.blueGrey.shade800,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   Widget buildSection(String title, dynamic content) {
     if (content is List) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: sectionTitleStyle),
+          buildTag(title),
           ...content.map((item) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2.0),
                 child: Text("• $item", style: contentStyle),
@@ -27,7 +47,7 @@ class CourseDetailsPage extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: sectionTitleStyle),
+          buildTag(title),
           ...content.entries.map((entry) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2.0),
                 child:
@@ -40,7 +60,7 @@ class CourseDetailsPage extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: sectionTitleStyle),
+          buildTag(title),
           SizedBox(height: 4),
           Text(content.toString(), style: contentStyle),
           SizedBox(height: 12),
@@ -48,12 +68,6 @@ class CourseDetailsPage extends StatelessWidget {
       );
     }
   }
-
-  final sectionTitleStyle = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.blueGrey,
-  );
 
   final contentStyle = TextStyle(
     fontSize: 14,

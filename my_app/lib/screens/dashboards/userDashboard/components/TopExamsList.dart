@@ -143,8 +143,12 @@ class _TopExamsListState extends State<TopExamsList> {
                       Text(
                         exam["name"]!,
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),

@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'Courses/CoursesPage.dart';
+import 'Courses/CourseDetailsPage.dart';
+import 'package:flutter/services.dart';
 
 class TrendingCoursesList extends StatefulWidget {
   @override
@@ -10,33 +12,43 @@ class TrendingCoursesList extends StatefulWidget {
 }
 
 class _TrendingCoursesListState extends State<TrendingCoursesList> {
-  final List<Map<String, String>> _trendingCourses = [
-    {"name": "Full Stack Web Development", "keyword": "web coding"},
-    {"name": "Data Science & AI", "keyword": "data analysis"},
-    {"name": "Cyber Security", "keyword": "cyber security"},
-    {"name": "UI/UX Design", "keyword": "design creativity"},
-    {"name": "Cloud Computing", "keyword": "cloud technology"},
-    {"name": "Digital Marketing", "keyword": "marketing online"},
-  ];
-
+  List<Map<String, String>> _trendingCourses = [];
   List<Map<String, String>> _courseImages = [];
 
   @override
   void initState() {
     super.initState();
-    _loadCachedCourses();
+    _loadTrendingCourses();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  Future<void> _loadTrendingCourses() async {
+    try {
+      final String response = await rootBundle
+          .loadString('assets/data/courses/trending-courses.json');
+      final List<dynamic> data = json.decode(response);
+
+      if (mounted) {
+        setState(() {
+          _trendingCourses = data.take(6).map<Map<String, String>>((item) {
+            return {
+              "name": item["name"].toString(),
+              "category": item["category"].toString(),
+              "description": item["description"].toString(),
+            };
+          }).toList();
+        });
+      }
+
+      await _loadCachedCourses();
+    } catch (e) {
+      print("❌ Error loading trending courses JSON: $e");
+    }
   }
 
-  /// **Loads Cached Data or Fetches New Data**
   Future<void> _loadCachedCourses() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? cachedData = prefs.getString("cached_course_images");
-
+    //String? cachedData = null;
     if (cachedData != null) {
       try {
         List<dynamic> decodedData = json.decode(cachedData);
@@ -59,7 +71,6 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
     }
   }
 
-  /// **Fetches Course Images from Unsplash**
   Future<void> _fetchCourseImages() async {
     List<Map<String, String>> fetchedCourses = [];
     String unsplashApiKey = "nyo0kWYlUFOZGmzcya9tVx2ZefwACQ38BdfKTl-XrRA";
@@ -67,7 +78,8 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
     for (var course in _trendingCourses) {
       try {
         final response = await http.get(Uri.parse(
-            "https://api.unsplash.com/photos/random?query=${course['keyword']}&client_id=$unsplashApiKey"));
+          "https://api.unsplash.com/photos/random?query=${Uri.encodeComponent(course['name']!)}&client_id=$unsplashApiKey",
+        ));
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
@@ -99,6 +111,18 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
     prefs.setString("cached_course_images", json.encode(fetchedCourses));
   }
 
+  Future<Map<String, dynamic>> _loadCourseByName(String name) async {
+    final String response = await rootBundle
+        .loadString('assets/data/courses/trending-courses.json');
+    final List<dynamic> data = json.decode(response);
+    for (var item in data) {
+      if (item["name"] == name) {
+        return item;
+      }
+    }
+    return {"name": name, "description": {}}; // fallback
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -118,7 +142,6 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Header with "See More" icon
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -138,8 +161,6 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
             ],
           ),
           SizedBox(height: 10),
-
-          // 🔹 Grid Layout with Smaller Icons
           SizedBox(
             height: (MediaQuery.of(context).size.width * 0.20 + 40) * 2,
             child: GridView.builder(
@@ -157,30 +178,58 @@ class _TrendingCoursesListState extends State<TrendingCoursesList> {
                 final course = _courseImages.isNotEmpty
                     ? _courseImages[index]
                     : _trendingCourses[index];
-                return Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.20,
-                        height: MediaQuery.of(context).size.width * 0.20,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(course["image"] ??
-                                "https://via.placeholder.com/100"),
-                            fit: BoxFit.cover,
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () async {
+                      try {
+                        final courseData =
+                            await _loadCourseByName(course["name"]!);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CourseDetailsPage(
+                              courseName: courseData["name"],
+                              courseData: Map<String, dynamic>.from(
+                                  courseData["description"] ?? {}),
+                            ),
+                          ),
+                        );
+                      } catch (e) {
+                        print("❌ Error navigating to CourseDetailsPage: $e");
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.20,
+                            height: MediaQuery.of(context).size.width * 0.20,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: NetworkImage(course["image"] ??
+                                    "https://via.placeholder.com/100"),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        SizedBox(height: 4),
+                        Text(
+                          course["name"]!,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      course["name"]!,
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                  ),
                 );
               },
             ),
