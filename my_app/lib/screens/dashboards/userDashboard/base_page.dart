@@ -6,7 +6,7 @@ import 'package:my_app/screens/dashboards/userDashboard/call_history_page.dart';
 import '../../../services/api_utils.dart';
 import 'user_dashboard.dart';
 import 'my_activities_page.dart';
-import 'learn_with_us_page.dart';
+import 'learnwithus/learn_with_us_page.dart';
 import 'community_page.dart';
 import 'profile_page.dart';
 import 'user_state_notifier.dart'; // Import UserStateNotifier

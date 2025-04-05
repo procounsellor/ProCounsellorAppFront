@@ -169,7 +169,7 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
   int _currentIndex = 0;
   bool _showFront = true;
 
-  late Timer _timer;
+  Timer? _timer;
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -191,22 +191,26 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
       ..addStatusListener((status) {
         if (status == AnimationStatus.forward ||
             status == AnimationStatus.reverse) {
-          // After animation completes, update index
           Future.delayed(Duration(milliseconds: 350), () {
             if (!mounted) return;
-            setState(() {
-              _currentIndex = (_currentIndex + 1) % _deadlines.length;
-            });
+            if (mounted) {
+              setState(() {
+                _currentIndex = (_currentIndex + 1) % _deadlines.length;
+              });
+            }
           });
         }
       });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _timer = Timer.periodic(Duration(seconds: 4), (_) {
+        if (!mounted) return;
         if (!_controller.isAnimating) {
-          rotateClock
-              ? _controller.forward(from: 0)
-              : _controller.reverse(from: 1);
+          if (rotateClock) {
+            if (mounted) _controller.forward(from: 0);
+          } else {
+            if (mounted) _controller.reverse(from: 1);
+          }
           rotateClock = !rotateClock;
         }
       });
@@ -218,7 +222,7 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
   @override
   void dispose() {
     _controller.dispose();
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 

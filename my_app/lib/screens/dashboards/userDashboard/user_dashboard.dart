@@ -59,10 +59,15 @@ class _UserDashboardState extends State<UserDashboard>
   @override
   late void Function() myMethod;
   void _onScroll() {
+    if (!mounted) return; // <-- Safe check
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 100) {
-      myMethod.call();
-      print("call");
+      try {
+        myMethod.call();
+        print("call");
+      } catch (e) {
+        print("⚠️ Error calling myMethod: $e");
+      }
     }
   }
 
@@ -140,6 +145,26 @@ class _UserDashboardState extends State<UserDashboard>
     }
   }
 
+  // void _listenToCounsellorStates() {
+  //   final databaseReference = FirebaseDatabase.instance.ref('counsellorStates');
+  //   databaseReference.onValue.listen((event) {
+  //     final snapshotValue = event.snapshot.value;
+
+  //     if (snapshotValue is Map<dynamic, dynamic>) {
+  //       final states = Map<String, dynamic>.from(snapshotValue);
+  //       // if (!mounted) return;
+  //       setState(() {
+  //         _liveCounsellors = _topRatedCounsellors.where((counsellor) {
+  //           final counsellorId = counsellor['userName'];
+  //           final state = states[counsellorId]?['state'];
+  //           return state == 'online'; // Include only online counsellors
+  //         }).toList();
+  //       });
+  //     } else {
+  //       print("Unexpected data type for snapshot value: $snapshotValue");
+  //     }
+  //   });
+  // }
   void _listenToCounsellorStates() {
     final databaseReference = FirebaseDatabase.instance.ref('counsellorStates');
     databaseReference.onValue.listen((event) {
@@ -147,12 +172,26 @@ class _UserDashboardState extends State<UserDashboard>
 
       if (snapshotValue is Map<dynamic, dynamic>) {
         final states = Map<String, dynamic>.from(snapshotValue);
+        if (!mounted) return;
+
         setState(() {
-          _liveCounsellors = _topRatedCounsellors.where((counsellor) {
+          // ✅ Step 1: Filter actual online counsellors
+          final onlineCounsellors = _topRatedCounsellors.where((counsellor) {
             final counsellorId = counsellor['userName'];
             final state = states[counsellorId]?['state'];
-            return state == 'online'; // Include only online counsellors
+            return state == 'online';
           }).toList();
+
+          // ✅ Step 2: Add "0000000000" counsellor manually to the beginning
+          final proAiCounsellor = {
+            'userName': '0000000000',
+            'firstName': 'Pro AI',
+            'photoUrl':
+                'https://via.placeholder.com/150', // or your custom image
+            'ratePerYear': 'Free',
+          };
+
+          _liveCounsellors = [proAiCounsellor, ...onlineCounsellors];
         });
       } else {
         print("Unexpected data type for snapshot value: $snapshotValue");
@@ -209,12 +248,15 @@ class _UserDashboardState extends State<UserDashboard>
       }
 
       _animationController.forward().then((_) {
-        if (!mounted || _isAnimationControllerDisposed) return;
-        setState(() {
-          _currentSearchHintIndex =
-              (_currentSearchHintIndex + 1) % _searchHints.length;
-        });
-        _animationController.reset();
+        if (!mounted) return;
+        if (_isAnimationControllerDisposed) return;
+        if (mounted) {
+          setState(() {
+            _currentSearchHintIndex =
+                (_currentSearchHintIndex + 1) % _searchHints.length;
+          });
+          _animationController.reset();
+        }
       });
     });
   }
@@ -347,38 +389,38 @@ class _UserDashboardState extends State<UserDashboard>
                         ),
                       ),
                     ),
-                  if (_liveCounsellors.isNotEmpty)
-                    SlideTransition(
-                      position: _pageAnimation,
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 16),
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 1,
-                              blurRadius: 6,
-                              //  offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Live Counsellors",
-                              style: GoogleFonts.outfit(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 10),
-                            _buildHorizontalList("", _liveCounsellors),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // if (_liveCounsellors.isNotEmpty)
+                  //   SlideTransition(
+                  //     position: _pageAnimation,
+                  //     child: Container(
+                  //       margin: EdgeInsets.only(bottom: 16),
+                  //       padding: EdgeInsets.all(12),
+                  //       decoration: BoxDecoration(
+                  //         color: Colors.white,
+                  //         borderRadius: BorderRadius.circular(10),
+                  //         boxShadow: [
+                  //           BoxShadow(
+                  //             color: Colors.grey.withOpacity(0.3),
+                  //             spreadRadius: 1,
+                  //             blurRadius: 6,
+                  //             //  offset: Offset(0, 2),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       child: Column(
+                  //         crossAxisAlignment: CrossAxisAlignment.start,
+                  //         children: [
+                  //           Text(
+                  //             "Live Counsellors",
+                  //             style: GoogleFonts.outfit(
+                  //                 fontSize: 18, fontWeight: FontWeight.bold),
+                  //           ),
+                  //           SizedBox(height: 10),
+                  //           _buildHorizontalList("", _liveCounsellors),
+                  //         ],
+                  //       ),
+                  //     ),
+                  //   ),
                   Indexer(children: [
                     CarouselSlider(
                       options: CarouselOptions(
@@ -386,6 +428,7 @@ class _UserDashboardState extends State<UserDashboard>
                         viewportFraction: 1,
                         autoPlay: true,
                         onPageChanged: (index, reason) {
+                          if (!mounted) return;
                           setState(() {
                             currentIndex = index;
                           });
@@ -513,6 +556,40 @@ class _UserDashboardState extends State<UserDashboard>
                           ),
                           SizedBox(height: 10),
                           _buildHorizontalList("", _topRatedCounsellors),
+                          SizedBox(height: 15),
+                          // if (_liveCounsellors.isNotEmpty)
+                          //   SlideTransition(
+                          //     position: _pageAnimation,
+                          //     child: Container(
+                          //       margin: EdgeInsets.only(bottom: 16),
+                          //       padding: EdgeInsets.all(12),
+                          //       decoration: BoxDecoration(
+                          //         color: Colors.white,
+                          //         borderRadius: BorderRadius.circular(10),
+                          //         boxShadow: [
+                          //           BoxShadow(
+                          //             color: Colors.grey.withOpacity(0.3),
+                          //             spreadRadius: 1,
+                          //             blurRadius: 6,
+                          //             //  offset: Offset(0, 2),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //       child: Column(
+                          //         crossAxisAlignment: CrossAxisAlignment.start,
+                          //         children: [
+                          //           Text(
+                          //             "Live Counsellors",
+                          //             style: GoogleFonts.outfit(
+                          //                 fontSize: 18,
+                          //                 fontWeight: FontWeight.bold),
+                          //           ),
+                          //           SizedBox(height: 10),
+                          //           _buildHorizontalList("", _liveCounsellors),
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ),
                         ],
                       ),
                     ),

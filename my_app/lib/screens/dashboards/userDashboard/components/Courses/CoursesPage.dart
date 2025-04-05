@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'CourseDetailsPage.dart';
+import '../../headersText/no_data_placeholder.dart';
 
 class CourseEntry {
   final String name;
@@ -33,11 +34,19 @@ class _CoursesPageState extends State<CoursesPage> {
   String selectedCategory = "";
   List<CourseEntry> allCourses = [];
   bool isLoading = true;
+  String searchQuery = "";
+  FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     loadCourseData();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   Future<void> loadCourseData() async {
@@ -59,8 +68,20 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredCourses =
-        allCourses.where((e) => e.category == selectedCategory).toList();
+    if (CourseEntry == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+        ),
+        body: const NoDataPlaceholder(),
+      );
+    }
+    final filteredCourses = allCourses
+        .where((e) =>
+            e.category == selectedCategory &&
+            e.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -85,6 +106,7 @@ class _CoursesPageState extends State<CoursesPage> {
                     onTap: () {
                       setState(() {
                         selectedCategory = category;
+                        searchQuery = "";
                       });
                     },
                     child: Container(
@@ -152,6 +174,36 @@ class _CoursesPageState extends State<CoursesPage> {
                         Text("Courses in $selectedCategory",
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 12),
+                        FocusScope(
+                          child: Focus(
+                            onFocusChange: (hasFocus) => setState(() {}),
+                            child: TextField(
+                              focusNode: _focusNode,
+                              decoration: InputDecoration(
+                                hintText: "Search courses...",
+                                prefixIcon: Icon(Icons.search,
+                                    color: _focusNode.hasFocus
+                                        ? Colors.orangeAccent
+                                        : Colors.grey),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.orangeAccent),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  searchQuery = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                         SizedBox(height: 12),
                         Expanded(
                           child: filteredCourses.isEmpty

@@ -45,6 +45,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
 
     if (cachedData != null) {
       List<dynamic> jsonData = json.decode(cachedData);
+      if (!mounted) return;
       setState(() {
         _collegeList = jsonData.cast<Map<String, dynamic>>();
 
@@ -94,7 +95,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("cached_colleges", json.encode(_collegeList));
-
+    if (!mounted) return;
     setState(() {
       _displayedColleges = _collegeList.take(_loadedCount).toList();
     });
@@ -116,6 +117,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
     setState(() => _isLoading = true);
 
     Future.delayed(Duration(seconds: 1), () {
+      if (!mounted) return;
       setState(() {
         _loadedCount += 10; // Load 10 more items
         _displayedColleges = _collegeList.take(_loadedCount).toList();
