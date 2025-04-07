@@ -277,8 +277,8 @@ class _VerificationPageState extends State<VerificationPage> {
             await storage.write(key: "role", value: role);
             await storage.write(key: "jwtToken", value: jwtToken);
             await storage.write(key: "userId", value: userId);
-            // await FirestoreService.saveFCMTokenUser(userId);
-            // print(FirestoreService.getFCMTokenUser(userId));
+            await FirestoreService.saveFCMTokenUser(userId);
+            print(FirestoreService.getFCMTokenUser(userId));
 
             // Authenticate with Firebase using the custom token
             await FirebaseAuth.instance

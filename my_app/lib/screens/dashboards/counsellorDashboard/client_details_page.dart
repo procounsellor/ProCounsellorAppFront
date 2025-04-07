@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/screens/callingScreens/call_page.dart';
 import 'package:my_app/screens/newCallingScreen/audio_call_screen.dart';
+import 'package:my_app/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:my_app/screens/newCallingScreen/video_call_screen.dart';
 import 'package:my_app/services/call_service.dart';
 import '../../newCallingScreen/firebase_notification_service.dart';
@@ -54,10 +55,11 @@ class ClientDetailsPage extends StatelessWidget {
         "audio_${DateTime.now().millisecondsSinceEpoch}";
 
     // ✅ Get Receiver's FCM Token from Firestore
-    //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(receiverId);
+    print(receiverFCMToken);
 
     await FirebaseNotificationService.sendCallNotification(
-      receiverFCMToken: "",
+      receiverFCMToken: receiverFCMToken!,
       senderName: senderName,
       channelId: channelId,
       receiverId: receiverId,
@@ -85,10 +87,11 @@ class ClientDetailsPage extends StatelessWidget {
         "video_${DateTime.now().millisecondsSinceEpoch}";
 
     // ✅ Get Receiver's FCM Token from Firestore
-    //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(receiverId);
+    print(receiverFCMToken);
 
     await FirebaseNotificationService.sendCallNotification(
-      receiverFCMToken: "",
+      receiverFCMToken: receiverFCMToken!,
       senderName: senderName,
       channelId: channelId,
       receiverId: receiverId,

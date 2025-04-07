@@ -5,6 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
+import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
+import 'package:my_app/services/api_utils.dart';
 
 import 'agora_service.dart';
 
@@ -45,11 +50,75 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
 
   bool _isEnding = false;
 
+  String callerName = '';
+  String callerPhoto = '';
+  bool callerIsCounsellor = false;
+
+  String receiverName = '';
+  String receiverPhoto = '';
+  bool receiverIsCounsellor = false;
+
   @override
   void initState() {
     super.initState();
+    _fetchCallerAndReceiverDetails();
     _initAgora();
     if (widget.isCaller) _playRingtone();
+
+    listenForCallEnd(widget.channelId);
+  }
+
+    // When receiver will cut the call in incoming call page
+  void listenForCallEnd(String channelId) {
+
+  }
+
+  Future<void> _fetchCallerAndReceiverDetails() async {
+    String baseUrl = "${ApiUtils.baseUrl}/api";
+
+    try {
+      final callerUserRes = await http.get(Uri.parse('$baseUrl/user/${widget.callerId}'));
+      if (callerUserRes.statusCode == 200 && callerUserRes.body.isNotEmpty) {
+        final data = json.decode(callerUserRes.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+          callerPhoto = data['photo'];
+          callerIsCounsellor = false;
+        });
+      } else {
+        final callerCounsellorRes = await http.get(Uri.parse('$baseUrl/counsellor/${widget.callerId}'));
+        if (callerCounsellorRes.statusCode == 200 && callerCounsellorRes.body.isNotEmpty) {
+          final data = json.decode(callerCounsellorRes.body);
+          setState(() {
+            callerName = "${data['firstName']} ${data['lastName']}";
+            callerPhoto = data['photoUrl'];
+            callerIsCounsellor = true;
+          });
+        }
+      }
+
+      final receiverUserRes = await http.get(Uri.parse('$baseUrl/user/${widget.receiverId}'));
+      if (receiverUserRes.statusCode == 200 && receiverUserRes.body.isNotEmpty) {
+        final data = json.decode(receiverUserRes.body);
+        setState(() {
+          receiverName = "${data['firstName']} ${data['lastName']}";
+          receiverPhoto = data['photo'];
+          receiverIsCounsellor = false;
+        });
+      } else {
+        final receiverCounsellorRes = await http.get(Uri.parse('$baseUrl/counsellor/${widget.receiverId}'));
+        if (receiverCounsellorRes.statusCode == 200 && receiverCounsellorRes.body.isNotEmpty) {
+          final data = json.decode(receiverCounsellorRes.body);
+          setState(() {
+            receiverName = "${data['firstName']} ${data['lastName']}";
+            receiverPhoto = data['photoUrl'];
+            receiverIsCounsellor = true;
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error fetching caller/receiver details: $e");
+    }
   }
 
   Future<void> _initAgora() async {
@@ -81,18 +150,6 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
       ),
     );
 
-    // agoraEngine.registerEventHandler(
-    //   RtcEngineEventHandler(
-    //     onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-    //       setState(() => _joined = true);
-    //     },
-    //     onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-    //       setState(() => _joined = false);
-    //       Navigator.pop(context);
-    //     },
-    //   ),
-    // );
-
     String? token = await AgoraService.fetchAgoraToken(widget.channelId, widget.isCaller ? 1 : 2);
     if (token != null) {
       await agoraEngine.joinChannel(
@@ -105,19 +162,6 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
         ),
       );
     }
-
-    // if (widget.isCaller) {
-    //   FirebaseDatabase.instance
-    //       .ref("agora_call_signaling")
-    //       .child(widget.receiverId)
-    //       .onValue
-    //       .listen((event) {
-    //     if (!event.snapshot.exists && mounted) {
-    //       print("📞 Receiver cut the call. Ending on caller side.");
-    //       _endCall(); // 💥 End the call on caller side
-    //     }
-    //   });
-    // }
   }
 
   void _startCallTimer() {
@@ -191,7 +235,54 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
     _stopRingtone();
     FirebaseDatabase.instance.ref("agora_call_signaling").child(widget.receiverId).remove();
     agoraEngine.leaveChannel();
-    Navigator.pop(context);
+    navigateToBasePage();
+  }
+
+  void navigateToBasePage(){
+    if(widget.isCaller){
+      if(callerIsCounsellor){
+        print("caller is counsellor");
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CounsellorBasePage(
+                      counsellorId: widget.callerId,
+                      onSignOut: widget.onSignOut,
+                    )));
+      }
+      else{
+        print("caller is user");
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BasePage(
+                      username: widget.callerId,
+                      onSignOut: widget.onSignOut,
+                    )));
+      }
+    }
+    else{
+      if(receiverIsCounsellor){
+        print("receiver is counsellor");
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CounsellorBasePage(
+                      counsellorId: widget.receiverId,
+                      onSignOut: widget.onSignOut,
+                    )));
+      }
+      else{
+        print("receiver is user");
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BasePage(
+                      username: widget.receiverId,
+                      onSignOut: widget.onSignOut,
+                    )));
+      }
+    }
   }
 
   @override
@@ -205,55 +296,79 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black87,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _joined
-                ? "Audio Call with ${widget.isCaller ? widget.receiverId : widget.callerId}"
+@override
+Widget build(BuildContext context) {
+  final String displayName = widget.isCaller ? receiverName : callerName;
+  final String displayPhoto = widget.isCaller ? receiverPhoto : callerPhoto;
+
+  return Scaffold(
+    backgroundColor: Colors.black87,
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 👤 Profile Picture
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: displayPhoto.isNotEmpty
+                ? NetworkImage(displayPhoto)
+                : const AssetImage('assets/images/default_user.png') as ImageProvider,
+            backgroundColor: Colors.grey.shade800,
+          ),
+          const SizedBox(height: 16),
+
+          // 📛 Name
+          Text(
+            displayName.isNotEmpty ? displayName : widget.isCaller ? widget.receiverId : widget.callerId,
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+
+          // 🕑 Call Status
+          Text(
+            _joined
+                ? "Audio Call in Progress"
                 : "Calling...",
-              style: const TextStyle(color: Colors.white, fontSize: 20),
+            style: const TextStyle(color: Colors.white70, fontSize: 18),
+          ),
+          if (_joined)
+            Text(
+              _formattedDuration,
+              style: const TextStyle(color: Colors.white54, fontSize: 16),
             ),
-            if (_joined)
-              Text(
-                _formattedDuration,
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
+
+          const SizedBox(height: 40),
+
+          // 📞 Call Controls
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _callButton(
+                icon: _isMuted ? Icons.mic_off : Icons.mic,
+                label: _isMuted ? 'Unmute' : 'Mute',
+                onPressed: _toggleMute,
               ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              const SizedBox(width: 20),
+              _callButton(
+                icon: Icons.call_end,
+                label: 'End',
+                color: Colors.red,
+                onPressed: _endCall,
+              ),
+              const SizedBox(width: 20),
+              if (!kIsWeb)
                 _callButton(
-                  icon: _isMuted ? Icons.mic_off : Icons.mic,
-                  label: _isMuted ? 'Unmute' : 'Mute',
-                  onPressed: _toggleMute,
+                  icon: _isSpeakerOn ? Icons.volume_up : Icons.hearing,
+                  label: _isSpeakerOn ? 'Speaker' : 'Earpiece',
+                  onPressed: _toggleSpeaker,
                 ),
-                const SizedBox(width: 20),
-                _callButton(
-                  icon: Icons.call_end,
-                  label: 'End',
-                  color: Colors.red,
-                  onPressed: _endCall,
-                ),
-                const SizedBox(width: 20),
-                if (!kIsWeb)
-                  _callButton(
-                    icon: _isSpeakerOn ? Icons.volume_up : Icons.hearing,
-                    label: _isSpeakerOn ? 'Speaker' : 'Earpiece',
-                    onPressed: _toggleSpeaker,
-                  ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _callButton({
     required IconData icon,

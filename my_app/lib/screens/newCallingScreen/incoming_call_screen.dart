@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:my_app/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
+import 'package:my_app/screens/dashboards/userDashboard/base_page.dart';
 import 'package:my_app/screens/newCallingScreen/agora_service.dart';
+import 'package:my_app/services/api_utils.dart';
 import 'audio_call_screen.dart';
 import 'video_call_screen.dart';
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class IncomingCallScreen extends StatefulWidget {
   final String receiverId;
@@ -26,21 +32,27 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
   String callerId = "Unknown";
   String callType = "audio"; 
 
+  String callerName = '';
+  String callerPhoto = '';
+  bool callerIsCounsellor = false;
+
+  bool receiverIsCounsellor = false;
+
   @override
   void initState() {
     super.initState();
     _getCallerId();
+    _fetchCallerAndReceiverDetails();
     _listenToCallCancellation();
   }
 
   void _listenToCallCancellation() {
-  callRef.child(widget.receiverId).onValue.listen((event) {
-    if (!event.snapshot.exists && mounted) {
-      Navigator.pop(context);
-    }
-  });
-}
-
+    callRef.child(widget.receiverId).onValue.listen((event) {
+      if (!event.snapshot.exists && mounted) {
+        navigateToBasePage();
+      }
+    });
+  }
 
   Future<void> _getCallerId() async {
     final snapshot = await callRef.child(widget.receiverId).get();
@@ -85,7 +97,76 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
   void _endCall(){
     callRef.child(widget.receiverId).remove();
     AgoraService.declinedCall(widget.channelId);
-    Navigator.pop(context);
+    navigateToBasePage();
+  }
+
+  void navigateToBasePage(){
+      if(receiverIsCounsellor){
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CounsellorBasePage(
+                      counsellorId: widget.receiverId,
+                      onSignOut: widget.onSignOut,
+                    )
+                    ),
+                    (route) => false,
+                    );
+      }
+      else{
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BasePage(
+                      username: widget.receiverId,
+                      onSignOut: widget.onSignOut,
+                    )
+                    ),
+                    (route) => false,
+                    );
+      }
+  }
+
+   Future<void> _fetchCallerAndReceiverDetails() async {
+    String baseUrl = "${ApiUtils.baseUrl}/api";
+
+    try {
+      final callerUserRes = await http.get(Uri.parse('$baseUrl/user/${callerId}'));
+      if (callerUserRes.statusCode == 200 && callerUserRes.body.isNotEmpty) {
+        final data = json.decode(callerUserRes.body);
+        setState(() {
+          callerName = "${data['firstName']} ${data['lastName']}";
+          callerPhoto = data['photo'];
+          callerIsCounsellor = false;
+        });
+      } else {
+        final callerCounsellorRes = await http.get(Uri.parse('$baseUrl/counsellor/${callerId}'));
+        if (callerCounsellorRes.statusCode == 200 && callerCounsellorRes.body.isNotEmpty) {
+          final data = json.decode(callerCounsellorRes.body);
+          setState(() {
+            callerName = "${data['firstName']} ${data['lastName']}";
+            callerPhoto = data['photoUrl'];
+            callerIsCounsellor = true;
+          });
+        }
+      }
+
+      final receiverUserRes = await http.get(Uri.parse('$baseUrl/user/${widget.receiverId}'));
+      if (receiverUserRes.statusCode == 200 && receiverUserRes.body.isNotEmpty) {
+        setState(() {
+          receiverIsCounsellor = false;
+        });
+      } else {
+        final receiverCounsellorRes = await http.get(Uri.parse('$baseUrl/counsellor/${widget.receiverId}'));
+        if (receiverCounsellorRes.statusCode == 200 && receiverCounsellorRes.body.isNotEmpty) {
+          setState(() {
+            receiverIsCounsellor = true;
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error fetching caller/receiver details: $e");
+    }
   }
 
   @override
@@ -118,9 +199,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
               children: [
                 // ❌ Reject Call
                 ElevatedButton(
-                  onPressed: () {
-                    _endCall;
-                  },
+                  onPressed: _endCall,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: const Icon(Icons.call_end, color: Colors.white, size: 30),
                 ),

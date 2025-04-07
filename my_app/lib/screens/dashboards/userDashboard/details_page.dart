@@ -279,65 +279,65 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-  void _startCall() async {
-    String callerId = widget.userId;
-    String receiverId = widget.counsellorId;
+  // void _startCall() async {
+  //   String callerId = widget.userId;
+  //   String receiverId = widget.counsellorId;
 
-    if (callerId.isEmpty || receiverId.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
-      return;
-    }
+  //   if (callerId.isEmpty || receiverId.isEmpty) {
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text("Enter both IDs")));
+  //     return;
+  //   }
 
-    String? callId =
-        await _callService.startCall(callerId, receiverId, "audio");
-    if (callId != null) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => CallPage(
-                  callId: callId,
-                  id: widget.userId,
-                  isCaller: true,
-                  callInitiatorId: widget.counsellorId,
-                  onSignOut: widget.onSignOut,)));
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Call failed")));
-    }
-  }
+  //   String? callId =
+  //       await _callService.startCall(callerId, receiverId, "audio");
+  //   if (callId != null) {
+  //     Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //             builder: (context) => CallPage(
+  //                 callId: callId,
+  //                 id: widget.userId,
+  //                 isCaller: true,
+  //                 callInitiatorId: widget.counsellorId,
+  //                 onSignOut: widget.onSignOut,)));
+  //   } else {
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text("Call failed")));
+  //   }
+  // }
 
-  void _startVideoCall(BuildContext context) async {
-    final VideoCallService _callService = VideoCallService();
-    String callerId = widget.userId;
-    String receiverId = widget.counsellorId;
+  // void _startVideoCall(BuildContext context) async {
+  //   final VideoCallService _callService = VideoCallService();
+  //   String callerId = widget.userId;
+  //   String receiverId = widget.counsellorId;
 
-    if (callerId.isEmpty || receiverId.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Enter both IDs")));
-      return;
-    }
+  //   if (callerId.isEmpty || receiverId.isEmpty) {
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text("Enter both IDs")));
+  //     return;
+  //   }
 
-    String? callId =
-        await _callService.startCall(callerId, receiverId, "video");
-    if (callId != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VideoCallPage(
-            callId: callId,
-            id: widget.counsellorId,
-            isCaller: true,
-            callInitiatorId: widget.counsellorId,
-            onSignOut: widget.onSignOut,
-          ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Call failed")));
-    }
-  }
+  //   String? callId =
+  //       await _callService.startCall(callerId, receiverId, "video");
+  //   if (callId != null) {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (context) => VideoCallPage(
+  //           callId: callId,
+  //           id: widget.counsellorId,
+  //           isCaller: true,
+  //           callInitiatorId: widget.counsellorId,
+  //           onSignOut: widget.onSignOut,
+  //         ),
+  //       ),
+  //     );
+  //   } else {
+  //     ScaffoldMessenger.of(context)
+  //         .showSnackBar(SnackBar(content: Text("Call failed")));
+  //   }
+  // }
 
 // Function to calculate ratings summary
 Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
@@ -840,10 +840,10 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                                     "audio_${DateTime.now().millisecondsSinceEpoch}";
 
                                                 // ✅ Get Receiver's FCM Token from Firestore
-                                                //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+                                                String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
 
                                                 await FirebaseNotificationService.sendCallNotification(
-                                                  receiverFCMToken: "",
+                                                  receiverFCMToken: receiverFCMToken!,
                                                   senderName: senderName,
                                                   channelId: channelId,
                                                   receiverId: receiverId,
@@ -921,11 +921,11 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                                 String channelId =
                                                     "video_${DateTime.now().millisecondsSinceEpoch}";
 
-                                                // ✅ Get Receiver's FCM Token from Firestore
-                                                //String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
+                                                // ✅ Get Receiver's FCM Token from Firestore.
+                                                String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
 
                                                 await FirebaseNotificationService.sendCallNotification(
-                                                  receiverFCMToken: "",
+                                                  receiverFCMToken: receiverFCMToken!,
                                                   senderName: senderName,
                                                   channelId: channelId,
                                                   receiverId: receiverId,
