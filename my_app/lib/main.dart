@@ -3,8 +3,10 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:my_app/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:my_app/screens/signInScreens/user_signin_page.dart';
 import 'firebase_options.dart';
 import 'package:my_app/screens/dashboards/adminDashboard/admin_base_page.dart';
@@ -34,8 +36,24 @@ void main() async {
 
   await requestPermissions();
   await requestNotificationPermission();
+  _initFCM();
 
   runApp(AppRoot());
+}
+
+Future<void> _initFCM() async {
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+
+  await firebaseMessaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Register for push (important for iOS)
+  await firebaseMessaging.getToken().then((token) {
+    print("✅ FCM Token initialized: $token");
+  });
 }
 
 /// ✅ **Request Camera & Microphone Permissions**
@@ -86,82 +104,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeApp().then((_) {
-      if (userId != null) {
-        listenForIncomingCalls(); // ✅ Only start listening when userId is available
-      } else {
-        print("❌ Error: userId is still null after initialization!");
-      }
-    });
-    //setupFirebaseMessaging();
-  }
-
-  void listenForIncomingCalls() {
-    if (userId == null) {
-      print("❌ Error: userId is null, cannot listen for calls.");
-      return;
-    }
-
-    callRef.child(userId!).onValue.listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-
-      if (data == null) {
-        print("⚠️ No active call found.");
-        return;
-      }
-
-      if (data is Map<dynamic, dynamic>) {
-        String callerName = data["callerName"] ?? "Unknown Caller";
-        String channelId = data["channelId"] ?? "";
-
-        if (channelId.isNotEmpty) {
-          print("📞 Incoming call from: $callerName");
-          navigateToIncomingCallScreen(channelId);
-        } else {
-          print("⚠️ Missing channelId in Firebase data.");
-        }
-      } else {
-        print("⚠️ Unexpected Firebase data format: $data");
-      }
-    });
-  }
-
-
-  /// ✅ **Firebase Messaging for Notifications**
-  // void setupFirebaseMessaging() {
-  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  //     print("📩 Foreground notification received: ${message.notification?.title}");
-  //     processIncomingCall(message);
-  //   });
-
-  //   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-  //     processIncomingCall(message);
-  //   });
-
-  //   FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-  //     if (message != null) processIncomingCall(message);
-  //   });
-  // }
-
-  /// ✅ **Process Incoming Call from FCM**
-  // void processIncomingCall(RemoteMessage message) {
-  //   if (message.data["type"] == "incoming_call" && message.data["channelId"] != null) {
-  //     navigateToIncomingCallScreen(message.data["channelId"]);
-  //   }
-  // }
-
-  /// ✅ **Navigate to Incoming Call Screen**
-  void navigateToIncomingCallScreen(String channelId) {
-    final context = navigatorKey.currentState?.overlay?.context;
-    print(context);
-    if (context != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => IncomingCallScreen(receiverId: userId!, channelId: channelId, onSignOut: restartApp),
-        ),
-      );
-    }
+    _initializeApp();
   }
 
   @override
@@ -180,6 +123,10 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           print("❌ Error: User ID not found in storage!");
         } else {
           print("✅ User ID Loaded: $userId");
+          setupNotificationListeners(
+            currentUserId: userId!,
+            onSignOut: restartApp,
+          );
         }
       } catch (e) {
         print("❌ Error reading secure storage: $e");
@@ -188,8 +135,74 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       setState(() {
         isLoading = false;
       });
+
+      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+        print("🔁 FCM Token refreshed: $newToken");
+        if(role == "user"){
+          FirestoreService.saveFCMTokenUser(userId!);
+        }
+        else if(role == "counsellor"){
+          FirestoreService.saveFCMTokenCounsellor(userId!);
+        }
+      });
     }
 
+    void setupNotificationListeners({
+      required String currentUserId,
+      required Future<void> Function() onSignOut,
+    }) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print('🔔 Foreground notification: ${message.data}');
+        _handleIncomingCall(message.data, currentUserId, onSignOut);
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('📲 Opened app via notification: ${message.data}');
+        _handleIncomingCall(message.data, currentUserId, onSignOut);
+      });
+
+      FirebaseMessaging.instance.getInitialMessage().then((message) {
+        if (message != null && message.data['type'] == 'incoming_call') {
+          _handleIncomingCall(message.data, currentUserId, onSignOut);
+        }
+      });
+    }
+
+   void _handleIncomingCall(
+  Map<String, dynamic> data,
+  String currentUserId,
+  Future<void> Function() onSignOut,
+) {
+  if (data['type'] != 'incoming_call') return;
+
+  final String channelId = data['channelId'] ?? '';
+
+  // Safely delay navigation till current frame ends
+  Future.microtask(() {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (navigatorKey.currentState?.mounted ?? false) {
+        final currentContext = navigatorKey.currentContext;
+
+        final isAlreadyOnCallScreen = ModalRoute.of(currentContext!)?.settings.name == 'incoming_call';
+
+        if (!isAlreadyOnCallScreen) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => IncomingCallScreen(
+                receiverId: currentUserId,
+                channelId: channelId,
+                onSignOut: onSignOut,
+              ),
+              settings: const RouteSettings(name: 'incoming_call'),
+            ),
+          );
+        }
+      } else {
+        print("❌ Navigator not mounted. Cannot push IncomingCallScreen.");
+      }
+    });
+  });
+}
 
   /// ✅ **Restart App (Logout & Clear Data)**
   Future<void> restartApp() async {

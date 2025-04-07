@@ -34,8 +34,8 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
     await storage.write(key: "role", value: "user");
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
-    // await FirestoreService.saveFCMTokenUser(widget.userId);
-    // print(FirestoreService.getFCMTokenUser(widget.userId));
+    await FirestoreService.saveFCMTokenUser(widget.userId);
+    print(FirestoreService.getFCMTokenUser(widget.userId));
 
 
     // Authenticate with Firebase using the custom token
