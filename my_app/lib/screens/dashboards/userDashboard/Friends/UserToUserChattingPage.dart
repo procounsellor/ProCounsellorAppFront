@@ -1,41 +1,45 @@
+import 'dart:async';
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart'; // For Firebase Realtime Database
-import 'package:http/http.dart' as http; // For API calls
+import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart';
 import 'package:my_app/screens/customWidgets/video_player_widget.dart';
+import '../../../../services/api_utils.dart';
+import 'ChatServiceUserToUser.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../services/api_utils.dart';
-import '../../../services/chat_service.dart';
-import 'client_details_page.dart'; // Import the Client Details Page
+import 'dart:convert';
+import '../details_page.dart';
 
-class ChattingPage extends StatefulWidget {
+class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
-  final String counsellorId;
-  final String? photo;
+  final String userId2;
   final Future<void> Function() onSignOut;
 
-  ChattingPage(
+  UserToUserChattingPage(
       {required this.itemName,
       required this.userId,
-      required this.counsellorId,
-      this.photo,
+      required this.userId2,
       required this.onSignOut});
 
   @override
   _ChattingPageState createState() => _ChattingPageState();
 }
 
-class _ChattingPageState extends State<ChattingPage> {
-  List<Map<String, dynamic>> messages = []; // Store full message objects
+class _ChattingPageState extends State<UserToUserChattingPage> {
+  List<Map<String, dynamic>> messages = [];
   TextEditingController _controller = TextEditingController();
   late String chatId;
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
   bool showSendButton = false;
+
+  // For counsellor's online status
+  String counsellorPhotoUrl = 'https://via.placeholder.com/150';
+  bool isCounsellorOnline = false;
+  late DatabaseReference counsellorStateRef;
 
   File? selectedFile; // Store selected file
   String? selectedFileName; // Store file name
@@ -45,29 +49,61 @@ class _ChattingPageState extends State<ChattingPage> {
   void initState() {
     super.initState();
     _initializeChat();
+    _listenToCounsellorStatus();
   }
 
   Future<void> _initializeChat() async {
     await _startChat();
     if (!isLoading) {
-      await _loadMessages();
-      _markUnreadMessagesAsSeen();
       _listenForNewMessages();
       _listenForSeenStatusUpdates();
-      _listenForIsSeenChanges();
     }
   }
 
   Future<void> _startChat() async {
     try {
-      chatId = await ChatService().startChat(widget.userId, widget.counsellorId)
+      chatId = await ChatService().startChat(widget.userId, widget.userId2)
           as String;
+
+      // Fetch counsellor's profile data
+      await _fetchCounsellorProfile();
+
       setState(() {
         isLoading = false;
       });
+      _loadMessages();
     } catch (e) {
       print('Error starting chat: $e');
     }
+  }
+
+  Future<void> _fetchCounsellorProfile() async {
+    try {
+      String url = '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = Map<String, dynamic>.from(json.decode(response.body));
+        setState(() {
+          counsellorPhotoUrl = data['photoUrl'] ?? counsellorPhotoUrl;
+        });
+      }
+    } catch (e) {
+      print('Error fetching counsellor profile: $e');
+    }
+  }
+
+  void _listenToCounsellorStatus() {
+    counsellorStateRef =
+        FirebaseDatabase.instance.ref('counsellorStates/${widget.userId2}');
+
+    counsellorStateRef.onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        setState(() {
+          isCounsellorOnline = data['state'] == 'online';
+        });
+      }
+    });
   }
 
   Future<void> _loadMessages() async {
@@ -75,26 +111,11 @@ class _ChattingPageState extends State<ChattingPage> {
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
       setState(() {
-        messages = fetchedMessages
-            .map((msg) => Map<String, dynamic>.from(msg))
-            .toList(); // Convert each message
+        messages = fetchedMessages;
       });
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
-    }
-  }
-
-  Future<void> _markMessageAsSeen(String messageId) async {
-    try {
-      String url =
-          '${ApiUtils.baseUrl}/api/chats/$chatId/messages/$messageId/mark-seen';
-      final response = await http.post(Uri.parse(url));
-      if (response.statusCode != 200) {
-        print('Failed to mark message $messageId as seen: ${response.body}');
-      }
-    } catch (e) {
-      print('Error marking message $messageId as seen: $e');
     }
   }
 
@@ -106,7 +127,7 @@ class _ChattingPageState extends State<ChattingPage> {
             if (!messages.any(
                 (existingMessage) => existingMessage['id'] == message['id'])) {
               messages.add(message);
-              if (message['senderId'] == widget.userId) {
+              if (message['senderId'] == widget.userId2) {
                 _markMessageAsSeen(message['id']);
               }
             }
@@ -130,26 +151,6 @@ class _ChattingPageState extends State<ChattingPage> {
           }
         });
       }
-    });
-  }
-
-  void _listenForIsSeenChanges() {
-    final databaseReference =
-        FirebaseDatabase.instance.ref('chats/$chatId/messages');
-    databaseReference.onChildChanged.listen((event) {
-      final updatedMessage = Map<String, dynamic>.from(
-          event.snapshot.value as Map); // Ensure conversion
-      final messageId = updatedMessage['id'];
-      final isSeen = updatedMessage['isSeen'];
-
-      setState(() {
-        for (var message in messages) {
-          if (message['id'] == messageId &&
-              message['senderId'] == widget.counsellorId) {
-            message['isSeen'] = isSeen;
-          }
-        }
-      });
     });
   }
 
@@ -245,7 +246,6 @@ class _ChattingPageState extends State<ChattingPage> {
         }
         showSendButton = true;
       });
-      print("Selected File: $selectedFileName");
     }
   }
 
@@ -253,7 +253,7 @@ class _ChattingPageState extends State<ChattingPage> {
     if (_controller.text.isNotEmpty) {
       try {
         MessageRequest messageRequest = MessageRequest(
-          senderId: widget.counsellorId,
+          senderId: widget.userId,
           text: _controller.text,
         );
 
@@ -292,7 +292,7 @@ class _ChattingPageState extends State<ChattingPage> {
       // Create a temporary message to show in the UI immediately
       Map<String, dynamic> tempMessage = {
         'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
-        'senderId': widget.counsellorId,
+        'senderId': widget.userId,
         'fileName': selectedFileName,
         'fileUrl': null, // No URL yet (file not uploaded)
         'fileType': 'uploading', // Temporary "uploading" status
@@ -327,14 +327,11 @@ class _ChattingPageState extends State<ChattingPage> {
         // Upload file to the backend
         await ChatService.sendFileMessage(
           chatId: chatId,
-          senderId: widget.counsellorId,
+          senderId: widget.userId,
           file: tempFile,
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
         );
-
-        print("✅ File uploaded successfully!");
-
         // Fetch updated messages from backend and replace the temporary message
         _loadMessages(); // Refresh messages immediately
       } catch (e) {
@@ -367,37 +364,32 @@ class _ChattingPageState extends State<ChattingPage> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.minScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
 
-  Stream<String> getUserState(String userId) {
-    final databaseReference =
-        FirebaseDatabase.instance.ref('userStates/$userId/state');
-    return databaseReference.onValue.map((event) {
-      final state = event.snapshot.value as String?;
-      return state ?? 'offline'; // Default to 'offline' if null
-    });
-  }
-
-  Future<void> _markUnreadMessagesAsSeen() async {
+  Future<void> _markMessageAsSeen(String messageId) async {
     try {
-      for (var message in messages) {
-        if (message['state'] != 'seen' &&
-            message['senderId'] == widget.userId) {
-          String messageId = message['id'];
-          await _markMessageAsSeen(messageId);
-        }
+      String url =
+          '${ApiUtils.baseUrl}/api/chats/$chatId/messages/$messageId/mark-seen';
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode != 200) {
+        print('Failed to mark message $messageId as seen: ${response.body}');
       }
     } catch (e) {
-      print('Error marking unread messages as seen: $e');
+      print('Error marking message $messageId as seen: $e');
     }
   }
 
   @override
   void dispose() {
     ChatService().cancelListeners(chatId);
+    counsellorStateRef.onDisconnect();
     _controller.dispose();
     super.dispose();
   }
@@ -533,9 +525,6 @@ class _ChattingPageState extends State<ChattingPage> {
 
   void _downloadFile(String url) async {
     Uri uri = Uri.parse(url); // Convert string to Uri
-
-    print("Downloading file from: $url");
-
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
@@ -597,78 +586,54 @@ class _ChattingPageState extends State<ChattingPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ClientDetailsPage(
-                  client: {
-                    'firstName': widget.itemName.split(' ')[0],
-                    'lastName': widget.itemName.split(' ').length > 1
-                        ? widget.itemName.split(' ')[1]
-                        : '',
-                    'email': widget.itemName,
-                    'phone': '',
-                    'photo': widget.photo ?? '',
-                    'userName': widget.userId,
-                  },
-                  counsellorId: widget.counsellorId,
-                  onSignOut: widget.onSignOut,
-                ),
-              ),
-            );
-          },
-          child: Row(
-            children: [
-              Stack(
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsPage(
+                      counsellorId: widget.userId2,
+                      userId: widget.userId,
+                      itemName: widget.userId2,
+                      onSignOut: widget.onSignOut,
+                    ),
+                  ),
+                );
+              },
+              child: Stack(
                 children: [
                   CircleAvatar(
-                    backgroundImage: NetworkImage(widget.photo ?? ''),
-                    radius: 24,
+                    backgroundImage: NetworkImage(counsellorPhotoUrl),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: StreamBuilder<String>(
-                      stream: getUserState(widget.userId),
-                      builder: (context, snapshot) {
-                        final state = snapshot.data ?? 'offline';
-                        return CircleAvatar(
-                          radius: 6,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 5,
-                            backgroundColor:
-                                state == 'online' ? Colors.green : Colors.red,
-                          ),
-                        );
-                      },
+                    child: CircleAvatar(
+                      radius: 6,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 5,
+                        backgroundColor:
+                            isCounsellorOnline ? Colors.green : Colors.grey,
+                      ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  widget.itemName.isNotEmpty ? widget.itemName : 'Unknown User',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+            ),
+            SizedBox(width: 10),
+            Text(
+              widget.itemName,
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+        centerTitle: true,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -676,40 +641,46 @@ class _ChattingPageState extends State<ChattingPage> {
               children: [
                 Expanded(
                   child: ListView.builder(
+                    reverse: true,
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final message = messages[index];
+                      final message = messages[messages.length - 1 - index];
                       final isUserMessage =
                           message['senderId'] == widget.userId;
-                      final isCounsellorMessage =
-                          message['senderId'] == widget.counsellorId;
+                      final isLastMessage = index == 0;
 
                       return Column(
                         crossAxisAlignment: isUserMessage
-                            ? CrossAxisAlignment.start
-                            : CrossAxisAlignment.end,
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            margin: EdgeInsets.symmetric(
-                              vertical: 5.0,
-                              horizontal: 10.0,
+                          Align(
+                            alignment: isUserMessage
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: EdgeInsets.symmetric(
+                                vertical: 5.0,
+                                horizontal: 10.0,
+                              ),
+                              padding: EdgeInsets.all(10.0),
+                              decoration: BoxDecoration(
+                                color: isUserMessage
+                                    ? Colors.orangeAccent.withOpacity(0.2)
+                                    : Colors.blueGrey.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: _buildMessageWidget(message),
                             ),
-                            padding: EdgeInsets.all(10.0),
-                            decoration: BoxDecoration(
-                              color: isUserMessage
-                                  ? Colors.grey[300]
-                                  : Colors.orangeAccent.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: _buildMessageWidget(message),
                           ),
-                          if (index == messages.length - 1 &&
-                              isCounsellorMessage &&
+
+                          // Show 'Seen' text for last message
+                          if (isLastMessage &&
+                              isUserMessage &&
                               message['isSeen'] == true)
                             Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 2.0, right: 16.0),
+                              padding: const EdgeInsets.only(right: 12.0),
                               child: Text(
                                 'Seen',
                                 style: TextStyle(

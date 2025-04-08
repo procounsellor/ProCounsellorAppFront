@@ -89,7 +89,7 @@ class _CounsellorMyActivitiesPageState
                     context,
                     "images/chat.png",
                     "Chats",
-                    ChatsPage(
+                    ChatPage(
                       counsellorId: widget.username,
                       onSignOut: widget.onSignOut,
                     ),

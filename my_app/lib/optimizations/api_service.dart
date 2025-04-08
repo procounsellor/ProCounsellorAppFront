@@ -1,6 +1,8 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'api_cache.dart'; // Import the cache manager
 import 'dart:convert';
+import '../services/api_utils.dart';
 
 Future<void> fetchUserDetails(String userId) async {
   // First, check if the data is cached
@@ -11,8 +13,8 @@ Future<void> fetchUserDetails(String userId) async {
   }
 
   // If not cached, fetch from API
-  final response = await http.get(Uri.parse(
-      "https://procounsellor-backend-1000407154647.asia-south1.run.app/api/user/$userId"));
+  final response =
+      await http.get(Uri.parse('${ApiUtils.baseUrl}/user/$userId'));
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
 
