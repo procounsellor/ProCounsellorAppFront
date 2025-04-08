@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../services/api_utils.dart';
+import '../../../optimizations/api_cache.dart';
 import 'chatting_page.dart';
+import '../userDashboard/Friends/UserToUserChattingPage.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../optimizations/api_cache.dart';
+import 'dart:async';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -19,216 +21,265 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  List<Map<String, dynamic>> chats = [];
-  List<Map<String, dynamic>> filteredChats = [];
+  final TextEditingController _searchController = TextEditingController();
+  String selectedTag = 'All';
+  List<Map<String, dynamic>> allChats = [];
+  List<Map<String, dynamic>> visibleChats = [];
   bool isLoading = true;
-  String searchQuery = '';
-  late DatabaseReference chatRef;
+  int visibleLimit = 10;
+  final ScrollController _scrollController = ScrollController();
+
+  final List<StreamSubscription> _chatListeners = [];
+  final String cacheKey = "chat_list_cache";
+  final Map<String, Timer> _debounceTimers = {};
 
   @override
   void initState() {
     super.initState();
-    fetchChats();
-    _listenToRealtimeMessages();
+    _scrollController.addListener(_onScroll);
+    _loadCachedChats();
+    fetchUserChatDetails();
   }
 
-  Future<void> fetchChats() async {
-    try {
-      String cacheKey = "user_chats_${widget.userId}";
-      String apiUrl =
-          "${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribed-counsellors";
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    for (final sub in _chatListeners) {
+      sub.cancel();
+    }
+    _debounceTimers.forEach((_, t) => t.cancel());
+    super.dispose();
+  }
 
-      // ✅ Step 1: Check Cache First
-      var cachedChats = await ApiCache.get(cacheKey);
-      if (cachedChats != null) {
-        print("✅ Loaded chat list from cache");
-        _updateChatList(cachedChats);
-      }
+  void _applyFilters() {
+    final query = _searchController.text.toLowerCase();
+    List<Map<String, dynamic>> filtered = List.from(allChats);
 
-      // ✅ Step 2: Fetch Data from API
-      final response = await http.get(Uri.parse(apiUrl));
-      if (response.statusCode == 200) {
-        final List<dynamic> counsellors = json.decode(response.body);
-        List<Future<Map<String, dynamic>?>> chatFutures =
-            counsellors.map((counsellor) async {
-          final counsellorId = counsellor['userName'];
-          final counsellorName =
-              counsellor['firstName'] ?? 'Unknown Counsellor';
-          final counsellorPhotoUrl =
-              counsellor['photoUrl'] ?? 'https://via.placeholder.com/150';
+    if (selectedTag == 'Counsellors') {
+      filtered = filtered.where((c) => c['role'] == 'counsellor').toList();
+    } else if (selectedTag == 'Friends') {
+      filtered = filtered.where((c) => c['role'] == 'user').toList();
+    }
 
-          try {
-            // ✅ Check if chat exists
-            final chatExistsResponse = await http.get(Uri.parse(
-                '${ApiUtils.baseUrl}/api/chats/exists?userId=${widget.userId}&counsellorId=$counsellorId'));
+    if (query.isNotEmpty) {
+      filtered = filtered.where((c) {
+        final name = c['name']?.toLowerCase() ?? '';
+        return name.contains(query);
+      }).toList();
+    }
 
-            if (chatExistsResponse.statusCode == 200 &&
-                json.decode(chatExistsResponse.body) == true) {
-              // ✅ Start or fetch existing chat
-              final chatResponse = await http.post(
-                Uri.parse(
-                    '${ApiUtils.baseUrl}/api/chats/start-chat?userId=${widget.userId}&counsellorId=$counsellorId'),
-              );
+    setState(() {
+      visibleChats = filtered.take(visibleLimit).toList();
+    });
+  }
 
-              if (chatResponse.statusCode == 200) {
-                final chatData = json.decode(chatResponse.body);
-                final chatId = chatData['chatId'];
-
-                // ✅ Fetch chat messages
-                final messagesResponse = await http.get(
-                  Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'),
-                );
-
-                if (messagesResponse.statusCode == 200) {
-                  final messages =
-                      json.decode(messagesResponse.body) as List<dynamic>;
-
-                  return _processChatData(chatId, counsellorId, counsellorName,
-                      counsellorPhotoUrl, messages);
-                }
-              }
-            }
-          } catch (e) {
-            print("Error fetching chat for counsellor $counsellorId: $e");
-          }
-          return null;
-        }).toList();
-
-        // ✅ Wait for all chat data to be processed
-        final chatDetails = await Future.wait(chatFutures);
-
-        // ✅ Store updated chats in cache
-        await ApiCache.set(cacheKey, chatDetails, persist: true);
-
-        // ✅ Update UI with latest chat data
-        _updateChatList(chatDetails);
-      } else {
-        throw Exception("Failed to fetch subscribed counsellors");
-      }
-    } catch (e) {
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 300 &&
+        visibleChats.length < allChats.length) {
       setState(() {
+        visibleLimit += 10;
+        visibleChats =
+            allChats.take(visibleLimit.clamp(0, allChats.length)).toList();
+      });
+    }
+  }
+
+  Future<void> _loadCachedChats() async {
+    final cachedData = await ApiCache.get(cacheKey);
+    if (cachedData != null && mounted) {
+      final cachedList = List<Map<String, dynamic>>.from(cachedData);
+      setState(() {
+        allChats = cachedList;
+        visibleChats = cachedList.take(visibleLimit).toList();
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
     }
   }
 
-  Map<String, dynamic> _processChatData(
-      String chatId,
-      String counsellorId,
-      String counsellorName,
-      String counsellorPhotoUrl,
-      List<dynamic> messages) {
-    String lastMessage = 'No messages yet';
-    String timestamp = 'N/A';
-    bool isSeen = true;
-    String senderId = '';
+  Future<void> fetchUserChatDetails() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.userId}'));
+      if (response.statusCode != 200 || response.body.isEmpty)
+        throw Exception("Failed to fetch user");
 
-    if (messages.isNotEmpty) {
-      var lastMsg = messages.last;
-      senderId = lastMsg['senderId'] ?? '';
+      final data = json.decode(response.body);
+      final chatIds =
+          List<Map<String, dynamic>>.from(data['chatIdsCreatedForUser'] ?? []);
+      List<Map<String, dynamic>> fetchedChats = [];
 
-      if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
-        lastMessage = lastMsg['text'];
-      } else if (lastMsg.containsKey('fileUrl') && lastMsg['fileUrl'] != null) {
-        String fileType = lastMsg['fileType'] ?? 'unknown';
+      for (final chat in chatIds) {
+        final user2 = chat['user2'];
+        final chatId = chat['chatId'];
+        Map<String, dynamic>? chatInfo;
 
-        if (fileType.startsWith('image/')) {
-          lastMessage = "📷 Image";
-        } else if (fileType.startsWith('video/')) {
-          lastMessage = "🎥 Video";
-        } else {
-          lastMessage = "📄 File";
-        }
-      }
+        chatInfo = await _getUserDetails(user2);
+        chatInfo ??= await _getCounsellorDetails(user2);
+        if (chatInfo == null) continue;
 
-      timestamp = DateFormat('dd MMM yyyy, h:mm a').format(
-        DateTime.fromMillisecondsSinceEpoch(lastMsg['timestamp']),
-      );
-      isSeen = lastMsg['isSeen'] ?? true;
-    }
+        chatInfo['chatId'] = chatId;
 
-    return {
-      'id': chatId,
-      'counsellorId': counsellorId,
-      'name': counsellorName,
-      'photoUrl': counsellorPhotoUrl,
-      'lastMessage': lastMessage,
-      'timestamp': timestamp,
-      'isSeen': isSeen,
-      'senderId': senderId,
-    };
-  }
+        try {
+          final msgRes = await http
+              .get(Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'));
+          if (msgRes.statusCode == 200) {
+            final List<dynamic> messages = json.decode(msgRes.body);
+            if (messages.isNotEmpty) {
+              final lastMsg = messages.last;
+              final timestamp = lastMsg['timestamp'];
+              final isSeen = lastMsg['isSeen'] ?? true;
+              final senderId = lastMsg['senderId'] ?? '';
 
-  void _updateChatList(List<dynamic> chatDetails) {
-    setState(() {
-      chats = chatDetails.whereType<Map<String, dynamic>>().toList();
-      chats.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
-      filteredChats = List.from(chats);
-      isLoading = false;
-    });
-  }
+              String lastMessageText = 'Media Message';
+              if (lastMsg.containsKey('text') && lastMsg['text'] != null) {
+                lastMessageText = lastMsg['text'];
+              } else if (lastMsg.containsKey('fileType')) {
+                final type = lastMsg['fileType'];
+                if (type.startsWith('image/'))
+                  lastMessageText = "📷 Image";
+                else if (type.startsWith('video/'))
+                  lastMessageText = "🎥 Video";
+                else
+                  lastMessageText = "📄 File";
+              }
 
-  void _listenToRealtimeMessages() {
-    chatRef = FirebaseDatabase.instance.ref('chats');
-
-    chatRef.onChildChanged.listen((event) {
-      if (event.snapshot.value != null) {
-        final chatId = event.snapshot.key;
-        final updatedChatData =
-            Map<String, dynamic>.from(event.snapshot.value as Map);
-
-        if (chatId != null && updatedChatData.containsKey('messages')) {
-          final messages =
-              Map<String, dynamic>.from(updatedChatData['messages']);
-          if (messages.isNotEmpty) {
-            final lastMessageKey = messages.keys.last;
-            final lastMessageData = messages[lastMessageKey];
-
-            final index = chats.indexWhere((chat) => chat['id'] == chatId);
-            if (index != -1) {
-              setState(() {
-                chats[index]['lastMessage'] =
-                    lastMessageData['text'] ?? 'No message';
-                chats[index]['timestamp'] =
-                    DateFormat('dd MMM yyyy, h:mm a').format(
-                  DateTime.fromMillisecondsSinceEpoch(
-                      lastMessageData['timestamp']),
-                );
-                chats[index]['isSeen'] = lastMessageData['isSeen'] ?? true;
-                chats[index]['senderId'] = lastMessageData['senderId'] ?? '';
-
-                // Move updated chat to the top
-                final updatedChat = chats.removeAt(index);
-                chats.insert(0, updatedChat);
-                filteredChats = List.from(chats);
-
-                // ✅ Update Cache with Latest Messages
-                String cacheKey = "user_chats_${widget.userId}";
-                ApiCache.set(cacheKey, chats, persist: true);
-              });
-            } else {
-              print("⚠️ Chat ID Not Found in List: $chatId");
+              chatInfo['lastMessage'] = lastMessageText;
+              chatInfo['timestampRaw'] = timestamp;
+              chatInfo['timestamp'] = DateFormat('dd MMM, h:mm a')
+                  .format(DateTime.fromMillisecondsSinceEpoch(timestamp));
+              chatInfo['isSeen'] = isSeen;
+              chatInfo['senderId'] = senderId;
             }
-          } else {
-            print("⚠️ No messages found in Chat ID: $chatId");
           }
-        }
+        } catch (_) {}
+
+        fetchedChats.add(chatInfo);
       }
+
+      fetchedChats.sort((a, b) {
+        final tsA = a['timestampRaw'] ?? 0;
+        final tsB = b['timestampRaw'] ?? 0;
+        return tsB.compareTo(tsA); // latest first
+      });
+
+      listenToRealtimeMessages(fetchedChats);
+      await ApiCache.set(cacheKey, fetchedChats, persist: true);
+
+      if (!mounted) return;
+      setState(() {
+        allChats = fetchedChats;
+        visibleChats = fetchedChats.take(visibleLimit).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      print('❌ Error fetching chats: $e');
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _getUserDetails(String userId) async {
+    try {
+      final res =
+          await http.get(Uri.parse('${ApiUtils.baseUrl}/api/user/$userId'));
+      if (res.statusCode == 200 && res.body.isNotEmpty) {
+        final user = json.decode(res.body);
+        return {
+          'userId': userId,
+          'name': '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}',
+          'photoUrl': user['photo'] ?? 'https://via.placeholder.com/150',
+          'role': user['role'] ?? 'user',
+        };
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _getCounsellorDetails(String userId) async {
+    try {
+      final res = await http
+          .get(Uri.parse('${ApiUtils.baseUrl}/api/counsellor/$userId'));
+      if (res.statusCode == 200 && res.body.isNotEmpty) {
+        final counsellor = json.decode(res.body);
+        return {
+          'userId': userId,
+          'name':
+              '${counsellor['firstName'] ?? ''} ${counsellor['lastName'] ?? ''}',
+          'photoUrl':
+              counsellor['photoUrl'] ?? 'https://via.placeholder.com/150',
+          'role': counsellor['role'] ?? 'counsellor',
+        };
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  void listenToRealtimeMessages(List<Map<String, dynamic>> chatList) {
+    for (final chat in chatList) {
+      final chatId = chat['chatId'];
+      final ref = FirebaseDatabase.instance.ref('chats/$chatId/messages');
+
+      final sub1 = ref.onChildAdded.listen((event) {
+        final msg = Map<String, dynamic>.from(event.snapshot.value as Map);
+        _debouncedUpdate(chatId, msg);
+      });
+
+      final sub2 = ref.onChildChanged.listen((event) {
+        final msg = Map<String, dynamic>.from(event.snapshot.value as Map);
+        _debouncedUpdate(chatId, msg);
+      });
+
+      _chatListeners.addAll([sub1, sub2]);
+    }
+  }
+
+  void _debouncedUpdate(String chatId, Map<String, dynamic> msg) {
+    _debounceTimers[chatId]?.cancel();
+    _debounceTimers[chatId] = Timer(Duration(milliseconds: 150), () {
+      _updateChat(chatId, msg);
     });
   }
 
-  void filterChats(String query) {
+  void _updateChat(String chatId, Map<String, dynamic> msg) {
+    final index = allChats.indexWhere((chat) => chat['chatId'] == chatId);
+    if (index == -1) return;
+
+    final chat = allChats[index];
+    final timestamp = msg['timestamp'];
+    final isSeen = msg['isSeen'] ?? true;
+    final senderId = msg['senderId'] ?? '';
+
+    String lastMessageText = 'Media Message';
+    if (msg.containsKey('text') && msg['text'] != null) {
+      lastMessageText = msg['text'];
+    } else if (msg.containsKey('fileType')) {
+      final type = msg['fileType'];
+      if (type.startsWith('image/'))
+        lastMessageText = "📷 Image";
+      else if (type.startsWith('video/'))
+        lastMessageText = "🎥 Video";
+      else
+        lastMessageText = "📄 File";
+    }
+
+    chat['lastMessage'] = lastMessageText;
+    chat['timestampRaw'] = timestamp;
+    chat['timestamp'] = DateFormat('dd MMM, h:mm a')
+        .format(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    chat['isSeen'] = isSeen;
+    chat['senderId'] = senderId;
+
+    allChats[index] = chat;
+    allChats.sort((a, b) {
+      final tsA = a['timestampRaw'] ?? 0;
+      final tsB = b['timestampRaw'] ?? 0;
+      return tsB.compareTo(tsA);
+    });
+
+    if (!mounted) return;
     setState(() {
-      searchQuery = query;
-      filteredChats = chats
-          .where((chat) => chat['name']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase()))
-          .toList();
+      visibleChats = allChats.take(visibleLimit).toList();
     });
   }
 
@@ -236,149 +287,160 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text("My Chats"),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: filterChats,
-              decoration: InputDecoration(
-                hintText: "Search counsellors...",
-                prefixIcon: Icon(Icons.search, color: Colors.orange),
-                fillColor: Color(0xFFFFF3E0),
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(color: Colors.orange),
-                ),
+      appBar: AppBar(title: Text('My Chats')),
+      body: isLoading
+          ? Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: Colors.deepOrangeAccent,
+                size: 50,
               ),
-            ),
-          ),
-          Expanded(
-            child: isLoading
-                ? Center(
-                    child: LoadingAnimationWidget.staggeredDotsWave(
-                      color: Colors.deepOrangeAccent,
-                      size: 50,
-                    ),
-                  )
-                : filteredChats.isEmpty
-                    ? Center(child: Text("No chats available"))
-                    : ListView.separated(
-                        separatorBuilder: (context, index) => Divider(
-                          color: Colors.grey.shade300,
-                          thickness: 1,
-                          indent: 10,
-                          endIndent: 10,
-                        ),
-                        itemCount: filteredChats.length,
-                        itemBuilder: (context, index) {
-                          final chat = filteredChats[index];
-                          final name = chat['name'] ?? 'Unknown Counsellor';
-                          final photoUrl = chat['photoUrl'];
-                          final counsellorId = chat['counsellorId'];
-                          final lastMessage = chat['lastMessage'];
-                          final timestamp = chat['timestamp'];
-                          final isSeen = chat['isSeen'];
-                          final senderId = chat['senderId'];
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChattingPage(
-                                    itemName: name,
-                                    userId: widget.userId,
-                                    counsellorId: counsellorId,
-                                    onSignOut: widget.onSignOut,
+            )
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        children: ['All', 'Counsellors', 'Friends']
+                            .map((label) => ChoiceChip(
+                                  label: Text(label),
+                                  selected: selectedTag == label,
+                                  selectedColor: Colors.deepOrangeAccent,
+                                  backgroundColor: Colors.grey[200],
+                                  labelStyle: TextStyle(
+                                    color: selectedTag == label
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
-                                ),
-                              ).then((_) {
-                                fetchChats(); // Refresh chats on returning
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8.0, horizontal: 16.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 35,
-                                    backgroundImage: NetworkImage(photoUrl),
-                                  ),
-                                  SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              name,
-                                              style: TextStyle(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            Text(
-                                              timestamp,
-                                              style: TextStyle(
-                                                fontSize: 12.0,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 4),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                lastMessage,
-                                                style: TextStyle(
-                                                  fontSize: 14.0,
-                                                  color: Colors.grey[600],
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            if (!isSeen &&
-                                                senderId != widget.userId)
-                                              Icon(
-                                                Icons.circle,
-                                                color: Colors.blue,
-                                                size: 10,
-                                              ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                                  onSelected: (_) {
+                                    setState(() {
+                                      selectedTag = label;
+                                      _applyFilters();
+                                    });
+                                  },
+                                ))
+                            .toList(),
                       ),
-          ),
-        ],
-      ),
+                      SizedBox(height: 10),
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          prefixIcon: Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.deepOrange[50],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (_) => _applyFilters(),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: visibleChats.isEmpty
+                      ? Center(child: Text('No chats found'))
+                      : ListView.separated(
+                          controller: _scrollController,
+                          itemCount: visibleChats.length,
+                          separatorBuilder: (_, __) => Divider(
+                            height: 1,
+                            thickness: 0.6,
+                            color: Colors.grey.withOpacity(0.3),
+                            indent: 70,
+                            endIndent: 12,
+                          ),
+                          itemBuilder: (context, index) {
+                            final chat = visibleChats[index];
+                            final isMine = chat['senderId'] == widget.userId;
+                            final lastMsg = isMine
+                                ? "Me: ${chat['lastMessage']}"
+                                : chat['lastMessage'];
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 12),
+                                leading: CircleAvatar(
+                                  radius: 24,
+                                  backgroundImage:
+                                      NetworkImage(chat['photoUrl']),
+                                  backgroundColor: Colors.grey[200],
+                                ),
+                                title: Text(
+                                  chat['name'],
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      lastMsg ?? '',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      chat['timestamp'] ?? '',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[600],
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                  ],
+                                ),
+                                trailing: (chat['isSeen'] == false &&
+                                        chat['senderId'] != widget.userId)
+                                    ? Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      )
+                                    : null,
+                                onTap: () {
+                                  if (chat['role'] == 'user') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UserToUserChattingPage(
+                                          itemName: chat['userId'],
+                                          userId: widget.userId,
+                                          userId2: chat['userId'],
+                                          onSignOut: () async {},
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChattingPage(
+                                          itemName: chat['userId'],
+                                          userId: widget.userId,
+                                          counsellorId: chat['userId'],
+                                          onSignOut: () async {},
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

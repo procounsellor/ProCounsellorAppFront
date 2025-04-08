@@ -13,6 +13,7 @@ import 'user_state_notifier.dart'; // Import UserStateNotifier
 import 'package:firebase_database/firebase_database.dart';
 import 'chat_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'Friends/friends_page.dart';
 
 class BasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -227,6 +228,18 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.group),
+            tooltip: "Friends",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FriendsPage(username: widget.username),
+                ),
+              );
+            },
+          ),
           Stack(
             children: [
               IconButton(

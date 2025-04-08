@@ -160,8 +160,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   Future<void> _fetchCounsellorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse(
-            '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}'),
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}'),
       );
 
       if (response.statusCode == 200) {
@@ -301,7 +300,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatsPage(
+                        builder: (context) => ChatPage(
                           counsellorId: widget.counsellorId,
                           onSignOut: widget.onSignOut,
                         ),
