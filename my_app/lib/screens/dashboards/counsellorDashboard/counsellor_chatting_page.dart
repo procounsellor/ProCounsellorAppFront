@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../services/api_utils.dart';
 import '../../../services/chat_service.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChattingPage extends StatefulWidget {
   final String itemName;
@@ -72,13 +74,28 @@ class _ChattingPageState extends State<ChattingPage> {
 
   Future<void> _loadMessages() async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      // Load cached messages first
+      String? cachedData = prefs.getString('chat_cache_$chatId');
+      if (cachedData != null) {
+        List decoded = jsonDecode(cachedData);
+        setState(() {
+          messages = List<Map<String, dynamic>>.from(decoded);
+        });
+      }
+
+      // Fetch from backend
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
+
       setState(() {
-        messages = fetchedMessages
-            .map((msg) => Map<String, dynamic>.from(msg))
-            .toList(); // Convert each message
+        messages = fetchedMessages;
       });
+
+      // Save to cache
+      prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
+
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');

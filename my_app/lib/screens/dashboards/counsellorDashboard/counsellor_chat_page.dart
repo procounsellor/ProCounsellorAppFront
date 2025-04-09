@@ -25,7 +25,9 @@ class _ChatPageState extends State<ChatPage> {
   List<StreamSubscription> _chatListeners = [];
   final ScrollController _scrollController = ScrollController();
   final Map<String, Timer> _debounceTimers = {};
+  final TextEditingController _searchController = TextEditingController();
   final String cacheKey = 'counsellor_chat_cache';
+  String selectedFilter = 'All';
   bool isLoading = true;
   int visibleLimit = 10;
 
@@ -33,6 +35,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _searchController.addListener(_onSearch);
     _loadCachedChats();
     _fetchChats();
   }
@@ -40,6 +43,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     for (final sub in _chatListeners) {
       sub.cancel();
     }
@@ -55,9 +59,34 @@ class _ChatPageState extends State<ChatPage> {
         visibleChats.length < allChats.length) {
       setState(() {
         visibleLimit += 10;
-        visibleChats = allChats.take(visibleLimit).toList();
+        _applyFilters();
       });
     }
+  }
+
+  void _onSearch() {
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    List<Map<String, dynamic>> filtered = allChats;
+
+    if (selectedFilter != 'All') {
+      filtered = filtered
+          .where((chat) => chat['role'] == selectedFilter.toLowerCase())
+          .toList();
+    }
+
+    final query = _searchController.text.toLowerCase();
+    if (query.isNotEmpty) {
+      filtered = filtered
+          .where((chat) => chat['name'].toLowerCase().contains(query))
+          .toList();
+    }
+
+    setState(() {
+      visibleChats = filtered.take(visibleLimit).toList();
+    });
   }
 
   Future<void> _loadCachedChats() async {
@@ -126,6 +155,10 @@ class _ChatPageState extends State<ChatPage> {
                         : '📄 File';
               }
 
+              if (senderId == widget.counsellorId) {
+                text = "Me: $text";
+              }
+
               chatInfo.addAll({
                 'lastMessage': text,
                 'timestampRaw': ts,
@@ -148,7 +181,7 @@ class _ChatPageState extends State<ChatPage> {
       if (!mounted) return;
       setState(() {
         allChats = fetchedChats;
-        visibleChats = fetchedChats.take(visibleLimit).toList();
+        _applyFilters();
         isLoading = false;
       });
 
@@ -188,8 +221,8 @@ class _ChatPageState extends State<ChatPage> {
 
     final chat = allChats[index];
     final ts = msg['timestamp'];
-    final isSeen = msg['isSeen'] ?? true;
     final senderId = msg['senderId'] ?? '';
+    final isSeen = msg['isSeen'] ?? true;
 
     String text = msg['text'] ?? 'Media';
     if (msg['text'] == null && msg['fileType'] != null) {
@@ -199,6 +232,10 @@ class _ChatPageState extends State<ChatPage> {
           : type.startsWith('video/')
               ? '🎥 Video'
               : '📄 File';
+    }
+
+    if (senderId == widget.counsellorId) {
+      text = "Me: $text";
     }
 
     chat['lastMessage'] = text;
@@ -211,9 +248,32 @@ class _ChatPageState extends State<ChatPage> {
     allChats.removeAt(index);
     allChats.insert(0, chat);
 
-    setState(() {
-      visibleChats = allChats.take(visibleLimit).toList();
-    });
+    _applyFilters();
+  }
+
+  Widget buildFilterChips() {
+    const options = ['All', 'Friends', 'Counsellors'];
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Wrap(
+        spacing: 8,
+        children: options
+            .map(
+              (filter) => ChoiceChip(
+                label: Text(filter),
+                selected: selectedFilter == filter,
+                selectedColor: Colors.orangeAccent,
+                onSelected: (_) {
+                  setState(() {
+                    selectedFilter = filter;
+                    _applyFilters();
+                  });
+                },
+              ),
+            )
+            .toList(),
+      ),
+    );
   }
 
   @override
@@ -224,48 +284,73 @@ class _ChatPageState extends State<ChatPage> {
           ? Center(
               child: LoadingAnimationWidget.staggeredDotsWave(
                   color: Colors.deepOrange, size: 50))
-          : visibleChats.isEmpty
-              ? Center(child: Text("No chats found"))
-              : ListView.separated(
-                  controller: _scrollController,
-                  itemCount: visibleChats.length,
-                  separatorBuilder: (_, __) => Divider(),
-                  itemBuilder: (context, i) {
-                    final chat = visibleChats[i];
-                    return ListTile(
-                      leading: CircleAvatar(
-                          backgroundImage: NetworkImage(chat['photoUrl'])),
-                      title: Text(chat['name']),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(chat['lastMessage'] ?? '',
-                              overflow: TextOverflow.ellipsis),
-                          Text(chat['timestamp'] ?? '',
-                              style:
-                                  TextStyle(fontSize: 12, color: Colors.grey)),
-                        ],
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: "Search by name...",
+                      filled: true,
+                      fillColor: Colors.orangeAccent.withOpacity(0.1),
+                      prefixIcon: Icon(Icons.search, color: Colors.deepOrange),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
                       ),
-                      trailing: (chat['isSeen'] == false &&
-                              chat['senderId'] != widget.counsellorId)
-                          ? Icon(Icons.circle, size: 10, color: Colors.blue)
-                          : null,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChattingPage(
-                              itemName: chat['name'],
-                              userId: chat['userId'],
-                              counsellorId: widget.counsellorId,
-                              onSignOut: widget.onSignOut,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                    ),
+                  ),
                 ),
+                buildFilterChips(),
+                Expanded(
+                  child: visibleChats.isEmpty
+                      ? Center(child: Text("No chats found"))
+                      : ListView.separated(
+                          controller: _scrollController,
+                          itemCount: visibleChats.length,
+                          separatorBuilder: (_, __) => Divider(),
+                          itemBuilder: (context, i) {
+                            final chat = visibleChats[i];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                  backgroundImage:
+                                      NetworkImage(chat['photoUrl'])),
+                              title: Text(chat['name']),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(chat['lastMessage'] ?? '',
+                                      overflow: TextOverflow.ellipsis),
+                                  Text(chat['timestamp'] ?? '',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                              trailing: (chat['isSeen'] == false &&
+                                      chat['senderId'] != widget.counsellorId)
+                                  ? Icon(Icons.circle,
+                                      size: 10, color: Colors.blue)
+                                  : null,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChattingPage(
+                                      itemName: chat['name'],
+                                      userId: chat['userId'],
+                                      counsellorId: widget.counsellorId,
+                                      onSignOut: widget.onSignOut,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

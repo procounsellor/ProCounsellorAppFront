@@ -11,6 +11,7 @@ import 'ChatServiceUserToUser.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import '../details_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -108,11 +109,28 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
   Future<void> _loadMessages() async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      // Load cached messages first
+      String? cachedData = prefs.getString('chat_cache_$chatId');
+      if (cachedData != null) {
+        List decoded = jsonDecode(cachedData);
+        setState(() {
+          messages = List<Map<String, dynamic>>.from(decoded);
+        });
+      }
+
+      // Fetch from backend
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
+
       setState(() {
         messages = fetchedMessages;
       });
+
+      // Save to cache
+      prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
+
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
