@@ -42,8 +42,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   List<String> activityLogs = [];
   int missedCallNotificationCount = 0;
 
-  late DatabaseReference chatRef;
-
+  DatabaseReference? chatRef;
   @override
   void initState() {
     super.initState();
@@ -114,6 +113,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   }
 
   void _resetMissedCallCount() {
+    if (!mounted) return;
     setState(() {
       missedCallNotificationCount = 0;
     });
@@ -132,6 +132,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
           String senderId = messageData['senderId'] ?? '';
 
           if (!isSeen && senderId != widget.counsellorId) {
+            if (!mounted) return;
             setState(() {
               notificationCount++;
             });
@@ -145,7 +146,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
               Map<String, dynamic>.from(event.snapshot.value as Map);
           bool isSeen = messageData['isSeen'] ?? true;
           //String senderId = messageData['senderId'] ?? '';
-
+          if (!mounted) return;
           setState(() {
             if (isSeen) {
               notificationCount =
@@ -168,6 +169,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         final List<String> chatIds =
             List<String>.from(data['chatIdsCreatedForCounsellor'] ?? []);
         _listenToNotifications(chatIds);
+        if (!mounted) return;
         setState(() {
           _photoUrl = data['photoUrl'];
           _fullName = data['firstName'] + " " + data['lastName'];
@@ -175,6 +177,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
           _isLoadingPhoto = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _isLoadingPhoto = false;
         });
@@ -182,6 +185,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
         print('Failed to load counsellor details: ${response.statusCode}');
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingPhoto = false;
       });
@@ -197,6 +201,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     subscriberRef.onChildAdded.listen((event) {
       if (event.snapshot.value == false) {
         // Notify only if value is false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("New subscriber: ${event.snapshot.key}");
@@ -208,6 +213,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     subscriberRef.onChildChanged.listen((event) {
       if (event.snapshot.value == false) {
         // Ensure it is still false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("Updated subscriber: ${event.snapshot.key}");
@@ -224,6 +230,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     followerRef.onChildAdded.listen((event) {
       if (event.snapshot.value == false) {
         // Notify only if value is false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("New follower: ${event.snapshot.key}");
@@ -235,6 +242,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     followerRef.onChildChanged.listen((event) {
       if (event.snapshot.value == false) {
         // Ensure it is still false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("Updated follower: ${event.snapshot.key}");
@@ -251,6 +259,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     reviewRef.onChildAdded.listen((event) {
       if (event.snapshot.value == false) {
         // Notify only if value is false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("New review: ${event.snapshot.key}");
@@ -262,6 +271,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     reviewRef.onChildChanged.listen((event) {
       if (event.snapshot.value == false) {
         // Ensure it is still false
+        if (!mounted) return;
         setState(() {
           subscriberNotificationCount++;
           activityLogs.add("Updated Review: ${event.snapshot.key}");
@@ -340,7 +350,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                   await prefs.setInt(
                       'seenSubscriberCount_${widget.counsellorId}',
                       subscriberNotificationCount);
-
+                  if (!mounted) return;
                   setState(() {
                     subscriberNotificationCount = 0;
                   });
@@ -496,16 +506,14 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
 
   @override
   void dispose() {
-    // Remove observer when BasePage is disposed
     WidgetsBinding.instance.removeObserver(this);
-
-    // Cancel any pending state change timer
-    // _stateChangeTimer?.cancel();
-
-    // Set counsellor state to "offline" when BasePage is destroyed
+    _stateChangeTimer?.cancel();
     _counsellorStateNotifier.setOffline();
+
+    // Optionally detach any custom Firebase listeners
+    chatRef?.onDisconnect();
+
     super.dispose();
-    chatRef.onDisconnect();
   }
 
   @override
@@ -534,6 +542,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   }
 
   void _navigateToPage(int index) {
+    if (!mounted) return;
     setState(() {
       _selectedIndex = index;
     });
@@ -541,6 +550,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
   }
 
   void _onItemTapped(int index) {
+    if (!mounted) return;
     setState(() {
       _selectedIndex = index;
     });
