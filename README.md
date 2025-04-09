@@ -20,7 +20,7 @@ ProCounsellorAppFront is a Flutter application designed to assist students in fi
 ## Clone the Repository
 ```
 git clone <repository-url>
-cd my_app
+cd ProCounsellor
 ```
 ## Install Dependencies
 ```
