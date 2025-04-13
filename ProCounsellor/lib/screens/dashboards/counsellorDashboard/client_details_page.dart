@@ -1,9 +1,9 @@
+import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_chatting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:ProCounsellor/screens/newCallingScreen/audio_call_screen.dart';
 import 'package:ProCounsellor/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:ProCounsellor/screens/newCallingScreen/video_call_screen.dart';
 import '../../newCallingScreen/firebase_notification_service.dart';
-import 'counsellor_chatting_page.dart';
 
 class ClientDetailsPage extends StatelessWidget {
   final Map<String, dynamic> client;
@@ -171,7 +171,7 @@ class ClientDetailsPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ChattingPage(
+                          builder: (context) => CounsellorChattingPage(
                             itemName:
                                 "${client['firstName'] ?? 'Unknown'} ${client['lastName'] ?? ''}"
                                     .trim(),

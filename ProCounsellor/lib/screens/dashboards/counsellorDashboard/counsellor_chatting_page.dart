@@ -10,17 +10,18 @@ import 'package:ProCounsellor/screens/customWidgets/video_player_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/api_utils.dart';
 import '../../../services/chat_service.dart';
+import '../../newCallingScreen/save_fcm_token.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ChattingPage extends StatefulWidget {
+class CounsellorChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
   final String? photo;
   final Future<void> Function() onSignOut;
 
-  ChattingPage(
+  CounsellorChattingPage(
       {required this.itemName,
       required this.userId,
       required this.counsellorId,
@@ -28,10 +29,10 @@ class ChattingPage extends StatefulWidget {
       required this.onSignOut});
 
   @override
-  _ChattingPageState createState() => _ChattingPageState();
+  _CounsellorChattingPageState createState() => _CounsellorChattingPageState();
 }
 
-class _ChattingPageState extends State<ChattingPage> {
+class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   List<Map<String, dynamic>> messages = []; // Store full message objects
   TextEditingController _controller = TextEditingController();
   late String chatId;
@@ -267,11 +268,14 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   Future<void> _sendMessage() async {
+    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(widget.userId);
+
     if (_controller.text.isNotEmpty) {
       try {
         MessageRequest messageRequest = MessageRequest(
           senderId: widget.counsellorId,
           text: _controller.text,
+          receiverFcmToken: receiverFCMToken!,
         );
 
         await ChatService().sendMessage(chatId, messageRequest);
@@ -288,6 +292,7 @@ class _ChattingPageState extends State<ChattingPage> {
   }
 
   Future<void> _sendFileMessage() async {
+    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(widget.userId);
     if (selectedFile != null || webFileBytes != null) {
       int fileSizeBytes = 0;
 
@@ -348,6 +353,7 @@ class _ChattingPageState extends State<ChattingPage> {
           file: tempFile,
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
+          receiverFcmToken: receiverFCMToken!,
         );
 
         print("✅ File uploaded successfully!");

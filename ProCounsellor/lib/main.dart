@@ -1,9 +1,13 @@
 import 'dart:io';
+import 'package:ProCounsellor/main_service.dart';
+import 'package:ProCounsellor/screens/dashboards/userDashboard/chatting_page.dart';
+import 'package:ProCounsellor/screens/newCallingScreen/agora_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:flutter_callkit_incoming/entities/call_event.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,7 +19,10 @@ import 'package:ProCounsellor/screens/dashboards/userDashboard/base_page.dart';
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'screens/newCallingScreen/incoming_call_screen.dart';
+import 'screens/dashboards/counsellorDashboard/counsellor_chatting_page.dart';
+import 'screens/dashboards/userDashboard/Friends/UserToUserChattingPage.dart';
+import 'screens/newCallingScreen/audio_call_screen.dart';
+import 'screens/newCallingScreen/video_call_screen.dart';
 
 // Initialize secure storage
 final storage = FlutterSecureStorage(
@@ -36,11 +43,15 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("📩 FCM received (background): ${message.data}");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("📩 [Background] Notification received: ${message.data}");
-
-  // Optional: Handle data (like logging or analytics)
-  // Do not use Navigator here — it's background!
+  if (message.data['type'] == 'incoming_call') {
+    await MainService().showNativeIncomingCall(
+      callerName: message.data['callerName'],
+      callType: message.data['callType'],
+      channelId: message.data['channelId'],
+    );
+  }
 }
 
 void main() async {
@@ -59,7 +70,7 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  await _setupFlutterNotifications(); // ✅ ADD THIS LINE
+  await _setupFlutterNotifications();
   await requestPermissions();
   await requestNotificationPermission();
   _initFCM();
@@ -128,6 +139,14 @@ Future<void> requestPermissions() async {
       var photoStatus = await Permission.photos.request();
       if (photoStatus.isDenied) print("❌ Photo library permission is denied.");
     }
+    if (Platform.isAndroid) {
+      final status = await Permission.phone.request();
+      if (status.isDenied || status.isPermanentlyDenied) {
+        // Show message to user or fallback
+        print("Phone permission denied. Cannot show call screen.");
+        return;
+      }
+    }
   }
 }
 
@@ -162,6 +181,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeApp();
+    _setupCallKitListeners();
   }
 
   @override
@@ -216,58 +236,201 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       required String currentUserId,
       required Future<void> Function() onSignOut,
     }) {
+      MainService _mainService = MainService();
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        print('🔔 Foreground notification: ${message.data}');
-        _handleIncomingCall(message.data, currentUserId, onSignOut);
+        print("📩 FCM received in foreground: ${message.data}");
+        if (message.data['type'] == 'incoming_call') {
+          _mainService.showNativeIncomingCall(
+            callerName: message.data['callerName'],
+            callType: message.data['callType'],
+            channelId: message.data['channelId'],
+          );
+        }
       });
 
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        print('📲 Opened app via notification: ${message.data}');
-        _handleIncomingCall(message.data, currentUserId, onSignOut);
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+        print("📩 FCM received in 1foreground: ${message.data}");
+        if (message.data['type'] == 'incoming_call') {
+          _mainService.showNativeIncomingCall(
+            callerName: message.data['callerName'],
+            callType: message.data['callType'],
+            channelId: message.data['channelId'],
+          );
+        }
+
+        if (message.data['type'] == 'chat') {
+          final senderId = message.data['senderId'];
+
+          if(role == "user"){
+            if(await _mainService.senderIsUser(senderId)){
+              final user = await _mainService.getUserFromUserId(senderId);
+              Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserToUserChattingPage(
+                    itemName: '${user['firstName']} ${user['lastName']}',
+                    userId: userId!,
+                    userId2: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+              );
+            }
+            else{
+              final counsellor = await _mainService.getCounsellorFromCounsellorId(senderId);
+              Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserChattingPage(
+                    itemName: '${counsellor['firstName']} ${counsellor['lastName']}',
+                    userId: userId!,
+                    counsellorId: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+              );
+            }
+          }
+          else if(role == "counsellor"){
+              final user = await _mainService.getUserFromUserId(senderId);
+              Navigator.push(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(
+                builder: (_) => CounsellorChattingPage(
+                  itemName: '${user['firstName']} ${user['lastName']}',
+                  userId: senderId,
+                  photo: user['photo'],
+                  counsellorId: senderId,
+                  onSignOut: restartApp,
+                ),
+              ),
+            );
+          }
+        }
       });
 
-      FirebaseMessaging.instance.getInitialMessage().then((message) {
-        if (message != null && message.data['type'] == 'incoming_call') {
-          _handleIncomingCall(message.data, currentUserId, onSignOut);
+      FirebaseMessaging.instance.getInitialMessage().then((message) async {
+        print("📩 FCM received in sss: ${message}");
+        if (message?.data['type'] == 'incoming_call') {
+          _mainService.showNativeIncomingCall(
+            callerName: message?.data['callerName'],
+            callType: message?.data['callType'],
+            channelId: message?.data['channelId'],
+          );
+        }
+        else if (message?.data['type'] == 'chat') {
+          final senderId = message?.data['senderId'];
+
+          // 🔁 Wait until the first frame is drawn before navigating
+          if(role == "user"){
+            if(await _mainService.senderIsUser(senderId)){
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserToUserChattingPage(
+                    itemName: senderId,
+                    userId: userId!,
+                    userId2: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+                );
+              });
+            }
+            else{
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserChattingPage(
+                    itemName: senderId,
+                    userId: userId!,
+                    counsellorId: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+              );
+              });
+            }
+          }
+          else if(role == "counsellor"){
+             WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(
+                builder: (_) => CounsellorChattingPage(
+                  itemName: senderId,
+                  userId: senderId,
+                  counsellorId: senderId,
+                  onSignOut: restartApp,
+                ),
+              ),
+            );
+             });
+          }
         }
       });
     }
 
-   void _handleIncomingCall(
-  Map<String, dynamic> data,
-  String currentUserId,
-  Future<void> Function() onSignOut,
-) {
-  if (data['type'] != 'incoming_call') return;
+  void _setupCallKitListeners() {
+  print("ak");
+  FlutterCallkitIncoming.onEvent.listen((event) async {
+    final data = event?.body;
 
-  final String channelId = data['channelId'] ?? '';
+    switch (event?.event) {
+      case Event.actionCallAccept:
+        final callType = data?['extra']?['callType'] ?? 'audio';
+        final channelId = data?['extra']?['channelId'];
+        final callerName = data?['extra']?['callerName'];
 
-  // Safely delay navigation till current frame ends
-  Future.microtask(() {
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (navigatorKey.currentState?.mounted ?? false) {
-        final currentContext = navigatorKey.currentContext;
+        print("📞 Call Accepted → $callType");
 
-        final isAlreadyOnCallScreen = ModalRoute.of(currentContext!)?.settings.name == 'incoming_call';
+        // Navigate based on type
+        if (navigatorKey.currentState?.context != null) {
+          final context = navigatorKey.currentState!.context;
 
-        if (!isAlreadyOnCallScreen) {
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (_) => IncomingCallScreen(
-                receiverId: currentUserId,
-                channelId: channelId,
-                onSignOut: onSignOut,
-              ),
-              settings: const RouteSettings(name: 'incoming_call'),
-            ),
+          Widget screen = callType == "video"
+              ? VideoCallScreen(
+                  isCaller: false,
+                  callerId: callerName,
+                  receiverId: userId!,
+                  channelId: channelId,
+                  onSignOut: restartApp,
+                )
+              : AudioCallScreen(
+                  isCaller: false,
+                  callerId: callerName,
+                  receiverId: userId!,
+                  channelId: channelId,
+                  onSignOut: restartApp,
+                );
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => screen),
           );
         }
-      } else {
-        print("❌ Navigator not mounted. Cannot push IncomingCallScreen.");
-      }
-    });
+        break;
+
+      case Event.actionCallDecline:
+        final channelId = data?['extra']?['channelId'];
+        print("📵 Call Declined → $channelId");
+        if (channelId != null) {
+          AgoraService.declinedCall(channelId);
+        }
+        break;
+
+      case Event.actionCallEnded:
+        print("📴 Call Ended");
+        break;
+
+      default:
+        print("📱 CallKit Event: ${event?.event}");
+    }
   });
 }
+
 
    /// ✅ **Restart App (Logout & Clear Data)**
   Future<void> restartApp() async {
