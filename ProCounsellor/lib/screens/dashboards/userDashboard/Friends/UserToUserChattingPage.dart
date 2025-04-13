@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:ProCounsellor/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,8 @@ import '../../../../services/api_utils.dart';
 import 'ChatServiceUserToUser.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
-import '../details_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'user_details_page.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -46,6 +47,11 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   String? selectedFileName; // Store file name
   Uint8List? webFileBytes; // For Web
 
+  // for user details
+  String userPhotoUrl = 'https://via.placeholder.com/150';
+  String userFirstName = '';
+  String userLastName = '';
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +64,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     if (!isLoading) {
       _listenForNewMessages();
       _listenForSeenStatusUpdates();
+      await _fetchUserProfile();
     }
   }
 
@@ -67,7 +74,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           as String;
 
       // Fetch counsellor's profile data
-      await _fetchCounsellorProfile();
+      await _fetchUserProfile();
 
       setState(() {
         isLoading = false;
@@ -78,24 +85,26 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
-  Future<void> _fetchCounsellorProfile() async {
+  Future<void> _fetchUserProfile() async {
     try {
-      String url = '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
+      String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(json.decode(response.body));
         setState(() {
-          counsellorPhotoUrl = data['photoUrl'] ?? counsellorPhotoUrl;
+          userPhotoUrl = data['photo'] ?? userPhotoUrl;
+          userFirstName = data['firstName'] ?? '';
+          userLastName = data['lastName'] ?? '';
         });
       }
     } catch (e) {
-      print('Error fetching counsellor profile: $e');
+      print('Error fetching user profile: $e');
     }
   }
 
   void _listenToCounsellorStatus() {
     counsellorStateRef =
-        FirebaseDatabase.instance.ref('counsellorStates/${widget.userId2}');
+        FirebaseDatabase.instance.ref('userStates/${widget.userId2}');
 
     counsellorStateRef.onValue.listen((event) {
       if (event.snapshot.value != null) {
@@ -268,11 +277,14 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   }
 
   Future<void> _sendMessage() async {
+    String? receiverFCMToken =
+        await FirestoreService.getFCMTokenUser(widget.userId2);
     if (_controller.text.isNotEmpty) {
       try {
         MessageRequest messageRequest = MessageRequest(
           senderId: widget.userId,
           text: _controller.text,
+          receiverFcmToken: receiverFCMToken!,
         );
 
         await ChatService().sendMessage(chatId, messageRequest);
@@ -289,6 +301,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   }
 
   Future<void> _sendFileMessage() async {
+    String? receiverFCMToken =
+        await FirestoreService.getFCMTokenUser(widget.userId2);
     if (selectedFile != null || webFileBytes != null) {
       int fileSizeBytes = 0;
 
@@ -349,6 +363,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           file: tempFile,
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
+          receiverFCMToken: receiverFCMToken!,
         );
         // Fetch updated messages from backend and replace the temporary message
         _loadMessages(); // Refresh messages immediately
@@ -604,26 +619,26 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsPage(
-                      counsellorId: widget.userId2,
-                      userId: widget.userId,
-                      itemName: widget.userId2,
-                      onSignOut: widget.onSignOut,
-                    ),
-                  ),
-                );
-              },
-              child: Stack(
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserDetailsPage(
+                  userId: widget.userId2,
+                  myUsername: widget.userId,
+                  onSignOut: widget.onSignOut,
+                ),
+              ),
+            );
+          },
+          child: Row(
+            children: [
+              Stack(
                 children: [
                   CircleAvatar(
-                    backgroundImage: NetworkImage(counsellorPhotoUrl),
+                    backgroundImage: NetworkImage(userPhotoUrl),
+                    radius: 22,
                   ),
                   Positioned(
                     bottom: 0,
@@ -640,16 +655,29 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                   ),
                 ],
               ),
-            ),
-            SizedBox(width: 10),
-            Text(
-              widget.itemName,
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
+              SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "$userFirstName $userLastName",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    isCounsellorOnline ? "Online" : "Offline",
+                    style: TextStyle(
+                      color: isCounsellorOnline ? Colors.green : Colors.grey,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         centerTitle: true,
       ),

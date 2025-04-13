@@ -182,8 +182,9 @@ class _SearchPageState extends State<SearchPage> {
                 MaterialPageRoute(
                   builder: (_) => UserDetailsPage(
                     userId: item['userName'], // or item['_id']
-                    myUsername:
-                        widget.userId, // Assuming current user's username
+                    myUsername: widget.userId,
+                    onSignOut:
+                        widget.onSignOut, // Assuming current user's username
                   ),
                 ),
               );
