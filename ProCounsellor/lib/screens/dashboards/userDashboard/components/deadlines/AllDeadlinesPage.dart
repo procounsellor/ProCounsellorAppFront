@@ -1,11 +1,14 @@
+import 'package:ProCounsellor/screens/dashboards/userDashboard/subscribed_counsellors_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'ApplyPage.dart';
 
 class AllDeadlinesPage extends StatefulWidget {
   final List<Map<String, String>> deadlines;
+  final String username;
 
-  const AllDeadlinesPage({super.key, required this.deadlines});
+  const AllDeadlinesPage(
+      {super.key, required this.deadlines, required this.username});
 
   @override
   State<AllDeadlinesPage> createState() => _AllDeadlinesPageState();
@@ -103,6 +106,7 @@ class _AllDeadlinesPageState extends State<AllDeadlinesPage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (_) => ApplyGuidePage(
+                                            username: widget.username,
                                             examTitle:
                                                 item['title'] ?? 'Application',
                                             videoUrl: item['video'] ?? '',
@@ -129,11 +133,15 @@ class _AllDeadlinesPageState extends State<AllDeadlinesPage> {
                                             fontWeight: FontWeight.w500)),
                                     onTap: () {
                                       Navigator.pop(context);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                "Connecting to counsellor...")),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              SubscribedCounsellorsPage(
+                                            username: widget.username,
+                                            onSignOut: () async {},
+                                          ),
+                                        ),
                                       );
                                     },
                                   ),

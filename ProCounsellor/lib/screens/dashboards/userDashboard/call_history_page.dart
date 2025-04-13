@@ -6,6 +6,7 @@ import '../../../services/api_utils.dart';
 import 'details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../../../optimizations/api_cache.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String userId;
@@ -205,7 +206,14 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Call History"),
+        title: Text(
+          "Call History",
+          style: GoogleFonts.outfit(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         backgroundColor: Colors.white,
         actions: [
           IconButton(
@@ -218,13 +226,13 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : hasError
-              ? const Center(
+              ? Center(
                   child: Text("Failed to load call history",
-                      style: TextStyle(color: Colors.white)))
+                      style: GoogleFonts.outfit(color: Colors.white)))
               : callHistory.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text("No call history available",
-                          style: TextStyle(color: Colors.white)))
+                          style: GoogleFonts.outfit(color: Colors.white)))
                   : _buildCallHistoryList(),
     );
   }
@@ -283,7 +291,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
       ),
       title: Text(
         contactName,
-        style: const TextStyle(
+        style: GoogleFonts.outfit(
             color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
       ),
       subtitle: Row(
@@ -300,7 +308,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
                     : (isOutgoing
                         ? "Outgoing"
                         : "Incoming"), // ✅ Default: Incoming/Outgoing
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
+            style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
           ),
 
           const SizedBox(width: 5),
@@ -316,7 +324,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         children: [
           Text(
             formattedTime,
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
+            style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
           ),
           const SizedBox(width: 10),
           IconButton(
@@ -381,7 +389,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
                     radius: 40, backgroundImage: NetworkImage(photoUrl)),
                 const SizedBox(height: 10),
                 Text(contactName,
-                    style: const TextStyle(
+                    style: GoogleFonts.outfit(
                         color: Colors.black,
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
@@ -389,22 +397,22 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
                 ListTile(
                   leading: const Icon(Icons.call, color: Colors.green),
                   title: Text("Call Type: ${call["callType"]}",
-                      style: const TextStyle(color: Colors.black)),
+                      style: GoogleFonts.outfit(color: Colors.black)),
                 ),
                 ListTile(
                   leading: const Icon(Icons.timer, color: Colors.blue),
                   title: Text("Duration: ${call["duration"] ?? "0 sec"}",
-                      style: const TextStyle(color: Colors.black)),
+                      style: GoogleFonts.outfit(color: Colors.black)),
                 ),
                 ListTile(
                   leading: const Icon(Icons.access_time, color: Colors.orange),
                   title: Text("Time: ${formatTimestamp(call["startTime"])}",
-                      style: const TextStyle(color: Colors.black)),
+                      style: GoogleFonts.outfit(color: Colors.black)),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   "Tap anywhere to view full details",
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  style: GoogleFonts.outfit(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 10),
               ],

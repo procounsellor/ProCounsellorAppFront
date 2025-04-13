@@ -27,6 +27,8 @@ class ExamEntry {
 }
 
 class ExamsPage extends StatefulWidget {
+  final String username;
+  const ExamsPage({required this.username});
   @override
   _ExamsPageState createState() => _ExamsPageState();
 }
@@ -226,10 +228,12 @@ class _ExamsPageState extends State<ExamsPage> {
                                                       MaterialPageRoute(
                                                         builder: (_) =>
                                                             ExamDetailsPage(
-                                                                examName:
-                                                                    exam.name,
-                                                                category:
-                                                                    selectedCategory),
+                                                          examName: exam.name,
+                                                          category:
+                                                              selectedCategory,
+                                                          username:
+                                                              widget.username,
+                                                        ),
                                                       ),
                                                     );
                                                   },

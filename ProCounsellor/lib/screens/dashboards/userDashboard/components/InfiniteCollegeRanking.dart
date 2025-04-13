@@ -12,8 +12,9 @@ typedef MyBuilder = void Function(
 
 class InfiniteCollegeRanking extends StatefulWidget {
   final MyBuilder builder;
-
-  const InfiniteCollegeRanking({super.key, required this.builder});
+  final String username;
+  const InfiniteCollegeRanking(
+      {super.key, required this.builder, required this.username});
   @override
   _InfiniteCollegeRanking1State createState() =>
       _InfiniteCollegeRanking1State();
@@ -208,6 +209,7 @@ class _InfiniteCollegeRanking1State extends State<InfiniteCollegeRanking> {
                           MaterialPageRoute(
                             builder: (context) => CollegeDetailsPage(
                               collegeName: categorizedColleges[key]![j]['name'],
+                              username: widget.username,
                             ),
                           ),
                         );

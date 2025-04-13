@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'deadlines/AllDeadlinesPage.dart';
 
 class UpcomingDeadlinesTicker extends StatefulWidget {
+  final String username;
+  const UpcomingDeadlinesTicker({super.key, required this.username});
   @override
   _UpcomingDeadlinesTickerState createState() =>
       _UpcomingDeadlinesTickerState();
@@ -324,7 +326,10 @@ class _UpcomingDeadlinesTickerState extends State<UpcomingDeadlinesTicker>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => AllDeadlinesPage(deadlines: _deadlines),
+            builder: (_) => AllDeadlinesPage(
+              deadlines: _deadlines,
+              username: widget.username,
+            ),
           ),
         );
       },

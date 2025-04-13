@@ -1,3 +1,4 @@
+import 'package:ProCounsellor/screens/dashboards/userDashboard/subscribed_counsellors_page.dart';
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,12 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 class ApplyGuidePage extends StatefulWidget {
   final String examTitle;
   final String videoUrl;
+  final String username;
 
-  const ApplyGuidePage({
-    Key? key,
-    required this.examTitle,
-    required this.videoUrl,
-  }) : super(key: key);
+  const ApplyGuidePage(
+      {Key? key,
+      required this.examTitle,
+      required this.videoUrl,
+      required this.username})
+      : super(key: key);
 
   @override
   State<ApplyGuidePage> createState() => _ApplyGuidePageState();
@@ -163,9 +166,14 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Connecting to counsellor..."),
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SubscribedCounsellorsPage(
+                                    username: widget.username,
+                                    onSignOut: () async {},
+                                  ),
                                 ),
                               );
                             },

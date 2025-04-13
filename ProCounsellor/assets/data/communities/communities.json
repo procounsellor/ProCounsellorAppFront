@@ -1,0 +1,37 @@
+[
+  {
+    "id": "engineering_devs",
+    "name": "Engineering Devs",
+    "members": 12800,
+    "description": "Discuss all things engineering — from circuits to software.",
+    "image": "assets/images/community/engineering_devs.jpg"
+  },
+  {
+    "id": "law_legends",
+    "name": "Law Legends",
+    "members": 8700,
+    "description": "Debate, discuss and decode legal concepts and case studies.",
+    "image": "assets/images/community/law_legends.jpg"
+  },
+  {
+    "id": "design_dynamos",
+    "name": "Design Dynamos",
+    "members": 9500,
+    "description": "Share ideas, get feedback, and grow your design skills.",
+    "image": "assets/images/community/design_dynamos.jpg"
+  },
+  {
+    "id": "business_minds",
+    "name": "Business Minds",
+    "members": 13450,
+    "description": "From startups to corporate strategy — talk business here.",
+    "image": "assets/images/community/business_minds.jpg"
+  },
+  {
+    "id": "medico_talks",
+    "name": "Medico Talks",
+    "members": 11200,
+    "description": "A community for future doctors and healthcare heroes.",
+    "image": "assets/images/community/medico_talks.jpg"
+  }
+]

@@ -1,3 +1,5 @@
+import 'package:ProCounsellor/screens/dashboards/userDashboard/components/deadlines/AllDeadlinesPage.dart';
+import 'package:ProCounsellor/screens/dashboards/userDashboard/details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,8 +8,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:ProCounsellor/screens/paymentScreens/add_funds.dart';
 import '../../../optimizations/api_cache.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../services/api_utils.dart';
+import 'package:shimmer/shimmer.dart';
+import '../userDashboard/my_reviews.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -22,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? profileData;
   bool isLoading = true;
   Uint8List? _profileImageBytes;
+  List<dynamic> subscribedCounsellors = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -44,6 +50,28 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _fetchProfileData();
+    _fetchSubscribedCounsellors();
+  }
+
+  Future<void> _fetchSubscribedCounsellors() async {
+    final url =
+        '${ApiUtils.baseUrl}/api/user/${widget.username}/subscribed-counsellors';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          subscribedCounsellors = data;
+        });
+        print("✅ Subscribed counsellors fetched successfully.");
+      } else {
+        print(
+            "❌ Failed to load subscribed counsellors: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error fetching subscribed counsellors: $e");
+    }
   }
 
   Future<void> _fetchProfileData() async {
@@ -242,7 +270,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Title
                       Text(
                         'Update Information',
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 16),
@@ -289,7 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Location Selection Title
                       Text(
                         'Location I am looking for',
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
 
@@ -339,7 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           },
                           child: Text(
                             'Update',
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.black,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -374,15 +402,43 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           Text(
             "$title: ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style:
+                GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Expanded(
             child: Text(
               value.toString(),
-              style: TextStyle(color: Colors.grey[700], fontSize: 16),
+              style: GoogleFonts.outfit(color: Colors.grey[700], fontSize: 16),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTile({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
@@ -401,150 +457,99 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       // User Info Section
                       Center(
-                        child: Card(
-                          color: Colors.white, // White background for the card
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation:
-                              5, // Add slight elevation for a shadow effect
-                          child: Container(
-                            width: MediaQuery.of(context).size.width *
-                                0.9, // 90% of the screen width
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                GestureDetector(
-                                  onTap: _pickImage,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.35,
-                                        height:
-                                            MediaQuery.of(context).size.width *
-                                                0.35,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[
-                                              300], // Placeholder background
-                                          border: Border.all(
-                                            color: Colors.orange,
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: _profileImageBytes != null
-                                              ? Image.memory(
-                                                  _profileImageBytes!,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : (profileData != null &&
-                                                      profileData!['photo'] !=
-                                                          null
-                                                  ? Image.network(
-                                                      profileData!['photo'],
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : Icon(
-                                                      Icons.person,
-                                                      size:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.2,
-                                                      color: Colors.white,
-                                                    )),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: CircleAvatar(
-                                          backgroundColor: Colors.orangeAccent,
-                                          radius: 18,
-                                          child: Icon(
-                                            Icons.camera_alt,
-                                            size: 18,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.35,
+                                    height: MediaQuery.of(context).size.width *
+                                        0.35,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: _profileImageBytes != null
+                                        ? Image.memory(_profileImageBytes!,
+                                            fit: BoxFit.cover)
+                                        : (profileData != null &&
+                                                profileData!['photo'] != null
+                                            ? Image.network(
+                                                profileData!['photo'],
+                                                fit: BoxFit.cover)
+                                            : Icon(Icons.person,
+                                                size: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.2,
+                                                color: Colors.white)),
                                   ),
-                                ),
-                                SizedBox(height: 20),
-                                if (profileData != null &&
-                                    (profileData!['firstName'] != null ||
-                                        profileData!['lastName'] != null))
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (profileData!['firstName'] != null)
-                                        Text(
-                                          profileData!['firstName'],
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      if (profileData!['lastName'] != null)
-                                        SizedBox(width: 8),
-                                      if (profileData!['lastName'] != null)
-                                        Text(
-                                          profileData!['lastName'],
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                    ],
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.black,
+                                      radius: 12,
+                                      child: Icon(Icons.edit,
+                                          size: 12, color: Colors.white),
+                                    ),
                                   ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 20),
-
-                      // Additional Info Section
-                      Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 5,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment
-                                        .spaceBetween, // Ensure even spacing
+                                  // Name
+                                  if (profileData != null &&
+                                      (profileData!['firstName'] != null ||
+                                          profileData!['lastName'] != null))
+                                    Row(
+                                      children: [
+                                        if (profileData!['firstName'] != null)
+                                          Text(
+                                            profileData!['firstName'],
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        if (profileData!['lastName'] != null)
+                                          SizedBox(width: 6),
+                                        if (profileData!['lastName'] != null)
+                                          Text(
+                                            profileData!['lastName'],
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                      ],
+                                    ),
+                                  SizedBox(height: 12),
+
+                                  // Wallet Balance
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Wallet Balance",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        "WALLET BALANCE",
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey[600]),
                                       ),
                                       Row(
                                         children: [
                                           Icon(Icons.currency_rupee,
-                                              color: Colors.green),
-                                          SizedBox(width: 4),
+                                              color: Colors.green, size: 16),
+                                          SizedBox(width: 2),
                                           Text(
                                             profileData != null &&
                                                     profileData![
@@ -553,113 +558,303 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 ? profileData!['walletAmount']
                                                     .toString()
                                                 : "Not provided",
-                                            style: TextStyle(
+                                            style: GoogleFonts.outfit(
                                               color: Colors.green,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                              fontSize: 14,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                  SizedBox(
-                                      height:
-                                          16), // Add spacing before the button
-                                  Center(
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors
-                                            .green, // Green color for the button
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 24, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              8), // Rounded edges
-                                        ),
+                                  SizedBox(height: 8),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => AddFundsPage(
-                                                userName: widget.username),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        "Add Funds",
-                                        style: TextStyle(
-                                          color:
-                                              Colors.white, // White text color
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AddFundsPage(
+                                              userName: widget.username),
                                         ),
+                                      );
+                                    },
+                                    child: Text(
+                                      "Add Funds",
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Icon(Icons.menu_book,
-                                      color: const Color.fromARGB(255, 151, 158,
-                                          154)), // Icon for "Interested Course"
-                                  SizedBox(
-                                      width: 8), // Space between icon and text
-
-                                  SizedBox(
-                                      width:
-                                          8), // Space between label and value
-                                  Expanded(
-                                    child: Text(
-                                      profileData != null &&
-                                              profileData![
-                                                      'interestedCourse'] !=
-                                                  null
-                                          ? profileData!['interestedCourse']
-                                          : "Not provided",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on,
-                                      color: Colors
-                                          .red), // Icon for "User Location"
-                                  SizedBox(
-                                      width: 8), // Space between icon and text
-
-                                  SizedBox(
-                                      width:
-                                          8), // Space between label and value
-                                  Expanded(
-                                    child: Text(
-                                      profileData != null &&
-                                              profileData![
-                                                      'userInterestedStateOfCounsellors'] !=
-                                                  null &&
-                                              profileData![
-                                                      'userInterestedStateOfCounsellors']
-                                                  .isNotEmpty
-                                          ? profileData![
-                                                  'userInterestedStateOfCounsellors']
-                                              .join(", ")
-                                          : "Not provided",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 20),
+
+                      SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "INTERESTED COUNSELLORS",
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          subscribedCounsellors.isEmpty && isLoading
+                              ? SizedBox(
+                                  height: 90,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
+                                    itemCount:
+                                        5, // Number of shimmer placeholders
+                                    separatorBuilder: (_, __) =>
+                                        SizedBox(width: 16),
+                                    itemBuilder: (context, index) {
+                                      return Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300,
+                                        highlightColor: Colors.grey.shade100,
+                                        child: SizedBox(
+                                          width: 70,
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 24,
+                                                backgroundColor:
+                                                    Colors.grey.shade400,
+                                              ),
+                                              SizedBox(height: 6),
+                                              Container(
+                                                height: 10,
+                                                width: 50,
+                                                color: Colors.grey.shade400,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              : SizedBox(
+                                  height: 90,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
+                                    child: SizedBox(
+                                      height: 90,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        child: ListView.separated(
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount:
+                                              subscribedCounsellors.length,
+                                          separatorBuilder: (_, __) =>
+                                              SizedBox(width: 16),
+                                          itemBuilder: (context, index) {
+                                            final counsellor =
+                                                subscribedCounsellors[index];
+                                            final counsellorId =
+                                                counsellor['userName'] ?? '';
+                                            final counsellorName = counsellor[
+                                                        'firstName'] +
+                                                    " " +
+                                                    counsellor['lastName'] ??
+                                                'Counsellor';
+
+                                            return GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => DetailsPage(
+                                                      itemName: counsellorName,
+                                                      userId: widget.username,
+                                                      counsellorId:
+                                                          counsellorId,
+                                                      onSignOut:
+                                                          () async {}, // replace with real callback if needed
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: SizedBox(
+                                                width: 70,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    CircleAvatar(
+                                                      backgroundImage:
+                                                          NetworkImage(counsellor[
+                                                                  'photoUrl'] ??
+                                                              ''),
+                                                      radius: 24,
+                                                    ),
+                                                    SizedBox(height: 6),
+                                                    Text(
+                                                      counsellorName,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: GoogleFonts.outfit(
+                                                          fontSize: 12),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "COURSE I AM LOOKING FOR",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              profileData != null &&
+                                      profileData!['interestedCourse'] != null
+                                  ? profileData!['interestedCourse']
+                                  : "Not provided",
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "LOCATION I AM LOOKING FOR",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              profileData != null &&
+                                      profileData![
+                                              'userInterestedStateOfCounsellors'] !=
+                                          null &&
+                                      profileData![
+                                              'userInterestedStateOfCounsellors']
+                                          .isNotEmpty
+                                  ? profileData![
+                                          'userInterestedStateOfCounsellors']
+                                      .join(", ")
+                                  : "Not provided",
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16),
+
+                      _buildSectionTile(
+                        title: "MY TRANSACTIONS",
+                        onTap: () {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (_) =>
+                          //         MyReviewPage(username: widget.username),
+                          //   ),
+                          // );
+                        },
+                      ),
+
+                      Divider(height: 1),
+
+                      _buildSectionTile(
+                        title: "MY REVIEWS",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  MyReviewPage(username: widget.username),
+                            ),
+                          );
+                        },
+                      ),
+
+                      Divider(height: 1),
+
+                      _buildSectionTile(
+                        title: "TARGETED COLLEGES",
+                        onTap: () {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (_) =>
+                          //         TargetedCollegesPage(userId: widget.username),
+                          //   ),
+                          // );
+                        },
+                      ),
+
+                      Divider(height: 1),
+
+                      _buildSectionTile(
+                        title: "DEADLINES",
+                        onTap: () {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (_) =>
+                          //         AllDeadlinesPage(username: widget.username),
+                          //   ),
+                          // );
+                        },
+                      ),
 
                       Center(
                         child: ElevatedButton(
@@ -676,7 +871,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           onPressed: _showUpdateModal, // Edit functionality
                           child: Text(
                             "Edit Profile",
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.white, // White text color
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
