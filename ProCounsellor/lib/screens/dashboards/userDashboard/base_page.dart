@@ -5,15 +5,15 @@ import 'package:http/http.dart' as http; // Import http for API calls
 import 'package:ProCounsellor/screens/dashboards/userDashboard/call_history_page.dart';
 import '../../../services/api_utils.dart';
 import 'user_dashboard.dart';
-import 'my_activities_page.dart';
 import 'learnwithus/learn_with_us_page.dart';
-import 'community_page.dart';
+import 'communities/communities_home_page.dart';
 import 'profile_page.dart';
 import 'user_state_notifier.dart'; // Import UserStateNotifier
 import 'package:firebase_database/firebase_database.dart';
 import 'chat_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'Friends/friends_page.dart';
+import 'components/message_notifier_service.dart';
 
 class BasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -39,6 +39,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   int notificationCount = 0;
   late DatabaseReference chatRef;
   int missedCallNotificationCount = 0;
+  MessageNotifierService? _messageNotifier;
 
   @override
   void initState() {
@@ -62,7 +63,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     _pages.add(
         UserDashboard(onSignOut: widget.onSignOut, username: widget.username));
     _pages.add(LearnWithUsPage());
-    _pages.add(CommunityPage());
+    _pages.add(CommunitiesHomePage());
     //_pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
     _pages.add(CallHistoryPage(
       userId: widget.username,
@@ -115,9 +116,25 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<String> chatIds =
-            List<String>.from(data['chatIdsCreatedForUser'] ?? []);
-        _listenToNotifications(chatIds);
+        final List<dynamic> chatObjects = data['chatIdsCreatedForUser'] ?? [];
+        print(chatObjects);
+        final List<String> chatIds = chatObjects
+            .map<String>((chat) => chat['chatId'] as String)
+            .toList();
+
+        _messageNotifier = MessageNotifierService(
+          username: widget.username,
+          chatIds: chatIds,
+        );
+
+// Optional: Listen for changes in count
+        _messageNotifier?.addListener(() {
+          if (mounted) {
+            setState(() {}); // to update notificationCount in the UI
+          }
+        });
+
+        //_listenToNotifications(chatIds);
         setState(() {
           _photoUrl = data['photo'];
           _fullName = data['firstName'] +
@@ -235,7 +252,10 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FriendsPage(username: widget.username),
+                  builder: (context) => FriendsPage(
+                    username: widget.username,
+                    onSignOut: widget.onSignOut,
+                  ),
                 ),
               );
             },
@@ -254,24 +274,18 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
                         ),
                       ),
                     );
+                    // _messageNotifier?.clearNotificationCount();
                   }),
               Positioned(
                 right: 6,
                 top: 6,
-                child: notificationCount > 0
+                child: (_messageNotifier?.hasUnseenMessages ?? false)
                     ? Container(
-                        padding: EdgeInsets.all(6),
+                        width: 10,
+                        height: 10,
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$notificationCount',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
                         ),
                       )
                     : Container(),

@@ -59,6 +59,10 @@ class _ChatPageState extends State<ChatPage> {
       filtered = filtered.where((c) => c['role'] == 'counsellor').toList();
     } else if (selectedTag == 'Friends') {
       filtered = filtered.where((c) => c['role'] == 'user').toList();
+    } else if (selectedTag == 'Unread') {
+      filtered = filtered
+          .where((c) => c['isSeen'] == false && c['senderId'] != widget.userId)
+          .toList();
     }
 
     if (query.isNotEmpty) {
@@ -150,11 +154,12 @@ class _ChatPageState extends State<ChatPage> {
                   .format(DateTime.fromMillisecondsSinceEpoch(timestamp));
               chatInfo['isSeen'] = isSeen;
               chatInfo['senderId'] = senderId;
+              fetchedChats.add(chatInfo);
             }
           }
         } catch (_) {}
 
-        fetchedChats.add(chatInfo);
+        //fetchedChats.add(chatInfo);
       }
 
       fetchedChats.sort((a, b) {
@@ -302,18 +307,36 @@ class _ChatPageState extends State<ChatPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        spacing: 8,
-                        children: ['All', 'Counsellors', 'Friends']
-                            .map((label) => ChoiceChip(
-                                  label: Text(label),
-                                  selected: selectedTag == label,
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 12, right: 12, bottom: 10),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              'All',
+                              'Counsellors',
+                              'Friends',
+                              'Unread'
+                            ].map((label) {
+                              final isSelected = selectedTag == label;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    label,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  selected: isSelected,
                                   selectedColor: Colors.deepOrangeAccent,
                                   backgroundColor: Colors.grey[200],
-                                  labelStyle: TextStyle(
-                                    color: selectedTag == label
-                                        ? Colors.white
-                                        : Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
                                   onSelected: (_) {
                                     setState(() {
@@ -321,8 +344,11 @@ class _ChatPageState extends State<ChatPage> {
                                       _applyFilters();
                                     });
                                   },
-                                ))
-                            .toList(),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
                       SizedBox(height: 10),
                       TextField(
