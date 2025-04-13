@@ -363,7 +363,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           file: tempFile,
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
-          receiverFCMToken: receiverFCMToken!,
+          receiverFcmToken: receiverFCMToken!,
         );
         // Fetch updated messages from backend and replace the temporary message
         _loadMessages(); // Refresh messages immediately

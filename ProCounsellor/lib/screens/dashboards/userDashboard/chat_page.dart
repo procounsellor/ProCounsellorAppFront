@@ -3,12 +3,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../services/api_utils.dart';
 import '../../../optimizations/api_cache.dart';
-import 'chatting_page.dart';
 import '../userDashboard/Friends/UserToUserChattingPage.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
+
+import 'chatting_page.dart';
 
 class ChatPage extends StatefulWidget {
   final String userId;
@@ -450,7 +451,7 @@ class _ChatPageState extends State<ChatPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ChattingPage(
+                                        builder: (context) => UserChattingPage(
                                           itemName: chat['userId'],
                                           userId: widget.userId,
                                           counsellorId: chat['userId'],
