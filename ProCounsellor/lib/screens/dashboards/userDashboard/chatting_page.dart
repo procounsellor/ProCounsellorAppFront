@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:ProCounsellor/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,23 +14,23 @@ import 'dart:convert';
 import 'details_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ChattingPage extends StatefulWidget {
+class UserChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String counsellorId;
   final Future<void> Function() onSignOut;
 
-  ChattingPage(
+  UserChattingPage(
       {required this.itemName,
       required this.userId,
       required this.counsellorId,
       required this.onSignOut});
 
   @override
-  _ChattingPageState createState() => _ChattingPageState();
+  _UserChattingPageState createState() => _UserChattingPageState();
 }
 
-class _ChattingPageState extends State<ChattingPage> {
+class _UserChattingPageState extends State<UserChattingPage> {
   List<Map<String, dynamic>> messages = [];
   TextEditingController _controller = TextEditingController();
   late String chatId;
@@ -45,12 +46,18 @@ class _ChattingPageState extends State<ChattingPage> {
   File? selectedFile; // Store selected file
   String? selectedFileName; // Store file name
   Uint8List? webFileBytes; // For Web
+  String? receiverFcmToken = "";
 
   @override
   void initState() {
     super.initState();
     _initializeChat();
     _listenToCounsellorStatus();
+    _getReceiverFcmToken();
+  }
+
+  Future<void> _getReceiverFcmToken() async {
+    receiverFcmToken = await FirestoreService.getFCMTokenCounsellor(widget.counsellorId);
   }
 
   Future<void> _initializeChat() async {
@@ -273,6 +280,7 @@ class _ChattingPageState extends State<ChattingPage> {
         MessageRequest messageRequest = MessageRequest(
           senderId: widget.userId,
           text: _controller.text,
+          receiverFcmToken: receiverFcmToken!,
         );
 
         await ChatService().sendMessage(chatId, messageRequest);
@@ -349,6 +357,7 @@ class _ChattingPageState extends State<ChattingPage> {
           file: tempFile,
           webFileBytes: tempWebBytes,
           fileName: tempFileName,
+          receiverFcmToken: receiverFcmToken!,
         );
         // Fetch updated messages from backend and replace the temporary message
         _loadMessages(); // Refresh messages immediately

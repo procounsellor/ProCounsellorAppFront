@@ -821,7 +821,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => ChattingPage(
+                                                builder: (_) => UserChattingPage(
                                                   itemName: widget.itemName,
                                                   userId: widget.userId,
                                                   counsellorId:

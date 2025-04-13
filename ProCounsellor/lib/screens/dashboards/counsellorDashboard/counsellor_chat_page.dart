@@ -1,9 +1,10 @@
+import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_chatting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../main_service.dart';
 import '../../../services/api_utils.dart';
 import '../../../optimizations/api_cache.dart';
-import 'counsellor_chatting_page.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -332,13 +333,16 @@ class _ChatPageState extends State<ChatPage> {
                                   ? Icon(Icons.circle,
                                       size: 10, color: Colors.blue)
                                   : null,
-                              onTap: () {
+                              onTap: () async {
+                                MainService _mainService = MainService();
+                                final user = await _mainService.getUserFromUserId(chat['userId']);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => ChattingPage(
+                                    builder: (_) => CounsellorChattingPage(
                                       itemName: chat['name'],
                                       userId: chat['userId'],
+                                      photo: user['photo'],
                                       counsellorId: widget.counsellorId,
                                       onSignOut: widget.onSignOut,
                                     ),

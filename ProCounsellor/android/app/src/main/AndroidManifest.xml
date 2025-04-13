@@ -8,8 +8,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Features -->
     <uses-feature android:name="android.hardware.camera" />
@@ -54,6 +57,16 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <service android:name="androidx.core.app.JobIntentService"
+         android:permission="android.permission.BIND_JOB_SERVICE"
+         android:exported="true"/>
+
+         <service
+        android:name="com.hiennv.flutter_callkit_incoming.OngoingNotificationService"
+        android:exported="false"
+        android:foregroundServiceType="phoneCall"
+        tools:replace="android:exported" /> <!-- ✅ Add this line -->
 
         <!-- ✅ Optional (legacy) Token refresh receiver -->
         <receiver
