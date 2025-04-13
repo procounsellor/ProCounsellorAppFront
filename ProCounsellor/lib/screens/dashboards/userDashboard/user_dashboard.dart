@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'components/TopEvents.dart';
 import '../../../services/api_utils.dart';
-import 'search_page.dart';
+import '../userDashboard/search/SearchPage.dart';
 import 'details_page.dart';
 import 'top_news_carousel.dart'; // Import the TopNewsCarousel class
 import 'components/TopExamsList.dart';
@@ -279,9 +279,6 @@ class _UserDashboardState extends State<UserDashboard>
                         context,
                         MaterialPageRoute(
                           builder: (_) => SearchPage(
-                            liveCounsellors: _liveCounsellors,
-                            topRatedCounsellors: _topRatedCounsellors,
-                            topNews: _topNews,
                             userId: widget.username,
                             onSignOut: widget.onSignOut,
                           ),
@@ -547,7 +544,7 @@ class _UserDashboardState extends State<UserDashboard>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 10),
-                          UpcomingDeadlinesTicker(),
+                          UpcomingDeadlinesTicker(username: widget.username),
                           SizedBox(height: 10),
                           Text(
                             "Top Rated Counsellors",
@@ -626,12 +623,14 @@ class _UserDashboardState extends State<UserDashboard>
                           SizedBox(height: 10),
 
                           TrendingHeader(title: "Top Colleges"),
-                          TopCollegesList(),
+                          TopCollegesList(username: widget.username),
                           SizedBox(height: 10),
 
                           const TrendingHeader(title: "Trending Exams"),
 
-                          TopExamsList(),
+                          TopExamsList(
+                            username: widget.username,
+                          ),
                           SizedBox(height: 10),
                           //TopFormsList() // Use the external carousel widget
                           TrendingHeader(title: "Trending Courses"),
@@ -645,6 +644,7 @@ class _UserDashboardState extends State<UserDashboard>
                                 void Function() methodFromChild) {
                               myMethod = methodFromChild;
                             },
+                            username: widget.username,
                           )
                         ],
                       ),

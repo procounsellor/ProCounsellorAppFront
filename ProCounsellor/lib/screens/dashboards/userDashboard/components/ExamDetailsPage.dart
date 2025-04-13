@@ -1,3 +1,4 @@
+import 'package:ProCounsellor/screens/dashboards/userDashboard/subscribed_counsellors_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
@@ -7,12 +8,13 @@ import 'package:share_plus/share_plus.dart';
 class ExamDetailsPage extends StatefulWidget {
   final String examName;
   final String category;
+  final String username;
 
-  const ExamDetailsPage({
-    required this.examName,
-    required this.category,
-    super.key,
-  });
+  const ExamDetailsPage(
+      {required this.examName,
+      required this.category,
+      super.key,
+      required this.username});
 
   @override
   State<ExamDetailsPage> createState() => _ExamDetailsPageState();
@@ -239,9 +241,14 @@ class _ExamDetailsPageState extends State<ExamDetailsPage> {
                           label: 'Connect to Counsellor',
                           onTap: () {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Connecting to counsellor...')),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SubscribedCounsellorsPage(
+                                  username: widget.username,
+                                  onSignOut: () async {},
+                                ),
+                              ),
                             );
                           },
                         ),

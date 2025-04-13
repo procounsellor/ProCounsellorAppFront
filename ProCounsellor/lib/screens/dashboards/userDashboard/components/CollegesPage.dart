@@ -28,6 +28,8 @@ class CollegeEntry {
 }
 
 class CollegesPage extends StatefulWidget {
+  final String username;
+  const CollegesPage({super.key, required this.username});
   @override
   _CollegesPageState createState() => _CollegesPageState();
 }
@@ -229,8 +231,9 @@ class _CollegesPageState extends State<CollegesPage> {
                                                   MaterialPageRoute(
                                                     builder: (_) =>
                                                         CollegeDetailsPage(
-                                                            collegeName:
-                                                                college.name),
+                                                      collegeName: college.name,
+                                                      username: widget.username,
+                                                    ),
                                                   ),
                                                 );
                                               },

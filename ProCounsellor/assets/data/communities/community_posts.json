@@ -1,0 +1,85 @@
+[
+  {
+    "postId": "p1",
+    "communityId": "engineering_devs",
+    "author": "alex_jones",
+    "type": "text",
+    "content": "What’s the best resource to understand Signal Processing fundamentals?",
+    "timestamp": "2025-04-09T14:32:00Z",
+    "comments": [
+      {
+        "author": "nina_k",
+        "content": "Try MIT OCW. Their EE lectures are 🔥",
+        "timestamp": "2025-04-09T15:10:00Z"
+      },
+      {
+        "author": "tech_guru",
+        "content": "DSP by Oppenheim is a classic.",
+        "timestamp": "2025-04-09T15:24:00Z"
+      }
+    ]
+  },
+  {
+    "postId": "p2",
+    "communityId": "engineering_devs",
+    "author": "buildr_bot",
+    "type": "media",
+    "mediaUrl": "assets/images/community/posts/bridge_simulation.png",
+    "caption": "Simulated stress test of a cantilever bridge using Ansys. Thoughts?",
+    "timestamp": "2025-04-09T13:45:00Z",
+    "comments": [
+      {
+        "author": "civil_john",
+        "content": "Nice setup! Did you consider wind load?",
+        "timestamp": "2025-04-09T14:05:00Z"
+      }
+    ]
+  },
+  {
+    "postId": "p3",
+    "communityId": "law_legends",
+    "author": "legal_lara",
+    "type": "text",
+    "content": "Can someone explain the doctrine of ‘basic structure’ in Indian Constitution?",
+    "timestamp": "2025-04-08T09:20:00Z",
+    "comments": [
+      {
+        "author": "case_cracker",
+        "content": "It prevents Parliament from altering the fundamental identity of the Constitution.",
+        "timestamp": "2025-04-08T09:42:00Z"
+      }
+    ]
+  },
+  {
+    "postId": "p4",
+    "communityId": "engineering_devs",
+    "author": "robo_nikhil",
+    "type": "media",
+    "mediaUrl": "assets/images/community/posts/arduino_project.jpg",
+    "caption": "Built a home automation prototype using Arduino + NodeMCU 💡🏠",
+    "timestamp": "2025-04-09T10:12:00Z",
+    "comments": [
+      {
+        "author": "iot_maniac",
+        "content": "Love it! What sensors did you use?",
+        "timestamp": "2025-04-09T10:40:00Z"
+      }
+    ]
+  },
+  {
+    "postId": "p5",
+    "communityId": "engineering_devs",
+    "author": "mech_mira",
+    "type": "media",
+    "mediaUrl": "assets/images/community/posts/3d_printed_gearbox.jpg",
+    "caption": "3D printed a working planetary gearbox. PLA + TPU for flexibility!",
+    "timestamp": "2025-04-08T17:55:00Z",
+    "comments": [
+      {
+        "author": "cad_cam_fan",
+        "content": "Impressive! Do you have STL files shared?",
+        "timestamp": "2025-04-08T18:10:00Z"
+      }
+    ]
+  }
+]

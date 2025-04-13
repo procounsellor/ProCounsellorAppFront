@@ -6,6 +6,8 @@ import 'CollegeDetailsPage.dart';
 import 'CollegesPage.dart';
 
 class TopCollegesList extends StatefulWidget {
+  final String username;
+  const TopCollegesList({super.key, required this.username});
   @override
   _TopCollegesListState createState() => _TopCollegesListState();
 }
@@ -83,7 +85,10 @@ class _TopCollegesListState extends State<TopCollegesList> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CollegesPage()),
+                    MaterialPageRoute(
+                        builder: (_) => CollegesPage(
+                              username: widget.username,
+                            )),
                   );
                 },
                 child: Icon(
@@ -115,8 +120,9 @@ class _TopCollegesListState extends State<TopCollegesList> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            CollegeDetailsPage(collegeName: college["name"]!),
+                        builder: (_) => CollegeDetailsPage(
+                            collegeName: college["name"]!,
+                            username: widget.username),
                       ),
                     );
                   },

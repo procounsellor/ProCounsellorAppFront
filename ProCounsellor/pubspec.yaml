@@ -45,7 +45,7 @@ dependencies:
   file_picker: ^6.0.0
   path_provider: ^2.1.2
   google_fonts: ^6.1.0
-  
+
   material_symbols_icons: ^4.2811.0
   agora_rtc_engine: ^6.5.1
 
@@ -69,9 +69,11 @@ dependencies:
   razorpay_flutter: ^1.4.0
   permission_handler: ^11.4.0
   share_plus: ^10.1.4 # or latest version
-  youtube_player_flutter: ^9.1.1 
+  youtube_player_flutter: ^9.1.1
   flutter_flip_card: ^0.0.6
   webview_flutter: ^4.10.0
+  shimmer: ^3.0.0
+  flutter_callkit_incoming: ^2.5.2
 
 dependency_overrides:
   file_picker:
@@ -129,7 +131,10 @@ flutter:
     - assets/data/courses/trending-courses.json
     - assets/images/learnwithus/
     - assets/data/learnwithus/video/stress_videos.json
-
+    - assets/data/communities/communities.json
+    - assets/images/community/
+    - assets/data/communities/community_posts.json
+    - assets/images/community/posts/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

@@ -8,6 +8,8 @@ import 'ExamDetailsPage.dart';
 // import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class TopExamsList extends StatefulWidget {
+  final String username;
+  const TopExamsList({super.key, required this.username});
   @override
   _TopExamsListState createState() => _TopExamsListState();
 }
@@ -84,7 +86,10 @@ class _TopExamsListState extends State<TopExamsList> {
                   // ✅ Future implementation: Navigate to full exam list page
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ExamsPage()),
+                    MaterialPageRoute(
+                        builder: (_) => ExamsPage(
+                              username: widget.username,
+                            )),
                   );
                 },
                 child: Icon(
@@ -118,8 +123,8 @@ class _TopExamsListState extends State<TopExamsList> {
                       MaterialPageRoute(
                         builder: (_) => ExamDetailsPage(
                           examName: exam['name']!,
-                          category: exam['category']!
-                              .toLowerCase(), // Ensure it's lowercase
+                          category: exam['category']!.toLowerCase(),
+                          username: widget.username, // Ensure it's lowercase
                         ),
                       ),
                     );

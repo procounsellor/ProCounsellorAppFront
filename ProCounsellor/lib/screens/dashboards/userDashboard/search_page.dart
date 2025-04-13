@@ -1,21 +1,21 @@
+import 'package:ProCounsellor/screens/dashboards/userDashboard/components/CollegeDetailsPage.dart';
 import 'package:flutter/material.dart';
 import 'details_page.dart';
 import 'package:flutter/widgets.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 
 class SearchPage extends StatefulWidget {
-  final List<dynamic> liveCounsellors;
   final List<dynamic> topRatedCounsellors;
   final List<String> topNews;
   final String userId;
   final Future<void> Function() onSignOut;
 
-  SearchPage({
-    required this.liveCounsellors,
-    required this.topRatedCounsellors,
-    required this.topNews,
-    required this.userId,
-    required this.onSignOut
-  });
+  SearchPage(
+      {required this.topRatedCounsellors,
+      required this.topNews,
+      required this.userId,
+      required this.onSignOut});
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -25,28 +25,66 @@ class _SearchPageState extends State<SearchPage> {
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Set<String> _selectedFilters = {};
+  List<dynamic> collegeList = [];
+  bool isCollegeDataLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCollegeData();
+  }
+
+  Future<void> _loadCollegeData() async {
+    final String jsonString = await rootBundle
+        .loadString('assets/data/colleges/college_ranking.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    setState(() {
+      collegeList = jsonData;
+      isCollegeDataLoading = false;
+    });
+  }
 
   List<dynamic> _filterItems(List<dynamic> items) {
-    if (_searchQuery.isEmpty) {
-      return [];
-    }
+    if (_searchQuery.isEmpty) return [];
+
     return items.where((item) {
+      final query = _searchQuery.toLowerCase();
+
       if (item is String) {
-        return item.toLowerCase().contains(_searchQuery.toLowerCase());
+        return item.toLowerCase().contains(query);
       } else if (item is Map) {
-        return (item['firstName'] ?? item['userName'])
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase());
+        final buffer = StringBuffer();
+
+        // Counsellor
+        buffer.write('${item['firstName'] ?? ''} ');
+        buffer.write('${item['userName'] ?? ''} ');
+
+        // College
+        buffer.write('${item['name'] ?? ''} ');
+        buffer.write('${item['city'] ?? ''} ');
+        buffer.write('${item['state'] ?? ''} ');
+        buffer.write('${item['rank']?.toString() ?? ''} ');
+
+        buffer.write('${item['category'] ?? ''} ');
+
+        // Description (overview)
+        if (item['description'] is Map &&
+            item['description']['overview'] != null) {
+          buffer.write(item['description']['overview']);
+        }
+
+        return buffer.toString().toLowerCase().contains(query);
       }
+
       return false;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasResults = (_filterItems(widget.liveCounsellors).isNotEmpty ||
-        _filterItems(widget.topRatedCounsellors).isNotEmpty ||
-        _filterItems(widget.topNews).isNotEmpty);
+    final hasResults = (_filterItems(widget.topRatedCounsellors).isNotEmpty ||
+        _filterItems(widget.topNews).isNotEmpty ||
+        _filterItems(collegeList).isNotEmpty);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -119,8 +157,7 @@ class _SearchPageState extends State<SearchPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.network(
-                        "https://media.giphy.com/media/AS1QYqISiXDiwLtPg3/giphy.gif?cid=ecf05e474o90gzgjxy0f6bmvdo3iiufy9e7hyck7x6n0e1cy&ep=v1_stickers_related&rid=giphy.gif&ct=s",
-                        //'https://media.giphy.com/media/gkbppgFMYr908R1ZfA/giphy.gif?cid=ecf05e472uibu5mav9wvtdfq0yvqq7v32j19gdac8zub3f2j&ep=v1_stickers_related&rid=giphy.gif&ct=s',
+                        "https://media.giphy.com/media/AS1QYqISiXDiwLtPg3/giphy.gif",
                         height: 150,
                         fit: BoxFit.contain,
                       ),
@@ -133,15 +170,11 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
               )
-            else if (_searchQuery.isNotEmpty)
+            else
               Expanded(
                 child: hasResults
                     ? ListView(
                         children: [
-                          if ((_selectedFilters.isEmpty ||
-                                  _selectedFilters.contains("counsellors")) &&
-                              _filterItems(widget.liveCounsellors).isNotEmpty)
-                            _buildList(_filterItems(widget.liveCounsellors)),
                           if ((_selectedFilters.isEmpty ||
                                   _selectedFilters.contains("counsellors")) &&
                               _filterItems(widget.topRatedCounsellors)
@@ -153,6 +186,11 @@ class _SearchPageState extends State<SearchPage> {
                               _filterItems(widget.topNews).isNotEmpty)
                             _buildList(_filterItems(widget.topNews),
                                 isNews: true),
+                          if (!isCollegeDataLoading &&
+                              (_selectedFilters.isEmpty ||
+                                  _selectedFilters.contains("colleges")) &&
+                              _filterItems(collegeList).isNotEmpty)
+                            _buildCollegeList(_filterItems(collegeList)),
                         ],
                       )
                     : Center(
@@ -162,14 +200,14 @@ class _SearchPageState extends State<SearchPage> {
                             Opacity(
                               opacity: 0.5,
                               child: Image.asset(
-                                'assets/images/no_results.png', // Add your asset path
+                                'assets/images/no_results.png',
                                 height: 150,
                                 fit: BoxFit.contain,
                               ),
                             ),
                             SizedBox(height: 16),
                             Transform.translate(
-                              offset: Offset(-10, -20), // Adjust image position
+                              offset: Offset(-10, -20),
                               child: Text(
                                 "No results found",
                                 style:
@@ -179,9 +217,7 @@ class _SearchPageState extends State<SearchPage> {
                           ],
                         ),
                       ),
-              )
-            else
-              SizedBox.shrink(),
+              ),
           ],
         ),
       ),
@@ -313,6 +349,58 @@ class _SearchPageState extends State<SearchPage> {
               ),
             );
           }
+        },
+      ),
+    );
+  }
+
+  Widget _buildCollegeList(List<dynamic> colleges) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: colleges.length,
+        itemBuilder: (context, index) {
+          final college = colleges[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CollegeDetailsPage(
+                      collegeName: college["name"], username: widget.userId),
+                ),
+              );
+            },
+            child: Container(
+              width: 180,
+              margin: EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 6)
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(college['name'] ?? '',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  SizedBox(height: 8),
+                  Text("${college['city']}, ${college['state']}",
+                      style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                  SizedBox(height: 8),
+                  Text("Rank: ${college['rank']}",
+                      style: TextStyle(fontSize: 12, color: Colors.orange)),
+                ],
+              ),
+            ),
+          );
         },
       ),
     );

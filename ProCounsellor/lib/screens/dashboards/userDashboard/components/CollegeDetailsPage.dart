@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ProCounsellor/screens/dashboards/userDashboard/subscribed_counsellors_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,8 +8,9 @@ import '../headersText/no_data_placeholder.dart';
 
 class CollegeDetailsPage extends StatefulWidget {
   final String collegeName;
+  final String username;
 
-  CollegeDetailsPage({required this.collegeName});
+  CollegeDetailsPage({required this.collegeName, required this.username});
 
   @override
   _CollegeDetailsPageState createState() => _CollegeDetailsPageState();
@@ -317,8 +319,15 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
                     ),
                   ),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Admission process coming soon!')),
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SubscribedCounsellorsPage(
+                          username: widget.username,
+                          onSignOut: () async {},
+                        ),
+                      ),
                     );
                   },
                   child: Text('Want Admission?',
@@ -423,9 +432,14 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
                         label: 'Connect to Counsellor',
                         onTap: () {
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Connecting to counsellor...')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SubscribedCounsellorsPage(
+                                username: widget.username,
+                                onSignOut: () async {},
+                              ),
+                            ),
                           );
                         },
                       ),

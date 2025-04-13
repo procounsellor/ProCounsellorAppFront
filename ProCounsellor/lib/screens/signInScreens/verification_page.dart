@@ -62,6 +62,7 @@ class _VerificationPageState extends State<VerificationPage> {
   @override
   void dispose() {
     _timer.cancel();
+    firstOtpFieldFocusNode.dispose(); // ✅ Dispose the focus node
     super.dispose();
   }
 
@@ -129,22 +130,34 @@ class _VerificationPageState extends State<VerificationPage> {
                       return Container(
                         width: 40,
                         margin: EdgeInsets.symmetric(horizontal: 4),
+                        // child: TextField(
+                        //   focusNode: index == 0 ? firstOtpFieldFocusNode : null,
+                        //   onChanged: (value) {
+                        //     if (value.isNotEmpty) {
+                        //       otpDigits[index] = value;
+                        //       if (index < 5) {
+                        //         FocusScope.of(context).nextFocus();
+                        //       }
+                        //     } else {
+                        //       otpDigits[index] = "";
+                        //     }
+                        //     setState(() {
+                        //       isButtonEnabled =
+                        //           otpDigits.every((digit) => digit.isNotEmpty);
+                        //     });
+                        //   },
+                        //   keyboardType: TextInputType.number,
+                        //   textAlign: TextAlign.center,
+                        //   maxLength: 1,
+                        //   decoration: InputDecoration(
+                        //     counterText: "",
+                        //     border: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(4),
+                        //     ),
+                        //   ),
+                        // ),
                         child: TextField(
                           focusNode: index == 0 ? firstOtpFieldFocusNode : null,
-                          onChanged: (value) {
-                            if (value.isNotEmpty) {
-                              otpDigits[index] = value;
-                              if (index < 5) {
-                                FocusScope.of(context).nextFocus();
-                              }
-                            } else {
-                              otpDigits[index] = "";
-                            }
-                            setState(() {
-                              isButtonEnabled =
-                                  otpDigits.every((digit) => digit.isNotEmpty);
-                            });
-                          },
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           maxLength: 1,
@@ -154,6 +167,24 @@ class _VerificationPageState extends State<VerificationPage> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
+                          onChanged: (value) {
+                            if (value.isEmpty && index > 0) {
+                              FocusScope.of(context)
+                                  .previousFocus(); // ⬅️ Go back if empty
+                            } else if (value.isNotEmpty) {
+                              otpDigits[index] = value;
+                              if (index < 5) {
+                                FocusScope.of(context)
+                                    .nextFocus(); // ➡️ Go forward if typed
+                              }
+                            } else {
+                              otpDigits[index] = "";
+                            }
+                            setState(() {
+                              isButtonEnabled =
+                                  otpDigits.every((digit) => digit.isNotEmpty);
+                            });
+                          },
                         ),
                       );
                     }),
