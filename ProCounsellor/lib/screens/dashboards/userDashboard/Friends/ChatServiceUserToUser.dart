@@ -12,14 +12,16 @@ import '../../../../services/api_utils.dart';
 class MessageRequest {
   final String senderId;
   final String text;
+  final String receiverFcmToken;
 
-  MessageRequest({required this.senderId, required this.text});
+  MessageRequest({required this.senderId, required this.text, required this.receiverFcmToken});
 
   // Convert the MessageRequest object to JSON format for the request body
   Map<String, dynamic> toJson() {
     return {
       'senderId': senderId,
       'text': text,
+      'receiverFcmToken': receiverFcmToken,
       'isSeen': false, // Default value for new messages
     };
   }
@@ -89,6 +91,7 @@ class ChatService {
     required File? file,
     required Uint8List? webFileBytes,
     required String fileName,
+    required String receiverFcmToken,
   }) async {
     try {
       var request = http.MultipartRequest(
@@ -97,6 +100,7 @@ class ChatService {
       );
 
       request.fields['senderId'] = senderId;
+      request.fields['receiverFcmToken'] = receiverFcmToken;
 
       // Determine file MIME type
       String? mimeType;
