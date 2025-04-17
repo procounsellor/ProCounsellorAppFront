@@ -13,6 +13,7 @@ class MainService {
     required String callerName,
     required String callType,
     required String channelId,
+    required String receiverName
   }) async {
     final uuid = const Uuid().v4();
 
@@ -30,20 +31,22 @@ class MainService {
         'channelId': channelId,
         'callType': callType,
         'callerName': callerName,
+        'receiverName': receiverName
       },
       android: const AndroidParams(
         isCustomNotification: true,
         isShowLogo: false,
-        ringtonePath: null, // Default ringtone
+        ringtonePath: null,
         backgroundColor: '#0955fa',
         backgroundUrl: null,
         actionColor: '#4CAF50',
+        isShowFullLockedScreen: true,
       ),
       ios: const IOSParams(
         iconName: 'CallKitIcon',
         handleType: 'generic',
         supportsVideo: true,
-        maximumCallGroups: 1,
+        maximumCallGroups: 2,
         maximumCallsPerCallGroup: 1,
       ),
     );
