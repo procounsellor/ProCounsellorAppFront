@@ -60,8 +60,6 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
 
   bool _remoteUserJoined = false;
 
-  bool _hasSentPicked = false;
-
   @override
   void initState() {
     super.initState();
@@ -99,7 +97,6 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
         final data = json.decode(callerUserRes.body);
         setState(() {
           callerName = "${data['firstName']} ${data['lastName']}";
-          print("Ak:" + callerName);
           callerPhoto = data['photo'];
           callerIsCounsellor = false;
         });
@@ -155,10 +152,8 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
           setState(() => _joined = true);
-          _callPicked();
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          print("ENtered picked: ");
           _stopRingtone();
           _startCallTimer();
           _callPicked();
@@ -205,9 +200,6 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
   }
 
   void _callPicked(){
-    if (_hasSentPicked) return;
-
-    _hasSentPicked = true;
     AgoraService.pickedCall(widget.channelId);
   }
 
