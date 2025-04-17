@@ -26,3 +26,22 @@
 -dontwarn com.google.android.apps.nbu.paisa.inapp.client.api.**
 -dontwarn proguard.annotation.Keep
 -dontwarn proguard.annotation.KeepClassMembers
+
+# Keep classes used by Jackson
+-keepclassmembers class * {
+    @com.fasterxml.jackson.annotation.* <fields>;
+    @com.fasterxml.jackson.annotation.* <methods>;
+}
+
+-keepclassmembers class ** {
+    @java.beans.ConstructorProperties <methods>;
+}
+
+-dontwarn java.beans.**
+-dontwarn org.w3c.dom.bootstrap.DOMImplementationRegistry
+-dontwarn com.fasterxml.jackson.databind.ext.**
+
+# Keep DOM and Java Beans used by Jackson
+-keep class java.beans.** { *; }
+-keep class org.w3c.dom.bootstrap.DOMImplementationRegistry { *; }
+
