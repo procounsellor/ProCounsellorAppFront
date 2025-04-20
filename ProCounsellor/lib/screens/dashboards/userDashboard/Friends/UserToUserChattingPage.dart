@@ -15,18 +15,21 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_details_page.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../../userDashboard/details_page.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String userId2;
   final Future<void> Function() onSignOut;
+  final String role;
 
   UserToUserChattingPage(
       {required this.itemName,
       required this.userId,
       required this.userId2,
-      required this.onSignOut});
+      required this.onSignOut,
+      required this.role});
 
   @override
   _ChattingPageState createState() => _ChattingPageState();
@@ -82,8 +85,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
   Future<void> _startChat() async {
     try {
-      chatId = await ChatService().startChat(widget.userId, widget.userId2)
-          as String;
+      // Replace this with the actual role (e.g., from widget or state)
+      String role =
+          widget.role; // Make sure widget.role exists or pass it otherwise
+
+      String? result =
+          await ChatService().startChat(widget.userId, widget.userId2, role);
+      print("Role" + role);
+      if (result != null) {
+        chatId = result;
+      } else {
+        throw Exception('Chat ID is null');
+      }
 
       // Fetch counsellor's profile data
       await _fetchUserProfile();
@@ -91,6 +104,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       setState(() {
         isLoading = false;
       });
+
       _loadMessages();
     } catch (e) {
       print('Error starting chat: $e');
@@ -115,40 +129,30 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   // }
   Future<void> _fetchUserProfile() async {
     try {
-      String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+      String url;
+
+      if (widget.role == 'user') {
+        url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+      } else {
+        url = '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
+      }
+
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(json.decode(response.body));
         setState(() {
-          userPhotoUrl = data['photo'] ?? userPhotoUrl;
+          userPhotoUrl = widget.role == 'user'
+              ? data['photo'] ?? userPhotoUrl
+              : data['photoUrl'] ?? userPhotoUrl;
           userFirstName = data['firstName'] ?? '';
           userLastName = data['lastName'] ?? '';
         });
-        return;
+      } else {
+        print('Failed to fetch profile: ${response.statusCode}');
       }
     } catch (e) {
-      print('Primary user API failed: $e');
-    }
-
-    // Try fallback: counsellor API
-    try {
-      String fallbackUrl =
-          '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
-      final fallbackResponse = await http.get(Uri.parse(fallbackUrl));
-
-      if (fallbackResponse.statusCode == 200) {
-        final data =
-            Map<String, dynamic>.from(json.decode(fallbackResponse.body));
-        setState(() {
-          userPhotoUrl =
-              data['photoUrl'] ?? userPhotoUrl; // note different field
-          userFirstName = data['firstName'] ?? '';
-          userLastName = data['lastName'] ?? '';
-        });
-      }
-    } catch (e) {
-      print('Fallback counsellor API failed: $e');
+      print('Error fetching profile: $e');
     }
   }
 
@@ -327,18 +331,60 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
+  // Future<void> _sendMessage() async {
+  //   String? receiverFCMToken =
+  //       await FirestoreService.getFCMTokenUser(widget.userId2);
+  //   print(widget.userId2);
+  //   print(receiverFCMToken);
+  //   if (_controller.text.isNotEmpty) {
+  //     try {
+  //       MessageRequest messageRequest = MessageRequest(
+  //         senderId: widget.userId,
+  //         text: _controller.text,
+  //         receiverFcmToken: receiverFCMToken!,
+  //       );
+  //       print(messageRequest);
+
+  //       await ChatService().sendMessage(chatId, messageRequest);
+
+  //       _controller.clear();
+  //       setState(() {
+  //         showSendButton = selectedFile != null || webFileBytes != null;
+  //       });
+  //       _scrollToBottom();
+  //       await FirebaseDatabase.instance
+  //           .ref('userStates/${widget.userId}')
+  //           .update({
+  //         'typing': false,
+  //       });
+  //     } catch (e) {
+  //       print('Error sending message: $e' +
+  //           "method name is user2userchatting _sendMsg*()");
+  //     }
+  //   }
+  // }
   Future<void> _sendMessage() async {
-    String? receiverFCMToken =
-        await FirestoreService.getFCMTokenUser(widget.userId2);
-    print(widget.userId2);
-    print(receiverFCMToken);
-    if (_controller.text.isNotEmpty) {
-      try {
+    String? receiverFCMToken;
+
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+      }
+
+      print('Sending message to: ${widget.userId2}');
+      print('Receiver FCM Token: $receiverFCMToken');
+
+      if (_controller.text.isNotEmpty && receiverFCMToken != null) {
         MessageRequest messageRequest = MessageRequest(
           senderId: widget.userId,
           text: _controller.text,
-          receiverFcmToken: receiverFCMToken!,
+          receiverFcmToken: receiverFCMToken,
         );
+
         print(messageRequest);
 
         await ChatService().sendMessage(chatId, messageRequest);
@@ -348,93 +394,185 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           showSendButton = selectedFile != null || webFileBytes != null;
         });
         _scrollToBottom();
+
         await FirebaseDatabase.instance
             .ref('userStates/${widget.userId}')
-            .update({
-          'typing': false,
-        });
-      } catch (e) {
-        print('Error sending message: $e' +
-            "method name is user2userchatting _sendMsg*()");
+            .update({'typing': false});
       }
+    } catch (e) {
+      print(
+          'Error sending message: $e (method: _sendMessage, user2userchatting)');
     }
   }
 
+  // Future<void> _sendFileMessage() async {
+  //   String? receiverFCMToken =
+  //       await FirestoreService.getFCMTokenUser(widget.userId2);
+  //   if (selectedFile != null || webFileBytes != null) {
+  //     int fileSizeBytes = 0;
+
+  //     // 🔥 Check for file size before uploading
+  //     if (selectedFile != null) {
+  //       fileSizeBytes = await selectedFile!.length();
+  //     } else if (webFileBytes != null) {
+  //       fileSizeBytes = webFileBytes!.length;
+  //     }
+
+  //     // ✅  Set your max size (e.g., 15MB)
+  //     const maxSizeInBytes = 10 * 1024 * 1024;
+
+  //     if (fileSizeBytes > maxSizeInBytes) {
+  //       _showErrorDialog("File too large",
+  //           "This file exceeds the 10MB limit. Please choose a smaller file.");
+  //       return; // ❌ Don't proceed with upload
+  //     }
+  //     // Create a temporary message to show in the UI immediately
+  //     Map<String, dynamic> tempMessage = {
+  //       'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
+  //       'senderId': widget.userId,
+  //       'fileName': selectedFileName,
+  //       'fileUrl': null, // No URL yet (file not uploaded)
+  //       'fileType': 'uploading', // Temporary "uploading" status
+  //       'isSeen': false,
+  //       'timestamp': DateTime.now().millisecondsSinceEpoch,
+  //     };
+
+  //     // Add the file message to UI instantly
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       if (mounted) {
+  //         setState(() {
+  //           messages.add(tempMessage);
+  //         });
+  //         _scrollToBottom();
+  //       }
+  //     });
+
+  //     // Save a copy of the selected file details
+  //     File? tempFile = selectedFile;
+  //     Uint8List? tempWebBytes = webFileBytes;
+  //     String tempFileName = selectedFileName!;
+
+  //     // Clear the selected file immediately
+  //     setState(() {
+  //       selectedFile = null;
+  //       selectedFileName = null;
+  //       webFileBytes = null;
+  //       showSendButton = _controller.text.isNotEmpty;
+  //     });
+
+  //     try {
+  //       // Upload file to the backend
+  //       await ChatService.sendFileMessage(
+  //         chatId: chatId,
+  //         senderId: widget.userId,
+  //         file: tempFile,
+  //         webFileBytes: tempWebBytes,
+  //         fileName: tempFileName,
+  //         receiverFcmToken: receiverFCMToken!,
+  //       );
+  //       // Fetch updated messages from backend and replace the temporary message
+  //       _loadMessages(); // Refresh messages immediately
+  //     } catch (e) {
+  //       print("❌ Error sending file: $e");
+
+  //       // Remove the temporary message if an error occurs
+  //       setState(() {
+  //         messages.remove(tempMessage);
+  //       });
+  //     }
+  //   }
+  // }
   Future<void> _sendFileMessage() async {
-    String? receiverFCMToken =
-        await FirestoreService.getFCMTokenUser(widget.userId2);
-    if (selectedFile != null || webFileBytes != null) {
-      int fileSizeBytes = 0;
+    String? receiverFCMToken;
 
-      // 🔥 Check for file size before uploading
-      if (selectedFile != null) {
-        fileSizeBytes = await selectedFile!.length();
-      } else if (webFileBytes != null) {
-        fileSizeBytes = webFileBytes!.length;
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
       }
 
-      // ✅  Set your max size (e.g., 15MB)
-      const maxSizeInBytes = 10 * 1024 * 1024;
+      if ((selectedFile != null || webFileBytes != null) &&
+          receiverFCMToken != null) {
+        int fileSizeBytes = 0;
 
-      if (fileSizeBytes > maxSizeInBytes) {
-        _showErrorDialog("File too large",
-            "This file exceeds the 10MB limit. Please choose a smaller file.");
-        return; // ❌ Don't proceed with upload
-      }
-      // Create a temporary message to show in the UI immediately
-      Map<String, dynamic> tempMessage = {
-        'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
-        'senderId': widget.userId,
-        'fileName': selectedFileName,
-        'fileUrl': null, // No URL yet (file not uploaded)
-        'fileType': 'uploading', // Temporary "uploading" status
-        'isSeen': false,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
-
-      // Add the file message to UI instantly
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            messages.add(tempMessage);
-          });
-          _scrollToBottom();
+        // 🔥 Check for file size before uploading
+        if (selectedFile != null) {
+          fileSizeBytes = await selectedFile!.length();
+        } else if (webFileBytes != null) {
+          fileSizeBytes = webFileBytes!.length;
         }
-      });
 
-      // Save a copy of the selected file details
-      File? tempFile = selectedFile;
-      Uint8List? tempWebBytes = webFileBytes;
-      String tempFileName = selectedFileName!;
+        // ✅  Set your max size (e.g., 10MB)
+        const maxSizeInBytes = 10 * 1024 * 1024;
 
-      // Clear the selected file immediately
-      setState(() {
-        selectedFile = null;
-        selectedFileName = null;
-        webFileBytes = null;
-        showSendButton = _controller.text.isNotEmpty;
-      });
+        if (fileSizeBytes > maxSizeInBytes) {
+          _showErrorDialog(
+            "File too large",
+            "This file exceeds the 10MB limit. Please choose a smaller file.",
+          );
+          return;
+        }
 
-      try {
-        // Upload file to the backend
-        await ChatService.sendFileMessage(
-          chatId: chatId,
-          senderId: widget.userId,
-          file: tempFile,
-          webFileBytes: tempWebBytes,
-          fileName: tempFileName,
-          receiverFcmToken: receiverFCMToken!,
-        );
-        // Fetch updated messages from backend and replace the temporary message
-        _loadMessages(); // Refresh messages immediately
-      } catch (e) {
-        print("❌ Error sending file: $e");
+        // Create a temporary message to show in the UI immediately
+        Map<String, dynamic> tempMessage = {
+          'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
+          'senderId': widget.userId,
+          'fileName': selectedFileName,
+          'fileUrl': null,
+          'fileType': 'uploading',
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        };
 
-        // Remove the temporary message if an error occurs
-        setState(() {
-          messages.remove(tempMessage);
+        // Add the file message to UI instantly
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              messages.add(tempMessage);
+            });
+            _scrollToBottom();
+          }
         });
+
+        // Save a copy of the selected file details
+        File? tempFile = selectedFile;
+        Uint8List? tempWebBytes = webFileBytes;
+        String tempFileName = selectedFileName!;
+
+        // Clear the selected file immediately
+        setState(() {
+          selectedFile = null;
+          selectedFileName = null;
+          webFileBytes = null;
+          showSendButton = _controller.text.isNotEmpty;
+        });
+
+        try {
+          // Upload file to the backend
+          await ChatService.sendFileMessage(
+            chatId: chatId,
+            senderId: widget.userId,
+            file: tempFile,
+            webFileBytes: tempWebBytes,
+            fileName: tempFileName,
+            receiverFcmToken: receiverFCMToken,
+          );
+
+          _loadMessages(); // Refresh messages immediately
+        } catch (e) {
+          print("❌ Error sending file: $e");
+
+          // Remove the temporary message if an error occurs
+          setState(() {
+            messages.remove(tempMessage);
+          });
+        }
       }
+    } catch (e) {
+      print("❌ Error fetching FCM token: $e");
     }
   }
 

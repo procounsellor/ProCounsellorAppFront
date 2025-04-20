@@ -37,13 +37,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('🔕 Background FCM: ${message.data}');
 
   if (message.data['type'] == 'incoming_call') {
-      MainService().showNativeIncomingCall(
-        callerName: message.data['callerName'],
-        callType: message.data['callType'],
-        channelId: message.data['channelId'],
-        receiverName: message.data['receiverName'],
-      );
-    }
+    MainService().showNativeIncomingCall(
+      callerName: message.data['callerName'],
+      callType: message.data['callType'],
+      channelId: message.data['channelId'],
+      receiverName: message.data['receiverName'],
+    );
+  }
 }
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -179,7 +179,8 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     final String platform = Platform.isIOS ? 'ios' : 'android';
 
     final collection = role == 'counsellor' ? 'counsellors' : 'users';
-    final docRef = FirebaseFirestore.instance.collection(collection).doc(userId);
+    final docRef =
+        FirebaseFirestore.instance.collection(collection).doc(userId);
 
     try {
       await docRef.set({
@@ -193,73 +194,72 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   }
 
   void listenCallKitEvents() {
-  FlutterCallkitIncoming.onEvent.listen((event) async {
-    final data = event?.body;
-    final eventType = event?.event;
+    FlutterCallkitIncoming.onEvent.listen((event) async {
+      final data = event?.body;
+      final eventType = event?.event;
 
-    final callType = data?['extra']?['callType'] ?? 'audio';
-    final channelId = data?['extra']?['channelId'];
-    final callerName = data?['extra']?['callerName'];
-    final receiverName = data?['extra']?['receiverName'];
+      final callType = data?['extra']?['callType'] ?? 'audio';
+      final channelId = data?['extra']?['channelId'];
+      final callerName = data?['extra']?['callerName'];
+      final receiverName = data?['extra']?['receiverName'];
 
-    print("👉 callType: $callType");
-    print("👉 channelId: $channelId");
-    print("👉 callerName: $callerName");
-    print("👉 userId (receiverId): $userId");
+      print("👉 callType: $callType");
+      print("👉 channelId: $channelId");
+      print("👉 callerName: $callerName");
+      print("👉 userId (receiverId): $userId");
 
-    if (eventType == Event.actionCallAccept) {
-      if (channelId == null || callerName == null || receiverName == null) {
-        print("❌ Missing call data. Cannot redirect.");
-        return;
-      }
+      if (eventType == Event.actionCallAccept) {
+        if (channelId == null || callerName == null || receiverName == null) {
+          print("❌ Missing call data. Cannot redirect.");
+          return;
+        }
 
-      final callScreen = callType == 'audio'
-          ? AudioCallScreen(
-              channelId: channelId,
-              isCaller: false,
-              callerId: callerName,
-              receiverId: receiverName,
-              onSignOut: restartApp,
-            )
-          : VideoCallScreen(
-              channelId: channelId,
-              isCaller: false,
-              callerId: callerName,
-              receiverId: receiverName,
-              onSignOut: restartApp,
-            );
+        final callScreen = callType == 'audio'
+            ? AudioCallScreen(
+                channelId: channelId,
+                isCaller: false,
+                callerId: callerName,
+                receiverId: receiverName,
+                onSignOut: restartApp,
+              )
+            : VideoCallScreen(
+                channelId: channelId,
+                isCaller: false,
+                callerId: callerName,
+                receiverId: receiverName,
+                onSignOut: restartApp,
+              );
 
-      // 🔄 Navigate first
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => callScreen),
-      );
+        // 🔄 Navigate first
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => callScreen),
+        );
 
-      // ⏳ Then end the native call UI after a brief delay
-      Future.delayed(const Duration(milliseconds: 500), () async {
+        // ⏳ Then end the native call UI after a brief delay
+        Future.delayed(const Duration(milliseconds: 500), () async {
+          await FlutterCallkitIncoming.endAllCalls();
+        });
+      } else if (eventType == Event.actionCallDecline ||
+          eventType == Event.actionCallEnded) {
         await FlutterCallkitIncoming.endAllCalls();
-      });
-    } else if (eventType == Event.actionCallDecline ||
-        eventType == Event.actionCallEnded) {
-      await FlutterCallkitIncoming.endAllCalls();
-    }
-  });
-}
-
-
-Future<String?> fetchChannelId(String receiverId) async {
-  final snapshot = await FirebaseDatabase.instance
-      .ref("agora_call_signaling")
-      .child(receiverId)
-      .get();
-
-  if (snapshot.exists) {
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    return data['channelId']?.toString(); // ✅ safely extract
-  } else {
-    print("❌ No signaling data found for $receiverId");
-    return null;
+      }
+    });
   }
-}
+
+  Future<String?> fetchChannelId(String receiverId) async {
+    final snapshot = await FirebaseDatabase.instance
+        .ref("agora_call_signaling")
+        .child(receiverId)
+        .get();
+
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data['channelId']?.toString(); // ✅ safely extract
+    } else {
+      print("❌ No signaling data found for $receiverId");
+      return null;
+    }
+  }
 
   Future<void> _initializeApp() async {
     try {
@@ -277,28 +277,29 @@ Future<String?> fetchChannelId(String receiverId) async {
 
       if (role == "user") {
         FirestoreService.saveFCMTokenUser(userId!);
-        if(Platform.isIOS){
+        if (Platform.isIOS) {
           print("ios");
           await saveVoIPUserMeta(userId!, role!);
         }
       } else if (role == "counsellor") {
         FirestoreService.saveFCMTokenCounsellor(userId!);
-        if(Platform.isIOS){
+        if (Platform.isIOS) {
           print("ios");
           await saveVoIPUserMeta(userId!, role!);
         }
       }
 
-      RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-        if (initialMessage != null && initialMessage.data['type'] == 'incoming_call') {
-          _mainService.showNativeIncomingCall(
-            callerName: initialMessage.data['callerName'],
-            channelId: initialMessage.data['channelId'],
-            callType: initialMessage.data['callType'],
-            receiverName: initialMessage.data['receiverName'],
-          );
-        }
-        else if (initialMessage?.data['type'] == 'chat') {
+      RemoteMessage? initialMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null &&
+          initialMessage.data['type'] == 'incoming_call') {
+        _mainService.showNativeIncomingCall(
+          callerName: initialMessage.data['callerName'],
+          channelId: initialMessage.data['channelId'],
+          callType: initialMessage.data['callType'],
+          receiverName: initialMessage.data['receiverName'],
+        );
+      } else if (initialMessage?.data['type'] == 'chat') {
         final senderId = initialMessage?.data['senderId'];
 
         // 🔁 Wait until the first frame is drawn before navigating
@@ -313,6 +314,7 @@ Future<String?> fetchChannelId(String receiverId) async {
                     userId: userId!,
                     userId2: senderId,
                     onSignOut: restartApp,
+                    role: "user",
                   ),
                 ),
               );
@@ -349,51 +351,50 @@ Future<String?> fetchChannelId(String receiverId) async {
         }
       }
 
-        final calls = await FlutterCallkitIncoming.activeCalls();
-        for (var call in calls) {
-          final isAccepted = call['isAccepted'] ?? false;
-          final callType = call['extra']?['callType'];
-          //final channelId = call['extra']?['channelId'];
-          final callerName = call['extra']?['callerName'];
-          final receiverName = call['extra']?['receiverName'];
-          final channelId = await fetchChannelId(receiverName);
-          print("channelId" + channelId!);
+      final calls = await FlutterCallkitIncoming.activeCalls();
+      for (var call in calls) {
+        final isAccepted = call['isAccepted'] ?? false;
+        final callType = call['extra']?['callType'];
+        //final channelId = call['extra']?['channelId'];
+        final callerName = call['extra']?['callerName'];
+        final receiverName = call['extra']?['receiverName'];
+        final channelId = await fetchChannelId(receiverName);
+        print("channelId" + channelId!);
 
-          if (isAccepted &&
+        if (isAccepted &&
             call['extra'] != null &&
             callerName != null &&
             receiverName != null &&
             channelId != null) {
-            print("✅ Cold start call accept — redirecting!" + channelId);
+          print("✅ Cold start call accept — redirecting!" + channelId);
 
-
-            redirectPage = callType == 'video'
-                ? VideoCallScreen(
-                    channelId: channelId,
-                    isCaller: false,
-                    callerId: callerName,
-                    receiverId: receiverName,
-                    onSignOut: restartApp,
-                  )
-                : AudioCallScreen(
-                    channelId: channelId,
-                    isCaller: false,
-                    callerId: callerName,
-                    receiverId: receiverName,
-                    onSignOut: restartApp,
-                  );
-            await FlutterCallkitIncoming.endAllCalls();
-            break;
-          }
+          redirectPage = callType == 'video'
+              ? VideoCallScreen(
+                  channelId: channelId,
+                  isCaller: false,
+                  callerId: callerName,
+                  receiverId: receiverName,
+                  onSignOut: restartApp,
+                )
+              : AudioCallScreen(
+                  channelId: channelId,
+                  isCaller: false,
+                  callerId: callerName,
+                  receiverId: receiverName,
+                  onSignOut: restartApp,
+                );
+          await FlutterCallkitIncoming.endAllCalls();
+          break;
         }
+      }
 
-        await flutterLocalNotificationsPlugin.initialize(
-          const InitializationSettings(
-            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          ),
-        );
+      await flutterLocalNotificationsPlugin.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        ),
+      );
 
-        await flutterLocalNotificationsPlugin
+      await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(callChannel);
@@ -416,32 +417,32 @@ Future<String?> fetchChannelId(String receiverId) async {
   }
 
   void listenFCMMessages() {
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print("📩 FCM in foreground: ${message.data}");
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("📩 FCM in foreground: ${message.data}");
 
-    if (message.data['type'] == 'incoming_call') {
-      _mainService.showNativeIncomingCall(
-        callerName: message.data['callerName'],
-        callType: message.data['callType'],
-        channelId: message.data['channelId'],
-        receiverName: message.data['receiverName'],
-      );
-    }
-  });
+      if (message.data['type'] == 'incoming_call') {
+        _mainService.showNativeIncomingCall(
+          callerName: message.data['callerName'],
+          callType: message.data['callType'],
+          channelId: message.data['channelId'],
+          receiverName: message.data['receiverName'],
+        );
+      }
+    });
 
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-    print("📩 Tapped notification: ${message.data}");
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+      print("📩 Tapped notification: ${message.data}");
 
-    if (message.data['type'] == 'incoming_call') {
-      _mainService.showNativeIncomingCall(
-        callerName: message.data['callerName'],
-        callType: message.data['callType'],
-        channelId: message.data['channelId'],
-        receiverName: message.data['receiverName'],
-      );
-    }
+      if (message.data['type'] == 'incoming_call') {
+        _mainService.showNativeIncomingCall(
+          callerName: message.data['callerName'],
+          callType: message.data['callType'],
+          channelId: message.data['channelId'],
+          receiverName: message.data['receiverName'],
+        );
+      }
 
-    if (message.data['type'] == 'chat') {
+      if (message.data['type'] == 'chat') {
         final senderId = message.data['senderId'];
 
         if (role == "user") {
@@ -451,11 +452,11 @@ Future<String?> fetchChannelId(String receiverId) async {
               navigatorKey.currentContext!,
               MaterialPageRoute(
                 builder: (_) => UserToUserChattingPage(
-                  itemName: '${user['firstName']} ${user['lastName']}',
-                  userId: userId!,
-                  userId2: senderId,
-                  onSignOut: restartApp,
-                ),
+                    itemName: '${user['firstName']} ${user['lastName']}',
+                    userId: userId!,
+                    userId2: senderId,
+                    onSignOut: restartApp,
+                    role: "user"),
               ),
             );
           } else {
@@ -464,12 +465,13 @@ Future<String?> fetchChannelId(String receiverId) async {
             Navigator.push(
               navigatorKey.currentContext!,
               MaterialPageRoute(
-                builder: (_) => UserChattingPage(
+                builder: (_) => UserToUserChattingPage(
                   itemName:
                       '${counsellor['firstName']} ${counsellor['lastName']}',
                   userId: userId!,
-                  counsellorId: senderId,
+                  userId2: senderId,
                   onSignOut: restartApp,
+                  role: "counsellor",
                 ),
               ),
             );
@@ -490,10 +492,9 @@ Future<String?> fetchChannelId(String receiverId) async {
           );
         }
       }
-  });
-}
+    });
+  }
 
-  
   Future<void> restartApp() async {
     print("🚪 Logging out...");
 
@@ -519,79 +520,79 @@ Future<String?> fetchChannelId(String receiverId) async {
     );
   }
 
- @override
-Widget build(BuildContext context) {
-  if (isLoading) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      theme: ThemeData(scaffoldBackgroundColor: Colors.white),
-    );
-  }
-
-  if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: UserSignInPage(onSignOut: restartApp),
-    );
-  }
-
-  if (redirectPage != null) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: redirectPage!,
-    );
-  }
-
-  switch (role?.toLowerCase()) {
-    case "user":
-      return MaterialApp(
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        home: BasePage(username: userId!, onSignOut: restartApp),
-      );
-    case "counsellor":
-      return MaterialApp(
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        home:
-            CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
-      );
-    case "admin":
-      return MaterialApp(
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        home: AdminBasePage(onSignOut: restartApp, adminId: userId!),
-      );
-    default:
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
       return MaterialApp(
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Invalid Role. Please contact support.",
-                    style: TextStyle(fontSize: 18, color: Colors.red)),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: restartApp,
-                  child: Text("Go to Login"),
-                  style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
-                ),
-              ],
+          body: Center(child: CircularProgressIndicator()),
+        ),
+        theme: ThemeData(scaffoldBackgroundColor: Colors.white),
+      );
+    }
+
+    if (jwtToken == null || jwtToken!.isEmpty || userId == null) {
+      return MaterialApp(
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        home: UserSignInPage(onSignOut: restartApp),
+      );
+    }
+
+    if (redirectPage != null) {
+      return MaterialApp(
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        home: redirectPage!,
+      );
+    }
+
+    switch (role?.toLowerCase()) {
+      case "user":
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          home: BasePage(username: userId!, onSignOut: restartApp),
+        );
+      case "counsellor":
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          home:
+              CounsellorBasePage(onSignOut: restartApp, counsellorId: userId!),
+        );
+      case "admin":
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          home: AdminBasePage(onSignOut: restartApp, adminId: userId!),
+        );
+      default:
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Invalid Role. Please contact support.",
+                      style: TextStyle(fontSize: 18, color: Colors.red)),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: restartApp,
+                    child: Text("Go to Login"),
+                    style: ElevatedButton.styleFrom(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
+    }
   }
-}
 }

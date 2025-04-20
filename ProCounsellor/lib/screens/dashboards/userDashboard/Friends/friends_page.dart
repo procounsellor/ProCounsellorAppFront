@@ -192,6 +192,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                           userId: widget.username,
                                           userId2: user['userName'],
                                           onSignOut: () async {},
+                                          role: "user",
                                         ),
                                       ),
                                     );
