@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ProCounsellor/main_service.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/chatting_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:ProCounsellor/screens/newCallingScreen/save_fcm_token.dart';
 import 'package:ProCounsellor/screens/signInScreens/user_signin_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:ProCounsellor/screens/dashboards/adminDashboard/admin_base_page.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/base_page.dart';
@@ -157,44 +159,92 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  Future<void> saveVoIPUserMeta(String userId, String role) async {
+    print("entered for saving");
+    final prefs = await SharedPreferences.getInstance();
+    final voipToken = prefs.getString('cached_voip_token');
+    print(voipToken);
+    if (voipToken != null && voipToken.isNotEmpty) {
+      print(voipToken + "not enpty ");
+      final collection = role == 'counsellor' ? 'counsellors' : 'users';
+      await FirebaseFirestore.instance.collection(collection).doc(userId).set({
+        'voipToken': voipToken,
+      }, SetOptions(merge: true));
+      print('✅ Synced cached VoIP token to Firestore: $voipToken');
+      prefs.remove('cached_voip_token');
+    }
+  }
+
+  Future<void> updatePlatformInFirestore(String userId, String role) async {
+    final String platform = Platform.isIOS ? 'ios' : 'android';
+
+    final collection = role == 'counsellor' ? 'counsellors' : 'users';
+    final docRef = FirebaseFirestore.instance.collection(collection).doc(userId);
+
+    try {
+      await docRef.set({
+        'platform': platform,
+      }, SetOptions(merge: true));
+
+      print('✅ Platform "$platform" updated for $collection → $userId');
+    } catch (e) {
+      print('❌ Failed to update platform: $e');
+    }
+  }
+
   void listenCallKitEvents() {
-    FlutterCallkitIncoming.onEvent.listen((event) async {
-      final data = event?.body;
-      final eventType = event?.event;
-      final callType = data?['extra']?['callType'] ?? 'audio';
-      final channelId = data?['extra']?['channelId'];
-      final callerName = data?['extra']?['callerName'];
-      final receiverName = data?['extra']?['receiverName'];
+  FlutterCallkitIncoming.onEvent.listen((event) async {
+    final data = event?.body;
+    final eventType = event?.event;
 
-      print("👉 callType: $callType");
-      print("👉 channelId: $channelId");
-      print("👉 callerName: $callerName");
-      print("👉 userId (receiverId): $userId");
+    final callType = data?['extra']?['callType'] ?? 'audio';
+    final channelId = data?['extra']?['channelId'];
+    final callerName = data?['extra']?['callerName'];
+    final receiverName = data?['extra']?['receiverName'];
 
-      if (eventType == Event.actionCallAccept) {
-        navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => callType == 'audio'
-            ? AudioCallScreen(
-                channelId: channelId!,
-                isCaller: false,
-                callerId: callerName,
-                receiverId: receiverName,
-                onSignOut: restartApp,
-              )
-            : VideoCallScreen(
-                channelId: channelId!,
-                isCaller: false,
-                callerId: callerName,
-                receiverId: receiverName,
-                onSignOut: restartApp,
-              ),
-        ));
-      } else if (eventType == Event.actionCallDecline ||
-          eventType == Event.actionCallEnded) {
-        await FlutterCallkitIncoming.endAllCalls();
+    print("👉 callType: $callType");
+    print("👉 channelId: $channelId");
+    print("👉 callerName: $callerName");
+    print("👉 userId (receiverId): $userId");
+
+    if (eventType == Event.actionCallAccept) {
+      if (channelId == null || callerName == null || receiverName == null) {
+        print("❌ Missing call data. Cannot redirect.");
+        return;
       }
-    });
+
+      final callScreen = callType == 'audio'
+          ? AudioCallScreen(
+              channelId: channelId,
+              isCaller: false,
+              callerId: callerName,
+              receiverId: receiverName,
+              onSignOut: restartApp,
+            )
+          : VideoCallScreen(
+              channelId: channelId,
+              isCaller: false,
+              callerId: callerName,
+              receiverId: receiverName,
+              onSignOut: restartApp,
+            );
+
+      // 🔄 Navigate first
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => callScreen),
+      );
+
+      // ⏳ Then end the native call UI after a brief delay
+      Future.delayed(const Duration(milliseconds: 500), () async {
+        await FlutterCallkitIncoming.endAllCalls();
+      });
+    } else if (eventType == Event.actionCallDecline ||
+        eventType == Event.actionCallEnded) {
+      await FlutterCallkitIncoming.endAllCalls();
+    }
+  });
 }
+
 
 Future<String?> fetchChannelId(String receiverId) async {
   final snapshot = await FirebaseDatabase.instance
@@ -223,10 +273,20 @@ Future<String?> fetchChannelId(String receiverId) async {
         print("✅ User ID Loaded: $userId");
       }
 
+      await updatePlatformInFirestore(userId!, role!);
+
       if (role == "user") {
         FirestoreService.saveFCMTokenUser(userId!);
+        if(Platform.isIOS){
+          print("ios");
+          await saveVoIPUserMeta(userId!, role!);
+        }
       } else if (role == "counsellor") {
         FirestoreService.saveFCMTokenCounsellor(userId!);
+        if(Platform.isIOS){
+          print("ios");
+          await saveVoIPUserMeta(userId!, role!);
+        }
       }
 
       RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
@@ -238,6 +298,56 @@ Future<String?> fetchChannelId(String receiverId) async {
             receiverName: initialMessage.data['receiverName'],
           );
         }
+        else if (initialMessage?.data['type'] == 'chat') {
+        final senderId = initialMessage?.data['senderId'];
+
+        // 🔁 Wait until the first frame is drawn before navigating
+        if (role == "user") {
+          if (await _mainService.senderIsUser(senderId)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserToUserChattingPage(
+                    itemName: senderId,
+                    userId: userId!,
+                    userId2: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+              );
+            });
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.push(
+                navigatorKey.currentContext!,
+                MaterialPageRoute(
+                  builder: (_) => UserChattingPage(
+                    itemName: senderId,
+                    userId: userId!,
+                    counsellorId: senderId,
+                    onSignOut: restartApp,
+                  ),
+                ),
+              );
+            });
+          }
+        } else if (role == "counsellor") {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.push(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(
+                builder: (_) => CounsellorChattingPage(
+                  itemName: senderId,
+                  userId: senderId,
+                  counsellorId: senderId,
+                  onSignOut: restartApp,
+                ),
+              ),
+            );
+          });
+        }
+      }
 
         final calls = await FlutterCallkitIncoming.activeCalls();
         for (var call in calls) {
@@ -256,6 +366,7 @@ Future<String?> fetchChannelId(String receiverId) async {
             channelId != null) {
             print("✅ Cold start call accept — redirecting!" + channelId);
 
+
             redirectPage = callType == 'video'
                 ? VideoCallScreen(
                     channelId: channelId,
@@ -271,6 +382,7 @@ Future<String?> fetchChannelId(String receiverId) async {
                     receiverId: receiverName,
                     onSignOut: restartApp,
                   );
+            await FlutterCallkitIncoming.endAllCalls();
             break;
           }
         }
@@ -317,7 +429,7 @@ Future<String?> fetchChannelId(String receiverId) async {
     }
   });
 
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
     print("📩 Tapped notification: ${message.data}");
 
     if (message.data['type'] == 'incoming_call') {
@@ -328,6 +440,56 @@ Future<String?> fetchChannelId(String receiverId) async {
         receiverName: message.data['receiverName'],
       );
     }
+
+    if (message.data['type'] == 'chat') {
+        final senderId = message.data['senderId'];
+
+        if (role == "user") {
+          if (await _mainService.senderIsUser(senderId)) {
+            final user = await _mainService.getUserFromUserId(senderId);
+            Navigator.push(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(
+                builder: (_) => UserToUserChattingPage(
+                  itemName: '${user['firstName']} ${user['lastName']}',
+                  userId: userId!,
+                  userId2: senderId,
+                  onSignOut: restartApp,
+                ),
+              ),
+            );
+          } else {
+            final counsellor =
+                await _mainService.getCounsellorFromCounsellorId(senderId);
+            Navigator.push(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(
+                builder: (_) => UserChattingPage(
+                  itemName:
+                      '${counsellor['firstName']} ${counsellor['lastName']}',
+                  userId: userId!,
+                  counsellorId: senderId,
+                  onSignOut: restartApp,
+                ),
+              ),
+            );
+          }
+        } else if (role == "counsellor") {
+          final user = await _mainService.getUserFromUserId(senderId);
+          Navigator.push(
+            navigatorKey.currentContext!,
+            MaterialPageRoute(
+              builder: (_) => CounsellorChattingPage(
+                itemName: '${user['firstName']} ${user['lastName']}',
+                userId: senderId,
+                photo: user['photo'],
+                counsellorId: senderId,
+                onSignOut: restartApp,
+              ),
+            ),
+          );
+        }
+      }
   });
 }
 
