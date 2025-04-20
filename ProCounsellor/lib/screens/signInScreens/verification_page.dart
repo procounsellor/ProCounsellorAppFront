@@ -111,7 +111,7 @@ class _VerificationPageState extends State<VerificationPage> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "+91 " + widget.phoneNumber,
+                      widget.phoneNumber,
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ),

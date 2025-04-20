@@ -9,10 +9,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:ProCounsellor/screens/customWidgets/video_player_widget.dart';
 import '../../../../services/api_utils.dart';
 import 'ChatServiceUserToUser.dart';
+//import '../../../../services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_details_page.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -38,6 +40,9 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   final ScrollController _scrollController = ScrollController();
   bool showSendButton = false;
 
+  bool isTyping = false;
+  final FocusNode _focusNode = FocusNode();
+
   // For counsellor's online status
   String counsellorPhotoUrl = 'https://via.placeholder.com/150';
   bool isCounsellorOnline = false;
@@ -57,6 +62,13 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     super.initState();
     _initializeChat();
     _listenToCounsellorStatus();
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        FirebaseDatabase.instance.ref('userStates/${widget.userId}').update({
+          'typing': false,
+        });
+      }
+    });
   }
 
   Future<void> _initializeChat() async {
@@ -85,10 +97,27 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
+  // Future<void> _fetchUserProfile() async {
+  //   try {
+  //     String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+  //     final response = await http.get(Uri.parse(url));
+  //     if (response.statusCode == 200) {
+  //       final data = Map<String, dynamic>.from(json.decode(response.body));
+  //       setState(() {
+  //         userPhotoUrl = data['photo'] ?? userPhotoUrl;
+  //         userFirstName = data['firstName'] ?? '';
+  //         userLastName = data['lastName'] ?? '';
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching user profile: $e');
+  //   }
+  // }
   Future<void> _fetchUserProfile() async {
     try {
       String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
       final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(json.decode(response.body));
         setState(() {
@@ -96,9 +125,30 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           userFirstName = data['firstName'] ?? '';
           userLastName = data['lastName'] ?? '';
         });
+        return;
       }
     } catch (e) {
-      print('Error fetching user profile: $e');
+      print('Primary user API failed: $e');
+    }
+
+    // Try fallback: counsellor API
+    try {
+      String fallbackUrl =
+          '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
+      final fallbackResponse = await http.get(Uri.parse(fallbackUrl));
+
+      if (fallbackResponse.statusCode == 200) {
+        final data =
+            Map<String, dynamic>.from(json.decode(fallbackResponse.body));
+        setState(() {
+          userPhotoUrl =
+              data['photoUrl'] ?? userPhotoUrl; // note different field
+          userFirstName = data['firstName'] ?? '';
+          userLastName = data['lastName'] ?? '';
+        });
+      }
+    } catch (e) {
+      print('Fallback counsellor API failed: $e');
     }
   }
 
@@ -111,6 +161,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
         setState(() {
           isCounsellorOnline = data['state'] == 'online';
+          isTyping = data['typing'] == true;
         });
       }
     });
@@ -279,6 +330,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   Future<void> _sendMessage() async {
     String? receiverFCMToken =
         await FirestoreService.getFCMTokenUser(widget.userId2);
+    print(widget.userId2);
+    print(receiverFCMToken);
     if (_controller.text.isNotEmpty) {
       try {
         MessageRequest messageRequest = MessageRequest(
@@ -286,6 +339,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           text: _controller.text,
           receiverFcmToken: receiverFCMToken!,
         );
+        print(messageRequest);
 
         await ChatService().sendMessage(chatId, messageRequest);
 
@@ -294,8 +348,14 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           showSendButton = selectedFile != null || webFileBytes != null;
         });
         _scrollToBottom();
+        await FirebaseDatabase.instance
+            .ref('userStates/${widget.userId}')
+            .update({
+          'typing': false,
+        });
       } catch (e) {
-        print('Error sending message: $e');
+        print('Error sending message: $e' +
+            "method name is user2userchatting _sendMsg*()");
       }
     }
   }
@@ -424,6 +484,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     ChatService().cancelListeners(chatId);
     counsellorStateRef.onDisconnect();
     _controller.dispose();
+    _focusNode.dispose(); // 👈 dispose it
     super.dispose();
   }
 
@@ -668,9 +729,13 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                     ),
                   ),
                   Text(
-                    isCounsellorOnline ? "Online" : "Offline",
+                    isTyping
+                        ? "Typing..."
+                        : (isCounsellorOnline ? "Online" : "Offline"),
                     style: TextStyle(
-                      color: isCounsellorOnline ? Colors.green : Colors.grey,
+                      color: isTyping
+                          ? Colors.purple
+                          : (isCounsellorOnline ? Colors.green : Colors.grey),
                       fontSize: 12,
                     ),
                   ),
@@ -771,6 +836,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                       ],
                     ),
                   ),
+                if (isTyping && !isLoading) _buildTypingIndicator(),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -792,11 +858,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                               : MediaQuery.of(context).size.width * 0.65,
                           child: TextField(
                             controller: _controller,
+                            focusNode: _focusNode,
                             onChanged: (text) {
                               setState(() {
                                 showSendButton = text.isNotEmpty ||
                                     selectedFile != null ||
                                     webFileBytes != null;
+                              });
+
+                              FirebaseDatabase.instance
+                                  .ref('userStates/${widget.userId}')
+                                  .update({
+                                'typing': text.isNotEmpty,
                               });
                             },
                             decoration: InputDecoration(
@@ -833,6 +906,25 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, bottom: 5.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundImage: NetworkImage(userPhotoUrl),
+          ),
+          const SizedBox(width: 8),
+          const SpinKitThreeBounce(
+            color: Colors.grey,
+            size: 18.0,
+          ),
+        ],
+      ),
     );
   }
 }

@@ -297,28 +297,28 @@ class _UserSignInPageState extends State<UserSignInPage> {
                                         color: Colors.white, fontSize: 14),
                                   ),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => AdminSignInScreen(
-                                            onSignOut: widget.onSignOut),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFAAF84),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Admin Sign in',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 14),
-                                  ),
-                                ),
+                                // ElevatedButton(
+                                //   onPressed: () {
+                                //     Navigator.push(
+                                //       context,
+                                //       MaterialPageRoute(
+                                //         builder: (_) => AdminSignInScreen(
+                                //             onSignOut: widget.onSignOut),
+                                //       ),
+                                //     );
+                                //   },
+                                //   style: ElevatedButton.styleFrom(
+                                //     backgroundColor: Color(0xFFFAAF84),
+                                //     shape: RoundedRectangleBorder(
+                                //       borderRadius: BorderRadius.circular(8),
+                                //     ),
+                                //   ),
+                                //   child: Text(
+                                //     'Admin Sign in',
+                                //     style: TextStyle(
+                                //         color: Colors.white, fontSize: 14),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ],
@@ -353,7 +353,6 @@ class _UserSignInPageState extends State<UserSignInPage> {
       //
       final response = await http.post(
         Uri.parse('${ApiUtils.baseUrl}/api/auth/generateOtp'),
-
         body: {'phoneNumber': phoneNumber},
       );
       if (response.statusCode == 200) {

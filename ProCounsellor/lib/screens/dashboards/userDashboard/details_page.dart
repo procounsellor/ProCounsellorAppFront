@@ -9,6 +9,8 @@ import '../../newCallingScreen/audio_call_screen.dart';
 import '../../newCallingScreen/firebase_notification_service.dart';
 import '../../newCallingScreen/save_fcm_token.dart';
 import 'chatting_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 
 class DetailsPage extends StatefulWidget {
   final String itemName;
@@ -38,11 +40,14 @@ class _DetailsPageState extends State<DetailsPage> {
   Map<String, dynamic>? counsellorDetails; // Store fetched counsellor details
   List<dynamic> reviews = [];
   Map<String, bool> showComments = {};
+  List<Map<String, dynamic>> clientDetailsList = [];
+  bool isLoadingClients = true;
 
   @override
   void initState() {
     super.initState();
     fetchCounsellorDetails(); // Fetch counsellor details on page load
+
     checkSubscriptionStatus(); // Check subscription status on page load
     checkFollowingStatus(); // Check following status on page load
     fetchReviews();
@@ -73,8 +78,8 @@ class _DetailsPageState extends State<DetailsPage> {
 
   // Function to fetch counsellor details
   Future<void> fetchCounsellorDetails() async {
-    final url = Uri.parse(
-        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
+    final url =
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
 
     try {
       final response = await http.get(url);
@@ -92,6 +97,7 @@ class _DetailsPageState extends State<DetailsPage> {
           SnackBar(content: Text("Failed to fetch counsellor details")),
         );
       }
+      fetchClientDetails();
     } catch (e) {
       setState(() {
         isLoading = false; // Stop loading if there's an error
@@ -100,6 +106,38 @@ class _DetailsPageState extends State<DetailsPage> {
         SnackBar(content: Text("Error: $e")),
       );
     }
+  }
+
+  Future<void> fetchClientDetails() async {
+    final clientIdsRaw = counsellorDetails?['clientIds'];
+    print(counsellorDetails?['clientIds']);
+    if (clientIdsRaw == null || clientIdsRaw is! List) {
+      setState(() {
+        clientDetailsList = [];
+        isLoadingClients = false;
+      });
+      return;
+    }
+    final List<dynamic> clientIds = clientIdsRaw;
+    List<Map<String, dynamic>> tempList = [];
+
+    for (String clientId in clientIds) {
+      final url = "${ApiUtils.baseUrl}/api/user/$clientId";
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final userData = json.decode(response.body);
+          tempList.add(userData);
+        }
+      } catch (e) {
+        print("Failed to load client $clientId: $e");
+      }
+    }
+
+    setState(() {
+      clientDetailsList = tempList;
+      isLoadingClients = false;
+    });
   }
 
   // Function to check if the user is already subscribed to the counsellor
@@ -275,31 +313,32 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
 // Function to calculate ratings summary
-Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
-  int totalRatings = reviews.length;
-  double averageRating = 0.0;
-  Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+  Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
+    int totalRatings = reviews.length;
+    double averageRating = 0.0;
+    Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
 
-  for (var review in reviews) {
-    if (review is Map<String, dynamic>) {
-      int rating = (review['rating'] ?? 0).toInt(); // Ensure it's an int
-      if (rating > 0 && rating <= 5) {
-        starCounts[rating] = (starCounts[rating] ?? 0) + 1;
-        averageRating += rating;
+    for (var review in reviews) {
+      if (review is Map<String, dynamic>) {
+        int rating = (review['rating'] ?? 0).toInt(); // Ensure it's an int
+        if (rating > 0 && rating <= 5) {
+          starCounts[rating] = (starCounts[rating] ?? 0) + 1;
+          averageRating += rating;
+        }
       }
     }
-  }
 
-  if (totalRatings > 0) {
-    averageRating /= totalRatings.toDouble(); // Ensure division returns a double
-  }
+    if (totalRatings > 0) {
+      averageRating /=
+          totalRatings.toDouble(); // Ensure division returns a double
+    }
 
-  return {
-    "averageRating": averageRating, // It's okay to return double here
-    "totalRatings": totalRatings,
-    "starCounts": starCounts,
-  };
-}
+    return {
+      "averageRating": averageRating, // It's okay to return double here
+      "totalRatings": totalRatings,
+      "starCounts": starCounts,
+    };
+  }
 
 // Widget for Rating Summary
   Widget buildRatingSummary(List<Map<String, dynamic>> reviews) {
@@ -331,7 +370,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
             children: [
               Text(
                 averageRating.toStringAsFixed(2),
-                style: TextStyle(
+                style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
@@ -354,7 +393,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                   SizedBox(width: 8),
                   Text(
                     "$totalRatings ratings",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
                   ),
                 ],
               ),
@@ -375,8 +414,8 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                   children: [
                     Text(
                       "$star",
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.outfit(
+                          fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(width: 8),
                     Expanded(
@@ -409,7 +448,8 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                     SizedBox(width: 8),
                     Text(
                       count.toString(),
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style:
+                          GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 );
@@ -429,7 +469,8 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: Text(widget.itemName, style: TextStyle(color: Colors.black)),
+          // title: Text(widget.itemName,
+          //     style: GoogleFonts.outfit(color: Colors.black)),
           centerTitle: true,
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.black),
@@ -449,531 +490,454 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                       children: [
                         // Required for the glassy effect
 
-                        Container(
-                          width: double.infinity, // Full width of the page
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Image
-                              Container(
-                                width: MediaQuery.of(context).size.width *
-                                    0.8, // Cover 80% of card width
-                                height: MediaQuery.of(context).size.width *
-                                    0.7, // Increased height
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                      12), // Rounded corners
-                                  image: DecorationImage(
-                                    image: NetworkImage(
-                                      counsellorDetails?['photoUrl'] ??
-                                          'https://via.placeholder.com/150',
-                                      // Fallback image
-                                    ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  border: Border.all(
-                                      color: Colors.orange.withOpacity(0.7),
-                                      width: 2), // Tinted orange border
-                                ),
-                              ),
-                              SizedBox(
-                                  height:
-                                      16), // Space between image and full name
-
-                              // Full Name
-                              Text(
-                                "${counsellorDetails?['firstName'] ?? 'N/A'} ${counsellorDetails?['lastName'] ?? ''}",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize:
-                                      22, // Slightly larger font for the name
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(
-                                  height:
-                                      16), // Space between full name and buttons
-
-                              // Expertise, Subscribe, and Follow Buttons Row
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  // Expertise Button
-                                  TextButton(
-                                    onPressed: () {
-                                      showGeneralDialog(
-                                        context: context,
-                                        barrierDismissible: true,
-                                        barrierLabel:
-                                            MaterialLocalizations.of(context)
-                                                .modalBarrierDismissLabel,
-                                        pageBuilder: (BuildContext context,
-                                            Animation<double> animation,
-                                            Animation<double>
-                                                secondaryAnimation) {
-                                          final expertiseList =
-                                              counsellorDetails?['expertise']
-                                                      as List<dynamic>? ??
-                                                  [];
-                                          return Center(
-                                            child: Container(
-                                              margin: EdgeInsets.symmetric(
-                                                  horizontal: 20),
-                                              padding: EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                    color: Colors.orange
-                                                        .withOpacity(0.7),
-                                                    width: 2),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.orange
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 20,
-                                                    spreadRadius: 1,
-                                                    offset: Offset(0, 8),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "Expertise",
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 18,
-                                                        color:
-                                                            Colors.orange[800],
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 10),
-                                                    SingleChildScrollView(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: expertiseList
-                                                            .map((expertise) {
-                                                          return Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                                    vertical:
-                                                                        4.0),
-                                                            child: Text(
-                                                              "- $expertise",
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          );
-                                                        }).toList(),
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 10),
-                                                    Align(
-                                                      alignment:
-                                                          Alignment.centerRight,
-                                                      child: TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(),
-                                                        style: TextButton
-                                                            .styleFrom(
-                                                          foregroundColor:
-                                                              Colors.white,
-                                                          backgroundColor:
-                                                              Colors.orange
-                                                                  .withOpacity(
-                                                                      0.7),
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8),
-                                                          ),
-                                                        ),
-                                                        child: Text("Close"),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        transitionDuration:
-                                            Duration(milliseconds: 300),
-                                        transitionBuilder: (context, animation,
-                                            secondaryAnimation, child) {
-                                          return ScaleTransition(
-                                            scale: CurvedAnimation(
-                                              parent: animation,
-                                              curve: Curves.easeOutBack,
-                                            ),
-                                            child: child,
-                                          );
-                                        },
-                                      );
-                                    },
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 6, horizontal: 12),
-                                      backgroundColor:
-                                          Colors.orange.withOpacity(0.2),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "Expertise",
-                                      style: TextStyle(
-                                        color: Colors.orange[700],
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Subscribe Button
-                                  ElevatedButton.icon(
-                                    onPressed:
-                                        isSubscribed ? unsubscribe : subscribe,
-                                    icon: Icon(
-                                      isSubscribed
-                                          ? Icons.cancel
-                                          : Icons.subscriptions,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    label: Text(
-                                      isSubscribed
-                                          ? "Unsubscribe"
-                                          : "Subscribe",
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange
-                                          .withOpacity(
-                                              0.7), // Tinted orange button
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 6),
-                                    ),
-                                  ),
-
-                                  // Follow Button
-                                  ElevatedButton.icon(
-                                    onPressed: isFollowed ? unfollow : follow,
-                                    icon: Icon(
-                                      isFollowed
-                                          ? Icons.cancel
-                                          : Icons.subscriptions,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    label: Text(
-                                      isFollowed ? "Unfollow" : "Follow",
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange
-                                          .withOpacity(
-                                              0.7), // Tinted orange button
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 6),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                  height:
-                                      16), // Space between buttons and information
-
-                              // Additional Information
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Organisation: ${counsellorDetails?['organisationName'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
-                                      style: TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      "Subscription: \₹ ${counsellorDetails?['ratePerYear'] ?? 'N/A'} per year",
-                                      style: TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                  height:
-                                      16), // Space between information and buttons
-
-                              // Call, Chat, and Video Call Buttons Row
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  // Call Button
-                                  ElevatedButton.icon(
-                                    onPressed: isSubscribed
-                                        ? () async {
-                                                String receiverId = widget.counsellorId;
-                                                String senderName = widget.userId;
-                                                String channelId =
-                                                    "audio_${DateTime.now().millisecondsSinceEpoch}";
-
-                                                // ✅ Get Receiver's FCM Token from Firestore
-                                                String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
-
-                                                await FirebaseNotificationService.sendCallNotification(
-                                                  receiverFCMToken: receiverFCMToken!,
-                                                  senderName: senderName,
-                                                  channelId: channelId,
-                                                  receiverId: receiverId,
-                                                  callType: "audio"
-                                                );
-
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => AudioCallScreen(
-                                                      channelId: channelId,
-                                                      isCaller: true,
-                                                      callerId: senderName,
-                                                      receiverId:receiverId,
-                                                      onSignOut: widget.onSignOut,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                        : null, // Disable button if not subscribed
-                                    icon: Icon(Icons.call, size: 16),
-                                    label: Text("Call",
-                                        style: TextStyle(fontSize: 12)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green[300],
-                                      foregroundColor:
-                                          Colors.black, // Green hue button
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                    ),
-                                  ),
-
-                                  // Chat Button
-                                  ElevatedButton.icon(
-                                    onPressed: isSubscribed
-                                        ? () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => UserChattingPage(
-                                                  itemName: widget.itemName,
-                                                  userId: widget.userId,
-                                                  counsellorId:
-                                                      widget.counsellorId,
-                                                      onSignOut: widget.onSignOut,
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        : null, // Disable button if not subscribed
-                                    icon: Icon(Icons.chat, size: 16),
-                                    label: Text("Chat",
-                                        style: TextStyle(fontSize: 12)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.green[300], // Green hue button
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                    ),
-                                  ),
-
-                                  // Video Call Button
-                                  ElevatedButton.icon(
-                                    onPressed: isSubscribed
-                                        ? () async {
-                                                String receiverId = widget.counsellorId;
-                                                String senderName = widget.userId;
-                                                String channelId =
-                                                    "video_${DateTime.now().millisecondsSinceEpoch}";
-
-                                                // ✅ Get Receiver's FCM Token from Firestore.
-                                                String? receiverFCMToken = await FirestoreService.getFCMTokenCounsellor(receiverId);
-
-                                                await FirebaseNotificationService.sendCallNotification(
-                                                  receiverFCMToken: receiverFCMToken!,
-                                                  senderName: senderName,
-                                                  channelId: channelId,
-                                                  receiverId: receiverId,
-                                                  callType: "video"
-                                                );
-
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => VideoCallScreen(
-                                                      channelId: channelId,
-                                                      isCaller: true,
-                                                      callerId: senderName,
-                                                      receiverId: receiverId,
-                                                      onSignOut: widget.onSignOut,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                        : null, // Disable button if not subscribed
-                                    icon: Icon(Icons.video_call, size: 16),
-                                    label: Text("Video Call",
-                                        style: TextStyle(fontSize: 12),
-                                        selectionColor: Colors.white),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.green[300], // Green hue button
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 20),
-                        // Reviews Section
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // Image
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Reviews Heading
-                            Text(
-                              "Reviews",
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            // Row with image and details
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Left: Image
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: NetworkImage(
+                                        counsellorDetails?['photoUrl'] ??
+                                            'https://via.placeholder.com/150',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+
+                                // Right: Name + Info
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "${counsellorDetails?['firstName'] ?? 'N/A'} ${counsellorDetails?['lastName'] ?? ''}",
+                                        style: GoogleFonts.outfit(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 6),
+                                      Text(
+                                        "Organisation: ${counsellorDetails?['organisationName'] ?? 'N/A'}",
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 14,
+                                            color: Colors.black87),
+                                      ),
+                                      Text(
+                                        "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 14,
+                                            color: Colors.black87),
+                                      ),
+                                      Text(
+                                        "Subscription: ₹ ${counsellorDetails?['ratePerYear'] ?? 'N/A'} per year",
+                                        style: GoogleFonts.outfit(
+                                            fontSize: 14,
+                                            color: Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
 
-                            // Post Review Button and View More
-                            Row(
-                              children: [
-                                // Post Review Button
-                                ElevatedButton(
-                                  onPressed: isSubscribed
-                                      ? () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => PostUserReview(
-                                                userName: widget.userId,
-                                                counsellorName:
-                                                    widget.counsellorId,
-                                              ),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            fetchReviews(); // Reload reviews on return
-                                          }
-                                        }
-                                      : null, // Disabled if not subscribed
-                                  child: Text("Post Review"),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isSubscribed
-                                        ? Colors
-                                            .green[300] // Enabled button color
-                                        : Colors.grey, // Disabled button color
-                                    foregroundColor: Colors.black, // Text color
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                  ),
-                                ),
+                            SizedBox(height: 12),
 
-                                // View More Text
-                                if (reviews.length > 2)
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => MyReviewPage(
-                                            username: widget.counsellorId,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Text("View More"),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.blue,
+                            // Pull this outside the row to align left with image
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 0), // No extra indent
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "EXPERTISE",
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
-                              ],
+                                  SizedBox(height: 4),
+                                  Text(
+                                    (counsellorDetails?['expertise']
+                                            as List<dynamic>)
+                                        .join(', '),
+                                    style: GoogleFonts.outfit(
+                                        fontSize: 14, color: Colors.black87),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
+
+                        SizedBox(
+                            height: 16), // Space between full name and buttons
+                        // Add this above your square buttons
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: TextButton.icon(
+                                onPressed:
+                                    isSubscribed ? unsubscribe : subscribe,
+                                icon: Icon(
+                                  isSubscribed
+                                      ? Icons.cancel
+                                      : Icons.subscriptions,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  isSubscribed ? "UNSUBSCRIBE" : "SUBSCRIBE",
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        6), // Slight rounding
+                                  ),
+                                  backgroundColor: Colors.orangeAccent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        buildActionButtonsRow(),
+
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "RECIPIENTS",
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+
+                        if (isLoadingClients)
+                          SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: 5, // Show 5 shimmer items
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  child: Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 30,
+                                          backgroundColor: Colors.white,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Container(
+                                          width: 60,
+                                          height: 10,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        else if (clientDetailsList.isEmpty)
+                          Text("No clients found.")
+                        else
+                          SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: clientDetailsList.length,
+                              itemBuilder: (context, index) {
+                                final user = clientDetailsList[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: NetworkImage(
+                                          user['photo'] ??
+                                              'https://via.placeholder.com/150',
+                                        ),
+                                      ),
+                                      SizedBox(height: 6),
+                                      Text(
+                                        user['firstName'] ??
+                                            user['userName'] ??
+                                            '',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                        // Expertise, Subscribe, and Follow Buttons Row
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //   children: [
+                        //     // Subscribe Button
+                        //     ElevatedButton.icon(
+                        //       onPressed: isSubscribed ? unsubscribe : subscribe,
+                        //       icon: Icon(
+                        //         isSubscribed
+                        //             ? Icons.cancel
+                        //             : Icons.subscriptions,
+                        //         color: Colors.white,
+                        //         size: 16,
+                        //       ),
+                        //       label: Text(
+                        //         isSubscribed ? "Unsubscribe" : "Subscribe",
+                        //         style: GoogleFonts.outfit(
+                        //             color: Colors.white, fontSize: 12),
+                        //       ),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Colors.orange
+                        //             .withOpacity(0.7), // Tinted orange button
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         padding: EdgeInsets.symmetric(
+                        //             horizontal: 8, vertical: 6),
+                        //       ),
+                        //     ),
+
+                        //     // Follow Button
+                        //     ElevatedButton.icon(
+                        //       onPressed: isFollowed ? unfollow : follow,
+                        //       icon: Icon(
+                        //         isFollowed ? Icons.cancel : Icons.subscriptions,
+                        //         color: Colors.white,
+                        //         size: 16,
+                        //       ),
+                        //       label: Text(
+                        //         isFollowed ? "Unfollow" : "Follow",
+                        //         style: GoogleFonts.outfit(
+                        //             color: Colors.white, fontSize: 12),
+                        //       ),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Colors.orange
+                        //             .withOpacity(0.7), // Tinted orange button
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         padding: EdgeInsets.symmetric(
+                        //             horizontal: 8, vertical: 6),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // SizedBox(
+                        //     height:
+                        //         16), // Space between buttons and information
+
+                        // // Additional Information
+
+                        // SizedBox(
+                        //     height:
+                        //         16), // Space between information and buttons
+
+                        // // Call, Chat, and Video Call Buttons Row
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //   children: [
+                        //     // Call Button
+                        //     ElevatedButton.icon(
+                        //       onPressed: isSubscribed
+                        //           ? () async {
+                        //               String receiverId = widget.counsellorId;
+                        //               String senderName = widget.userId;
+                        //               String channelId =
+                        //                   "audio_${DateTime.now().millisecondsSinceEpoch}";
+
+                        //               // ✅ Get Receiver's FCM Token from Firestore
+                        //               String? receiverFCMToken =
+                        //                   await FirestoreService
+                        //                       .getFCMTokenCounsellor(
+                        //                           receiverId);
+
+                        //               await FirebaseNotificationService
+                        //                   .sendCallNotification(
+                        //                       receiverFCMToken:
+                        //                           receiverFCMToken!,
+                        //                       senderName: senderName,
+                        //                       channelId: channelId,
+                        //                       receiverId: receiverId,
+                        //                       callType: "audio");
+
+                        //               Navigator.push(
+                        //                 context,
+                        //                 MaterialPageRoute(
+                        //                   builder: (context) => AudioCallScreen(
+                        //                     channelId: channelId,
+                        //                     isCaller: true,
+                        //                     callerId: senderName,
+                        //                     receiverId: receiverId,
+                        //                     onSignOut: widget.onSignOut,
+                        //                   ),
+                        //                 ),
+                        //               );
+                        //             }
+                        //           : null, // Disable button if not subscribed
+                        //       icon: Icon(Icons.call, size: 16),
+                        //       label:
+                        //           Text("Call", style: GoogleFonts.outfit(fontSize: 12)),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Colors.green[300],
+                        //         foregroundColor:
+                        //             Colors.black, // Green hue button
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         padding: EdgeInsets.symmetric(
+                        //             horizontal: 12, vertical: 8),
+                        //       ),
+                        //     ),
+
+                        //     // Chat Button
+                        //     ElevatedButton.icon(
+                        //       onPressed: isSubscribed
+                        //           ? () {
+                        //               Navigator.push(
+                        //                 context,
+                        //                 MaterialPageRoute(
+                        //                   builder: (_) => UserChattingPage(
+                        //                     itemName: widget.itemName,
+                        //                     userId: widget.userId,
+                        //                     counsellorId: widget.counsellorId,
+                        //                     onSignOut: widget.onSignOut,
+                        //                   ),
+                        //                 ),
+                        //               );
+                        //             }
+                        //           : null, // Disable button if not subscribed
+                        //       icon: Icon(Icons.chat, size: 16),
+                        //       label:
+                        //           Text("Chat", style: GoogleFonts.outfit(fontSize: 12)),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor:
+                        //             Colors.green[300], // Green hue button
+                        //         foregroundColor: Colors.black,
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         padding: EdgeInsets.symmetric(
+                        //             horizontal: 12, vertical: 8),
+                        //       ),
+                        //     ),
+
+                        //     // Video Call Button
+                        //     ElevatedButton.icon(
+                        //       onPressed: isSubscribed
+                        //           ? () async {
+                        //               String receiverId = widget.counsellorId;
+                        //               String senderName = widget.userId;
+                        //               String channelId =
+                        //                   "video_${DateTime.now().millisecondsSinceEpoch}";
+
+                        //               // ✅ Get Receiver's FCM Token from Firestore.
+                        //               String? receiverFCMToken =
+                        //                   await FirestoreService
+                        //                       .getFCMTokenCounsellor(
+                        //                           receiverId);
+
+                        //               await FirebaseNotificationService
+                        //                   .sendCallNotification(
+                        //                       receiverFCMToken:
+                        //                           receiverFCMToken!,
+                        //                       senderName: senderName,
+                        //                       channelId: channelId,
+                        //                       receiverId: receiverId,
+                        //                       callType: "video");
+
+                        //               Navigator.push(
+                        //                 context,
+                        //                 MaterialPageRoute(
+                        //                   builder: (context) => VideoCallScreen(
+                        //                     channelId: channelId,
+                        //                     isCaller: true,
+                        //                     callerId: senderName,
+                        //                     receiverId: receiverId,
+                        //                     onSignOut: widget.onSignOut,
+                        //                   ),
+                        //                 ),
+                        //               );
+                        //             }
+                        //           : null, // Disable button if not subscribed
+                        //       icon: Icon(Icons.video_call, size: 16),
+                        //       label: Text("Video Call",
+                        //           style: GoogleFonts.outfit(fontSize: 12),
+                        //           selectionColor: Colors.white),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor:
+                        //             Colors.green[300], // Green hue button
+                        //         foregroundColor: Colors.black,
+                        //         shape: RoundedRectangleBorder(
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         padding: EdgeInsets.symmetric(
+                        //             horizontal: 12, vertical: 8),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+
+                        SizedBox(height: 20),
+                        // Reviews Section
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "REVIEWS",
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+
+                        // SizedBox(height: 15),
+
                         SizedBox(height: 16),
 
                         buildRatingSummary(
@@ -1026,7 +990,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                               Text(
                                                 review["userFullName"] ??
                                                     review["userName"],
-                                                style: TextStyle(
+                                                style: GoogleFonts.outfit(
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
@@ -1038,8 +1002,11 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                           Row(
                                             children: [
                                               ...List.generate(
-                                                (review["rating"] ?? 0).toInt(), // Convert rating to int safely
-                                                (index) => Icon(Icons.star, color: Colors.orange, size: 16),
+                                                (review["rating"] ?? 0)
+                                                    .toInt(), // Convert rating to int safely
+                                                (index) => Icon(Icons.star,
+                                                    color: Colors.orange,
+                                                    size: 16),
                                               ),
                                             ],
                                           ),
@@ -1049,7 +1016,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                           Text(
                                             review["reviewText"] ??
                                                 "No review text provided.",
-                                            style: TextStyle(
+                                            style: GoogleFonts.outfit(
                                                 fontSize: 14,
                                                 color: Colors.black54),
                                           ),
@@ -1137,7 +1104,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                               controller: _commentController,
                                               decoration: InputDecoration(
                                                 hintText: "Add a comment...",
-                                                hintStyle: TextStyle(
+                                                hintStyle: GoogleFonts.outfit(
                                                     color: Colors.grey[500]),
                                                 filled: true,
                                                 fillColor: Colors.grey[100],
@@ -1191,7 +1158,7 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                                                   _commentController.clear();
                                                 }
                                               },
-                                              style: TextStyle(
+                                              style: GoogleFonts.outfit(
                                                   fontSize: 14,
                                                   color: Colors.black),
                                               cursorColor: Colors.orange,
@@ -1225,16 +1192,301 @@ Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
                               )
                             : Text(
                                 "No reviews available.",
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.grey),
+                                style: GoogleFonts.outfit(
+                                    fontSize: 14, color: Colors.grey),
                               ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //   children: [
+                        // Reviews Heading
 
-// Button to navigate to PostUserReview page
+                        // Post Review Button and View More
+                        Column(
+                          children: [
+                            // Post Review Button
+                            // ElevatedButton(
+                            //   onPressed: isSubscribed
+                            //       ? () async {
+                            //           final result = await Navigator.push(
+                            //             context,
+                            //             MaterialPageRoute(
+                            //               builder: (_) => PostUserReview(
+                            //                 userName: widget.userId,
+                            //                 counsellorName:
+                            //                     widget.counsellorId,
+                            //               ),
+                            //             ),
+                            //           );
+                            //           if (result == true) {
+                            //             fetchReviews(); // Reload reviews on return
+                            //           }
+                            //         }
+                            //       : null, // Disabled if not subscribed
+                            //   child: Text("Post Review"),
+                            //   style: ElevatedButton.styleFrom(
+                            //     backgroundColor: isSubscribed
+                            //         ? Colors
+                            //             .green[300] // Enabled button color
+                            //         : Colors.grey, // Disabled button color
+                            //     foregroundColor: Colors.white, // Text color
+                            //     shape: RoundedRectangleBorder(
+                            //       borderRadius: BorderRadius.circular(8),
+                            //     ),
+                            //     padding: EdgeInsets.symmetric(
+                            //         horizontal: 16, vertical: 8),
+                            //   ),
+                            // ),
+                            SizedBox(height: 10),
+                            InkWell(
+                              onTap: isSubscribed
+                                  ? () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => PostUserReview(
+                                            userName: widget.userId,
+                                            counsellorName: widget.counsellorId,
+                                          ),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        fetchReviews(); // Reload reviews on return
+                                      }
+                                    }
+                                  : null,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 2.0, horizontal: 4.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "POST REVIEW",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSubscribed
+                                            ? Colors.grey[800]
+                                            : Colors.grey[400],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: isSubscribed
+                                          ? Colors.grey[700]
+                                          : Colors.grey[400],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Divider(
+                              color: Colors.grey.withOpacity(0.3),
+                              thickness: 0.8,
+                              indent: 12,
+                              endIndent: 12,
+                            ),
+
+                            // View More Text
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MyReviewPage(
+                                      username: widget.counsellorId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 2.0, horizontal: 4.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "VIEW MORE",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
+
+// Button to navigate to PostUserReview page
+                    //   ],
+                    // ),
                   ),
           ),
         ));
+  }
+
+  Widget buildActionButtonsRow() {
+    final buttonData = [
+      // {
+      //   "icon": isSubscribed ? Icons.cancel : Icons.subscriptions,
+      //   "label": isSubscribed ? "Unsubscribe" : "Subscribe",
+      //   "onTap": isSubscribed ? unsubscribe : subscribe,
+      // },
+      {
+        "icon": isFollowed ? Icons.person_remove : Icons.person_add,
+        "label": isFollowed ? "Unfollow" : "Follow",
+        "onTap": isFollowed ? unfollow : follow,
+      },
+      {
+        "icon": Icons.call,
+        "label": "Call",
+        "onTap": isSubscribed
+            ? () async {
+                String receiverId = widget.counsellorId;
+                String senderName = widget.userId;
+                String channelId =
+                    "audio_${DateTime.now().millisecondsSinceEpoch}";
+                String? receiverFCMToken =
+                    await FirestoreService.getFCMTokenCounsellor(receiverId);
+                await FirebaseNotificationService.sendCallNotification(
+                  receiverFCMToken: receiverFCMToken!,
+                  senderName: senderName,
+                  channelId: channelId,
+                  receiverId: receiverId,
+                  callType: "audio",
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AudioCallScreen(
+                      channelId: channelId,
+                      isCaller: true,
+                      callerId: senderName,
+                      receiverId: receiverId,
+                      onSignOut: widget.onSignOut,
+                    ),
+                  ),
+                );
+              }
+            : null,
+      },
+      {
+        "icon": Icons.chat,
+        "label": "Chat",
+        "onTap": isSubscribed
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserChattingPage(
+                      itemName: widget.itemName,
+                      userId: widget.userId,
+                      counsellorId: widget.counsellorId,
+                      onSignOut: widget.onSignOut,
+                    ),
+                  ),
+                );
+              }
+            : null,
+      },
+      {
+        "icon": Icons.video_call,
+        "label": "Video",
+        "onTap": isSubscribed
+            ? () async {
+                String receiverId = widget.counsellorId;
+                String senderName = widget.userId;
+                String channelId =
+                    "video_${DateTime.now().millisecondsSinceEpoch}";
+                String? receiverFCMToken =
+                    await FirestoreService.getFCMTokenCounsellor(receiverId);
+                await FirebaseNotificationService.sendCallNotification(
+                  receiverFCMToken: receiverFCMToken!,
+                  senderName: senderName,
+                  channelId: channelId,
+                  receiverId: receiverId,
+                  callType: "video",
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VideoCallScreen(
+                      channelId: channelId,
+                      isCaller: true,
+                      callerId: senderName,
+                      receiverId: receiverId,
+                      onSignOut: widget.onSignOut,
+                    ),
+                  ),
+                );
+              }
+            : null,
+      },
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 40) / 4;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: buttonData.map((btn) {
+              final isLockedFeature =
+                  ["Call", "Chat", "Video"].contains(btn['label']) &&
+                      !isSubscribed;
+
+              final icon = btn['icon'] as IconData;
+              final label = btn['label'] as String;
+              final onTap = btn['onTap'] as void Function()?;
+
+              return GestureDetector(
+                  onTap: isLockedFeature ? null : onTap,
+                  child: Container(
+                    width: itemWidth,
+                    height: itemWidth,
+                    decoration: BoxDecoration(
+                      color:
+                          isLockedFeature ? Colors.grey[300] : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 24,
+                          color:
+                              isLockedFeature ? Colors.grey[600] : Colors.black,
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          label,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: isLockedFeature
+                                ? Colors.grey[600]
+                                : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ));
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> addComment(
