@@ -323,11 +323,11 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => UserToUserChattingPage(
-                                    itemName: widget.userId,
-                                    userId: widget.myUsername,
-                                    userId2: widget.userId,
-                                    onSignOut: () async {},
-                                  ),
+                                      itemName: widget.userId,
+                                      userId: widget.myUsername,
+                                      userId2: widget.userId,
+                                      onSignOut: () async {},
+                                      role: "user"),
                                 ),
                               );
                             }),
