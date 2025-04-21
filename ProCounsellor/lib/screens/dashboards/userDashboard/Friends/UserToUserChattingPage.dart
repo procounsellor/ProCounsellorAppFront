@@ -16,6 +16,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'user_details_page.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../userDashboard/details_page.dart';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
+// import 'package:path_provider/path_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:path/path.dart' as p;
+import 'package:media_scanner/media_scanner.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -72,6 +78,108 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         });
       }
     });
+  }
+
+  // Future<void> _downloadImageWithDio(String imageUrl) async {
+  //   final hasPermission = await _requestImagePermission();
+
+  //   if (!hasPermission) {
+  //     print("❌ Permission not granted");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("❌ Permission denied")),
+  //     );
+  //     return;
+  //   }
+
+  //   try {
+  //     final dir = await getExternalStorageDirectory(); // still works
+  //     final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.jpg";
+  //     final fullPath = "${dir!.path}/$fileName";
+
+  //     final response = await Dio().download(imageUrl, fullPath);
+  //     if (response.statusCode == 200) {
+  //       print("✅ Image saved to $fullPath");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("✅ Image saved")),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("❌ Failed to download image")),
+  //     );
+  //   }
+  // }
+
+  Future<void> _downloadImageWithDio(String imageUrl) async {
+    // Request proper permission
+    final hasPermission = await _requestImagePermission();
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
+      );
+      return;
+    }
+
+    try {
+      // Custom path: /storage/emulated/0/Pictures/ProCounsellor/
+      final baseDir = Directory('/storage/emulated/0/Pictures');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.jpg";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(imageUrl, fullPath);
+      if (response.statusCode == 200) {
+        print("✅ Image saved to $fullPath");
+
+        await MediaScanner.loadMedia(path: fullPath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ Image saved to Gallery: $fullPath")),
+        );
+      } else {
+        print("❌ Download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to save image")),
+      );
+    }
+  }
+
+  // Future<bool> _requestImagePermission() async {
+  //   if (Platform.isAndroid) {
+  //     final sdk = await _getAndroidSdkVersion();
+  //     if (sdk >= 33) {
+  //       final status = await Permission.photos.request();
+  //       return status.isGranted;
+  //     } else {
+  //       final status = await Permission.storage.request();
+  //       return status.isGranted;
+  //     }
+  //   }
+  //   return true; // iOS/web fallback
+  // }
+
+  Future<bool> _requestImagePermission() async {
+    if (Platform.isAndroid) {
+      final sdk = await _getAndroidSdkVersion();
+      if (sdk >= 33) {
+        return await Permission.photos.request().isGranted;
+      } else {
+        return await Permission.storage.request().isGranted;
+      }
+    }
+    return true;
+  }
+
+  Future<int> _getAndroidSdkVersion() async {
+    final info = await DeviceInfoPlugin().androidInfo;
+    return info.version.sdkInt;
   }
 
   Future<void> _initializeChat() async {
@@ -631,18 +739,25 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       onTap: () {
         showDialog(
           context: context,
-          builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: InteractiveViewer(
-              panEnabled: true,
-              boundaryMargin: EdgeInsets.all(20),
-              minScale: 0.5,
-              maxScale: 3.0,
-              child: Image.network(
-                message['fileUrl'],
-                fit: BoxFit.contain,
+          builder: (_) => AlertDialog(
+            title: Text("Image Options"),
+            content: Text("Do you want to view or download this image?"),
+            actions: [
+              TextButton(
+                child: Text("View"),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFullImage(message['fileUrl']);
+                },
               ),
-            ),
+              TextButton(
+                child: Text("Download"),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _downloadImageWithDio(message['fileUrl']); // 👈 Add here
+                },
+              ),
+            ],
           ),
         );
       },
@@ -653,68 +768,189 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           width: 200,
           height: 200,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(child: CircularProgressIndicator());
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.error, color: Colors.red);
-          },
         ),
       ),
     );
   }
 
+  void _showFullImage(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: InteractiveViewer(
+          panEnabled: true,
+          child: Image.network(url),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadVideoWithDio(String videoUrl) async {
+    final hasPermission = await _requestImagePermission(); // same logic works
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
+      );
+      return;
+    }
+
+    try {
+      final baseDir = Directory('/storage/emulated/0/Movies/ProCounsellor');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName = "pro_video_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(
+        videoUrl,
+        fullPath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            print(
+                "🎬 Downloading video: ${(received / total * 100).toStringAsFixed(0)}%");
+          }
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Video saved to $fullPath");
+
+        // 👇 Trigger gallery scan
+        await MediaScanner.loadMedia(path: fullPath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ Video now visible in Gallery")),
+        );
+      } else {
+        print("❌ Video download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error downloading video: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to download video")),
+      );
+    }
+  }
+
+  // Widget _buildVideoMessage(Map<String, dynamic> message) {
+  //   if (kIsWeb) {
+  //     // On Web, open video in a new browser tab
+  //     return GestureDetector(
+  //       onTap: () {
+  //         _launchURL(message['fileUrl']);
+  //       },
+  //       child: Container(
+  //         width: 200,
+  //         height: 120,
+  //         decoration: BoxDecoration(
+  //           color: Colors.black,
+  //           borderRadius: BorderRadius.circular(8.0),
+  //         ),
+  //         child: Stack(
+  //           alignment: Alignment.center,
+  //           children: [
+  //             Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   } else {
+  //     // Mobile/Desktop: Show video preview and play inside the app
+  //     return GestureDetector(
+  //       onTap: () {
+  //         showDialog(
+  //           context: context,
+  //           builder: (_) => Dialog(
+  //             backgroundColor: Colors.black,
+  //             child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+  //           ),
+  //         );
+  //       },
+  //       child: Container(
+  //         width: 200,
+  //         height: 120,
+  //         decoration: BoxDecoration(
+  //           color: Colors.black,
+  //           borderRadius: BorderRadius.circular(8.0),
+  //         ),
+  //         child: Stack(
+  //           alignment: Alignment.center,
+  //           children: [
+  //             Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
+
   Widget _buildVideoMessage(Map<String, dynamic> message) {
+    final videoUrl = message['fileUrl'];
+
     if (kIsWeb) {
       // On Web, open video in a new browser tab
       return GestureDetector(
-        onTap: () {
-          _launchURL(message['fileUrl']);
-        },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-            ],
-          ),
-        ),
+        onTap: () => _launchURL(videoUrl),
+        child: _videoThumbnail(),
       );
     } else {
-      // Mobile/Desktop: Show video preview and play inside the app
+      // On Android/iOS/Desktop: Show popup with Play/Download options
       return GestureDetector(
         onTap: () {
           showDialog(
             context: context,
-            builder: (_) => Dialog(
-              backgroundColor: Colors.black,
-              child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+            builder: (_) => AlertDialog(
+              title: Text("Video Options"),
+              content: Text("Would you like to view or download this video?"),
+              actions: [
+                TextButton(
+                  child: Text("Play"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        backgroundColor: Colors.black,
+                        child: VideoPlayerWidget(videoUrl: videoUrl),
+                      ),
+                    );
+                  },
+                ),
+                TextButton(
+                  child: Text("Download"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _downloadVideoWithDio(videoUrl); // 👈 Call download
+                  },
+                ),
+              ],
             ),
           );
         },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-            ],
-          ),
-        ),
+        child: _videoThumbnail(),
       );
     }
+  }
+
+// 🔽 This is just your video box design extracted as a helper
+  Widget _videoThumbnail() {
+    return Container(
+      width: 200,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+        ],
+      ),
+    );
   }
 
 // Open Video in Browser on Web
