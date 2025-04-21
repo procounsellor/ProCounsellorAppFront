@@ -1,0 +1,3 @@
+[submodule "ProCounsellor/packages/gallery_saver_custom/packages/gallery_saver_custom"]
+	path = ProCounsellor/packages/gallery_saver_custom/packages/gallery_saver_custom
+	url = https://github.com/CarnegieTechnologies/gallery_saver.git

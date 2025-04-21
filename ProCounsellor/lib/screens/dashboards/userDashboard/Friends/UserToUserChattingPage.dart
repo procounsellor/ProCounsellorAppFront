@@ -23,6 +23,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:media_scanner/media_scanner.dart';
 
+import 'dart:typed_data';
+import 'package:gallery_saver/gallery_saver.dart';
+
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
@@ -735,27 +738,39 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
+    final imageUrl = message['fileUrl'];
+
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
             title: Text("Image Options"),
-            content: Text("Do you want to view or download this image?"),
+            content: Text("View or download this image?"),
             actions: [
               TextButton(
-                child: Text("View"),
                 onPressed: () {
                   Navigator.pop(context);
-                  _showFullImage(message['fileUrl']);
+                  _showFullImage(imageUrl); // existing viewer
                 },
+                child: Text("View"),
               ),
               TextButton(
-                child: Text("Download"),
-                onPressed: () {
+                onPressed: () async {
                   Navigator.pop(context);
-                  _downloadImageWithDio(message['fileUrl']); // 👈 Add here
+                  final success = await GallerySaver.saveImage(
+                    imageUrl,
+                    albumName: 'ProCounsellor',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success == true
+                          ? "✅ Image saved to Gallery"
+                          : "❌ Failed to save image"),
+                    ),
+                  );
                 },
+                child: Text("Download"),
               ),
             ],
           ),
@@ -764,10 +779,11 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
         child: Image.network(
-          message['fileUrl'],
+          imageUrl,
           width: 200,
           height: 200,
           fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Icon(Icons.broken_image),
         ),
       ),
     );
@@ -891,48 +907,56 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     final videoUrl = message['fileUrl'];
 
     if (kIsWeb) {
-      // On Web, open video in a new browser tab
       return GestureDetector(
         onTap: () => _launchURL(videoUrl),
         child: _videoThumbnail(),
       );
-    } else {
-      // On Android/iOS/Desktop: Show popup with Play/Download options
-      return GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: Text("Video Options"),
-              content: Text("Would you like to view or download this video?"),
-              actions: [
-                TextButton(
-                  child: Text("Play"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showDialog(
-                      context: context,
-                      builder: (_) => Dialog(
-                        backgroundColor: Colors.black,
-                        child: VideoPlayerWidget(videoUrl: videoUrl),
-                      ),
-                    );
-                  },
-                ),
-                TextButton(
-                  child: Text("Download"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _downloadVideoWithDio(videoUrl); // 👈 Call download
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-        child: _videoThumbnail(),
-      );
     }
+
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Video Options"),
+            content: Text("Play or download this video?"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (_) => Dialog(
+                      backgroundColor: Colors.black,
+                      child: VideoPlayerWidget(videoUrl: videoUrl),
+                    ),
+                  );
+                },
+                child: Text("Play"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final success = await GallerySaver.saveVideo(
+                    videoUrl,
+                    albumName: 'ProCounsellor',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success == true
+                          ? "✅ Video saved to Gallery"
+                          : "❌ Failed to save video"),
+                    ),
+                  );
+                },
+                child: Text("Download"),
+              ),
+            ],
+          ),
+        );
+      },
+      child: _videoThumbnail(),
+    );
   }
 
 // 🔽 This is just your video box design extracted as a helper

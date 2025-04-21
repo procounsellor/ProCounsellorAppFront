@@ -79,6 +79,8 @@ dependencies:
   dio: ^5.3.3
   device_info_plus: ^10.0.0
   media_scanner: ^2.0.0
+  gallery_saver:
+    path: packages/gallery_saver_custom/packages/gallery_saver_custom
 
 dependency_overrides:
   file_picker:
