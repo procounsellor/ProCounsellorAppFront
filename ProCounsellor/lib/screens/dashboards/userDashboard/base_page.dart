@@ -14,6 +14,7 @@ import 'chat_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'Friends/friends_page.dart';
 import 'components/message_notifier_service.dart';
+import '../drawer/user_drawer.dart'; // Add this import at the top
 
 class BasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -40,6 +41,8 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
   late DatabaseReference chatRef;
   int missedCallNotificationCount = 0;
   MessageNotifierService? _messageNotifier;
+  String _drawerName = "";
+  String? _drawerPhotoUrl;
 
   @override
   void initState() {
@@ -64,13 +67,14 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         UserDashboard(onSignOut: widget.onSignOut, username: widget.username));
     _pages.add(LearnWithUsPage());
     _pages.add(CommunitiesHomePage());
-    //_pages.add(MyActivitiesPage(username: widget.username, onSignOut: widget.onSignOut,));
     _pages.add(CallHistoryPage(
       userId: widget.username,
       onSignOut: widget.onSignOut,
       onMissedCallUpdated: _resetMissedCallCount,
     ));
     _pages.add(ProfilePage(username: widget.username));
+    _pages.add(
+        FriendsPage(username: widget.username, onSignOut: widget.onSignOut));
   }
 
   void _listenToMissedCalls() {
@@ -137,9 +141,12 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         //_listenToNotifications(chatIds);
         setState(() {
           _photoUrl = data['photo'];
-          _fullName = data['firstName'] +
-              " " +
-              data['lastName']; // Assuming API returns 'photoUrl'
+          _drawerPhotoUrl = data['photo'];
+          final firstName = data['firstName'] ?? '';
+          final lastName = data['lastName'] ?? '';
+          _fullName = '$firstName $lastName'.trim();
+          _drawerName = _fullName;
+          // Assuming API returns 'photoUrl'
           _isLoadingPhoto = false;
         });
       } else {
@@ -294,12 +301,17 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           ),
         ],
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer(); // Open the drawer
-          },
+        leading: Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            ),
+          ],
         ),
+
         // actions: [
         //   IconButton(
         //     icon: Icon(Icons.logout),
@@ -312,94 +324,26 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         //   ),
         // ],
       ),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFFF0BB78),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    backgroundImage:
-                        _photoUrl != null ? NetworkImage(_photoUrl!) : null,
-                    child: _isLoadingPhoto || _photoUrl == null
-                        ? Text(
-                            _fullName.substring(0, 1).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF0BB78),
-                            ),
-                          )
-                        : null,
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    _fullName,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                _navigateToPage(0);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.lightbulb),
-              title: Text('Learn with Us'),
-              onTap: () {
-                _navigateToPage(1);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.groups),
-              title: Text('Community'),
-              onTap: () {
-                _navigateToPage(2);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.list_alt),
-              title: Text('My Activities'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Profile'),
-              onTap: () {
-                _navigateToPage(4);
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Logout'),
-              onTap: () async {
-                _stateChangeTimer?.cancel(); // Cancel any pending timer
-                _userStateNotifier
-                    .setOffline(); // Explicitly set state to offline on logout
-                await widget.onSignOut();
-              },
-            ),
-          ],
-        ),
+      drawer: UserDrawer(
+        fullName: _drawerName,
+        photoUrl: _drawerPhotoUrl,
+        isLoadingPhoto: _isLoadingPhoto,
+        onLogout: () async {
+          _stateChangeTimer?.cancel();
+          _userStateNotifier.setOffline();
+          await widget.onSignOut();
+        },
+        navigateToPage: _navigateToPage,
+        username: widget.username,
+        onSignOut: widget.onSignOut,
+        onProfileUpdated: (updatedName, updatedPhoto) {
+          setState(() {
+            _drawerName = updatedName;
+            _drawerPhotoUrl = updatedPhoto;
+          });
+        },
       ),
+
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -446,7 +390,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
     setState(() {
       _selectedIndex = index;
     });
-    Navigator.pop(context); // Close the drawer
+    Navigator.pop(context); // Close drawer
   }
 
   void _onItemTapped(int index) {

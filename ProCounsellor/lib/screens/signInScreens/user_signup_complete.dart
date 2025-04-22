@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/base_page.dart';
-
+import 'package:video_player/video_player.dart';
 import '../newCallingScreen/save_fcm_token.dart';
 
 final storage = FlutterSecureStorage();
@@ -13,20 +13,30 @@ class SignUpCompleteScreen extends StatefulWidget {
   final String firebaseCustomToken;
   final Future<void> Function() onSignOut;
 
-  SignUpCompleteScreen(
-      {required this.userId,
-      required this.jwtToken,
-      required this.firebaseCustomToken,
-      required this.onSignOut});
+  const SignUpCompleteScreen({
+    required this.userId,
+    required this.jwtToken,
+    required this.firebaseCustomToken,
+    required this.onSignOut,
+  });
 
   @override
-  _SignUpCompleteScreenState createState() => _SignUpCompleteScreenState();
+  State<SignUpCompleteScreen> createState() => _SignUpCompleteScreenState();
 }
 
 class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
+  late VideoPlayerController _controller;
+
   @override
   void initState() {
     super.initState();
+    _controller = VideoPlayerController.asset('assets/images/signin.mp4')
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play();
+        _controller.setLooping(true);
+      });
+
     _storeCredentials();
   }
 
@@ -35,93 +45,94 @@ class _SignUpCompleteScreenState extends State<SignUpCompleteScreen> {
     await storage.write(key: "jwtToken", value: widget.jwtToken);
     await storage.write(key: "userId", value: widget.userId);
     await FirestoreService.saveFCMTokenUser(widget.userId);
-    print(FirestoreService.getFCMTokenUser(widget.userId));
 
-
-    // Authenticate with Firebase using the custom token
     await FirebaseAuth.instance
         .signInWithCustomToken(widget.firebaseCustomToken);
+  }
 
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      print("Authenticated user: ${user.uid}");
-    } else {
-      print("Authentication failed.");
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: Duration(seconds: 1),
-              curve: Curves.easeInOut,
-              child: Icon(
-                Icons.check_circle,
-                color: Color(0xFFFAAF84),
-                size: 100,
-              ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          /// 🔷 Centered Video
+          SizedBox(
+            height: screenHeight * 0.4,
+            width: double.infinity,
+            child: _controller.value.isInitialized
+                ? FittedBox(
+                    fit: BoxFit.contain,
+                    child: SizedBox(
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
+                    ),
+                  )
+                : const Center(child: CircularProgressIndicator()),
+          ),
+
+          const SizedBox(height: 16),
+
+          /// ✅ All Done Text
+          const Text(
+            "SignUp Success!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            SizedBox(height: 20),
-            Text(
-              "Congratulations!",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFFAAF84),
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "You have successfully signed up.",
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Phone Number: ${widget.userId}",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFAAF84),
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BasePage(
-                    username: widget.userId,
-                    onSignOut: widget.onSignOut,
+          ),
+
+          const SizedBox(height: 16),
+
+          /// 🟩 Button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BasePage(
+                        username: widget.userId,
+                        onSignOut: widget.onSignOut,
+                      ),
+                    ),
+                    (route) => false,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.greenAccent[700],
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                (route) => false,
-              );
-              },
-              child: Text(
-                "Go to Dashboard",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                child: const Text(
+                  "Go to Dashboard",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

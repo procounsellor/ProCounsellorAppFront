@@ -440,22 +440,24 @@ class _ChatPageState extends State<ChatPage> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             UserToUserChattingPage(
-                                          itemName: chat['userId'],
-                                          userId: widget.userId,
-                                          userId2: chat['userId'],
-                                          onSignOut: () async {},
-                                        ),
+                                                itemName: chat['userId'],
+                                                userId: widget.userId,
+                                                userId2: chat['userId'],
+                                                onSignOut: () async {},
+                                                role: "user"),
                                       ),
                                     );
                                   } else {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => UserChattingPage(
+                                        builder: (context) =>
+                                            UserToUserChattingPage(
                                           itemName: chat['userId'],
                                           userId: widget.userId,
-                                          counsellorId: chat['userId'],
+                                          userId2: chat['userId'],
                                           onSignOut: () async {},
+                                          role: "counsellor",
                                         ),
                                       ),
                                     );

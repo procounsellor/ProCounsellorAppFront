@@ -14,7 +14,10 @@ class MessageRequest {
   final String text;
   final String receiverFcmToken;
 
-  MessageRequest({required this.senderId, required this.text, required this.receiverFcmToken});
+  MessageRequest(
+      {required this.senderId,
+      required this.text,
+      required this.receiverFcmToken});
 
   // Convert the MessageRequest object to JSON format for the request body
   Map<String, dynamic> toJson() {
@@ -57,12 +60,19 @@ class ChatService {
   }
 
   // Start a new chat
-  Future<String?> startChat(String userId, String userId2) async {
-    final response = await http.post(
-      Uri.parse(
-          '$baseUrl/start-chat-userTouser?userId=$userId&userId2=$userId2'),
-    );
-
+  Future<String?> startChat(String userId, String userId2, String role) async {
+    http.Response response;
+    print("role" + role + " user" + userId2);
+    if (role == "user") {
+      response = await http.post(
+        Uri.parse(
+            '$baseUrl/start-chat-userTouser?userId=$userId&userId2=$userId2'),
+      );
+    } else {
+      response = await http.post(
+        Uri.parse('$baseUrl/start-chat?userId=$userId&counsellorId=$userId2'),
+      );
+    }
     if (response.statusCode == 200) {
       var responseBody = jsonDecode(response.body);
       return responseBody['chatId'];

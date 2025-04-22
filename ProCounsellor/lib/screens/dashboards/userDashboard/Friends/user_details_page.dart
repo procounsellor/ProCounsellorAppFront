@@ -28,6 +28,8 @@ class UserDetailsPage extends StatefulWidget {
 class _UserDetailsPageState extends State<UserDetailsPage> {
   Map<String, dynamic>? userDetails;
   bool isLoading = true;
+  List<Map<String, dynamic>> clientDetailsList = [];
+  bool isLoadingClients = true;
 
   @override
   void initState() {
@@ -57,7 +59,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     String receiverId = widget.userId;
     String senderName = widget.myUsername;
     String channelId = "audio_${DateTime.now().millisecondsSinceEpoch}";
-    print("Channel ID:"+ channelId);
+    print("Channel ID:" + channelId);
 
     // ✅ Get Receiver's FCM Token from Firestore
     String? receiverFCMToken =
@@ -321,11 +323,11 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => UserToUserChattingPage(
-                                    itemName: widget.userId,
-                                    userId: widget.myUsername,
-                                    userId2: widget.userId,
-                                    onSignOut: () async {},
-                                  ),
+                                      itemName: widget.userId,
+                                      userId: widget.myUsername,
+                                      userId2: widget.userId,
+                                      onSignOut: () async {},
+                                      role: "user"),
                                 ),
                               );
                             }),

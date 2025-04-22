@@ -59,17 +59,32 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          subscribedCounsellors = data;
-        });
+        final decoded = json.decode(response.body);
+
+        if (decoded is List) {
+          // ✅ Assign only if it's a valid list
+          setState(() {
+            subscribedCounsellors = decoded;
+          });
+        } else {
+          // ⚠️ Fallback to empty list if the structure is unexpected
+          setState(() {
+            subscribedCounsellors = [];
+          });
+          print("⚠️ Unexpected data format, using empty list.");
+        }
+
         print("✅ Subscribed counsellors fetched successfully.");
       } else {
         print(
             "❌ Failed to load subscribed counsellors: ${response.statusCode}");
       }
     } catch (e) {
+      setState(() {
+        subscribedCounsellors = []; // ✅ prevent crashes on error
+      });
       print("❌ Error fetching subscribed counsellors: $e");
     }
   }
@@ -655,80 +670,111 @@ class _ProfilePageState extends State<ProfilePage> {
                                     },
                                   ),
                                 )
-                              : SizedBox(
-                                  height: 90,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
-                                    child: SizedBox(
+                              : subscribedCounsellors.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: Text(
+                                        "No counsellors subscribed yet.",
+                                        style: GoogleFonts.outfit(
+                                            color: Colors.grey),
+                                      ),
+                                    )
+                                  : SizedBox(
                                       height: 90,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 12),
-                                        child: ListView.separated(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount:
-                                              subscribedCounsellors.length,
-                                          separatorBuilder: (_, __) =>
-                                              SizedBox(width: 16),
-                                          itemBuilder: (context, index) {
-                                            final counsellor =
-                                                subscribedCounsellors[index];
-                                            final counsellorId =
-                                                counsellor['userName'] ?? '';
-                                            final counsellorName = counsellor[
-                                                        'firstName'] +
-                                                    " " +
+                                        child: SizedBox(
+                                          height: 90,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12),
+                                            child: ListView.separated(
+                                              scrollDirection: Axis.horizontal,
+                                              itemCount:
+                                                  subscribedCounsellors.length,
+                                              separatorBuilder: (_, __) =>
+                                                  SizedBox(width: 16),
+                                              itemBuilder: (context, index) {
+                                                final counsellor =
+                                                    subscribedCounsellors[
+                                                        index];
+                                                final counsellorId =
+                                                    counsellor['userName'] ??
+                                                        '';
+                                                final firstName =
+                                                    counsellor['firstName'] ??
+                                                        '';
+                                                final lastName =
                                                     counsellor['lastName'] ??
-                                                'Counsellor';
+                                                        '';
+                                                final counsellorName =
+                                                    (firstName + " " + lastName)
+                                                            .trim()
+                                                            .isEmpty
+                                                        ? 'Counsellor'
+                                                        : '$firstName $lastName';
 
-                                            return GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) => DetailsPage(
-                                                      itemName: counsellorName,
-                                                      userId: widget.username,
-                                                      counsellorId:
-                                                          counsellorId,
-                                                      onSignOut:
-                                                          () async {}, // replace with real callback if needed
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            DetailsPage(
+                                                          itemName:
+                                                              counsellorName,
+                                                          userId:
+                                                              widget.username,
+                                                          counsellorId:
+                                                              counsellorId,
+                                                          onSignOut:
+                                                              () async {}, // replace with real callback if needed
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: SizedBox(
+                                                    width: 70,
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        CircleAvatar(
+                                                          backgroundImage: (counsellor[
+                                                                          'photoUrl'] !=
+                                                                      null &&
+                                                                  counsellor[
+                                                                          'photoUrl']
+                                                                      .toString()
+                                                                      .isNotEmpty)
+                                                              ? NetworkImage(
+                                                                  counsellor[
+                                                                      'photoUrl'])
+                                                              : null,
+                                                          radius: 24,
+                                                        ),
+                                                        SizedBox(height: 6),
+                                                        Text(
+                                                          counsellorName,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .outfit(
+                                                                  fontSize: 12),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
                                                 );
                                               },
-                                              child: SizedBox(
-                                                width: 70,
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    CircleAvatar(
-                                                      backgroundImage:
-                                                          NetworkImage(counsellor[
-                                                                  'photoUrl'] ??
-                                                              ''),
-                                                      radius: 24,
-                                                    ),
-                                                    SizedBox(height: 6),
-                                                    Text(
-                                                      counsellorName,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: GoogleFonts.outfit(
-                                                          fontSize: 12),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
                         ],
                       ),
                       SizedBox(height: 16),

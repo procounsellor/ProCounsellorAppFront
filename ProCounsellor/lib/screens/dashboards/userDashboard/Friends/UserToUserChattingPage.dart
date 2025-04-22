@@ -9,22 +9,36 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:ProCounsellor/screens/customWidgets/video_player_widget.dart';
 import '../../../../services/api_utils.dart';
 import 'ChatServiceUserToUser.dart';
+//import '../../../../services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_details_page.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../../userDashboard/details_page.dart';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
+// import 'package:path_provider/path_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:path/path.dart' as p;
+import 'package:media_scanner/media_scanner.dart';
+
+import 'dart:typed_data';
+import 'package:gallery_saver/gallery_saver.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
   final String userId;
   final String userId2;
   final Future<void> Function() onSignOut;
+  final String role;
 
   UserToUserChattingPage(
       {required this.itemName,
       required this.userId,
       required this.userId2,
-      required this.onSignOut});
+      required this.onSignOut,
+      required this.role});
 
   @override
   _ChattingPageState createState() => _ChattingPageState();
@@ -37,6 +51,9 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   bool isLoading = true;
   final ScrollController _scrollController = ScrollController();
   bool showSendButton = false;
+
+  bool isTyping = false;
+  final FocusNode _focusNode = FocusNode();
 
   // For counsellor's online status
   String counsellorPhotoUrl = 'https://via.placeholder.com/150';
@@ -57,6 +74,115 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     super.initState();
     _initializeChat();
     _listenToCounsellorStatus();
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        FirebaseDatabase.instance.ref('userStates/${widget.userId}').update({
+          'typing': false,
+        });
+      }
+    });
+  }
+
+  // Future<void> _downloadImageWithDio(String imageUrl) async {
+  //   final hasPermission = await _requestImagePermission();
+
+  //   if (!hasPermission) {
+  //     print("❌ Permission not granted");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("❌ Permission denied")),
+  //     );
+  //     return;
+  //   }
+
+  //   try {
+  //     final dir = await getExternalStorageDirectory(); // still works
+  //     final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.jpg";
+  //     final fullPath = "${dir!.path}/$fileName";
+
+  //     final response = await Dio().download(imageUrl, fullPath);
+  //     if (response.statusCode == 200) {
+  //       print("✅ Image saved to $fullPath");
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text("✅ Image saved")),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("❌ Failed to download image")),
+  //     );
+  //   }
+  // }
+
+  Future<void> _downloadImageWithDio(String imageUrl) async {
+    // Request proper permission
+    final hasPermission = await _requestImagePermission();
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
+      );
+      return;
+    }
+
+    try {
+      // Custom path: /storage/emulated/0/Pictures/ProCounsellor/
+      final baseDir = Directory('/storage/emulated/0/Pictures');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.jpg";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(imageUrl, fullPath);
+      if (response.statusCode == 200) {
+        print("✅ Image saved to $fullPath");
+
+        await MediaScanner.loadMedia(path: fullPath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ Image saved to Gallery: $fullPath")),
+        );
+      } else {
+        print("❌ Download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to save image")),
+      );
+    }
+  }
+
+  // Future<bool> _requestImagePermission() async {
+  //   if (Platform.isAndroid) {
+  //     final sdk = await _getAndroidSdkVersion();
+  //     if (sdk >= 33) {
+  //       final status = await Permission.photos.request();
+  //       return status.isGranted;
+  //     } else {
+  //       final status = await Permission.storage.request();
+  //       return status.isGranted;
+  //     }
+  //   }
+  //   return true; // iOS/web fallback
+  // }
+
+  Future<bool> _requestImagePermission() async {
+    if (Platform.isAndroid) {
+      final sdk = await _getAndroidSdkVersion();
+      if (sdk >= 33) {
+        return await Permission.photos.request().isGranted;
+      } else {
+        return await Permission.storage.request().isGranted;
+      }
+    }
+    return true;
+  }
+
+  Future<int> _getAndroidSdkVersion() async {
+    final info = await DeviceInfoPlugin().androidInfo;
+    return info.version.sdkInt;
   }
 
   Future<void> _initializeChat() async {
@@ -70,8 +196,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
   Future<void> _startChat() async {
     try {
-      chatId = await ChatService().startChat(widget.userId, widget.userId2)
-          as String;
+      // Replace this with the actual role (e.g., from widget or state)
+      String role =
+          widget.role; // Make sure widget.role exists or pass it otherwise
+
+      String? result =
+          await ChatService().startChat(widget.userId, widget.userId2, role);
+      print("Role" + role);
+      if (result != null) {
+        chatId = result;
+      } else {
+        throw Exception('Chat ID is null');
+      }
 
       // Fetch counsellor's profile data
       await _fetchUserProfile();
@@ -79,26 +215,55 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       setState(() {
         isLoading = false;
       });
+
       _loadMessages();
     } catch (e) {
       print('Error starting chat: $e');
     }
   }
 
+  // Future<void> _fetchUserProfile() async {
+  //   try {
+  //     String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+  //     final response = await http.get(Uri.parse(url));
+  //     if (response.statusCode == 200) {
+  //       final data = Map<String, dynamic>.from(json.decode(response.body));
+  //       setState(() {
+  //         userPhotoUrl = data['photo'] ?? userPhotoUrl;
+  //         userFirstName = data['firstName'] ?? '';
+  //         userLastName = data['lastName'] ?? '';
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching user profile: $e');
+  //   }
+  // }
   Future<void> _fetchUserProfile() async {
     try {
-      String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+      String url;
+
+      if (widget.role == 'user') {
+        url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
+      } else {
+        url = '${ApiUtils.baseUrl}/api/counsellor/${widget.userId2}';
+      }
+
       final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final data = Map<String, dynamic>.from(json.decode(response.body));
         setState(() {
-          userPhotoUrl = data['photo'] ?? userPhotoUrl;
+          userPhotoUrl = widget.role == 'user'
+              ? data['photo'] ?? userPhotoUrl
+              : data['photoUrl'] ?? userPhotoUrl;
           userFirstName = data['firstName'] ?? '';
           userLastName = data['lastName'] ?? '';
         });
+      } else {
+        print('Failed to fetch profile: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching user profile: $e');
+      print('Error fetching profile: $e');
     }
   }
 
@@ -111,6 +276,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
         setState(() {
           isCounsellorOnline = data['state'] == 'online';
+          isTyping = data['typing'] == true;
         });
       }
     });
@@ -276,16 +442,61 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
+  // Future<void> _sendMessage() async {
+  //   String? receiverFCMToken =
+  //       await FirestoreService.getFCMTokenUser(widget.userId2);
+  //   print(widget.userId2);
+  //   print(receiverFCMToken);
+  //   if (_controller.text.isNotEmpty) {
+  //     try {
+  //       MessageRequest messageRequest = MessageRequest(
+  //         senderId: widget.userId,
+  //         text: _controller.text,
+  //         receiverFcmToken: receiverFCMToken!,
+  //       );
+  //       print(messageRequest);
+
+  //       await ChatService().sendMessage(chatId, messageRequest);
+
+  //       _controller.clear();
+  //       setState(() {
+  //         showSendButton = selectedFile != null || webFileBytes != null;
+  //       });
+  //       _scrollToBottom();
+  //       await FirebaseDatabase.instance
+  //           .ref('userStates/${widget.userId}')
+  //           .update({
+  //         'typing': false,
+  //       });
+  //     } catch (e) {
+  //       print('Error sending message: $e' +
+  //           "method name is user2userchatting _sendMsg*()");
+  //     }
+  //   }
+  // }
   Future<void> _sendMessage() async {
-    String? receiverFCMToken =
-        await FirestoreService.getFCMTokenUser(widget.userId2);
-    if (_controller.text.isNotEmpty) {
-      try {
+    String? receiverFCMToken;
+
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+      }
+
+      print('Sending message to: ${widget.userId2}');
+      print('Receiver FCM Token: $receiverFCMToken');
+
+      if (_controller.text.isNotEmpty && receiverFCMToken != null) {
         MessageRequest messageRequest = MessageRequest(
           senderId: widget.userId,
           text: _controller.text,
-          receiverFcmToken: receiverFCMToken!,
+          receiverFcmToken: receiverFCMToken,
         );
+
+        print(messageRequest);
 
         await ChatService().sendMessage(chatId, messageRequest);
 
@@ -294,87 +505,185 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           showSendButton = selectedFile != null || webFileBytes != null;
         });
         _scrollToBottom();
-      } catch (e) {
-        print('Error sending message: $e');
+
+        await FirebaseDatabase.instance
+            .ref('userStates/${widget.userId}')
+            .update({'typing': false});
       }
+    } catch (e) {
+      print(
+          'Error sending message: $e (method: _sendMessage, user2userchatting)');
     }
   }
 
+  // Future<void> _sendFileMessage() async {
+  //   String? receiverFCMToken =
+  //       await FirestoreService.getFCMTokenUser(widget.userId2);
+  //   if (selectedFile != null || webFileBytes != null) {
+  //     int fileSizeBytes = 0;
+
+  //     // 🔥 Check for file size before uploading
+  //     if (selectedFile != null) {
+  //       fileSizeBytes = await selectedFile!.length();
+  //     } else if (webFileBytes != null) {
+  //       fileSizeBytes = webFileBytes!.length;
+  //     }
+
+  //     // ✅  Set your max size (e.g., 15MB)
+  //     const maxSizeInBytes = 10 * 1024 * 1024;
+
+  //     if (fileSizeBytes > maxSizeInBytes) {
+  //       _showErrorDialog("File too large",
+  //           "This file exceeds the 10MB limit. Please choose a smaller file.");
+  //       return; // ❌ Don't proceed with upload
+  //     }
+  //     // Create a temporary message to show in the UI immediately
+  //     Map<String, dynamic> tempMessage = {
+  //       'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
+  //       'senderId': widget.userId,
+  //       'fileName': selectedFileName,
+  //       'fileUrl': null, // No URL yet (file not uploaded)
+  //       'fileType': 'uploading', // Temporary "uploading" status
+  //       'isSeen': false,
+  //       'timestamp': DateTime.now().millisecondsSinceEpoch,
+  //     };
+
+  //     // Add the file message to UI instantly
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       if (mounted) {
+  //         setState(() {
+  //           messages.add(tempMessage);
+  //         });
+  //         _scrollToBottom();
+  //       }
+  //     });
+
+  //     // Save a copy of the selected file details
+  //     File? tempFile = selectedFile;
+  //     Uint8List? tempWebBytes = webFileBytes;
+  //     String tempFileName = selectedFileName!;
+
+  //     // Clear the selected file immediately
+  //     setState(() {
+  //       selectedFile = null;
+  //       selectedFileName = null;
+  //       webFileBytes = null;
+  //       showSendButton = _controller.text.isNotEmpty;
+  //     });
+
+  //     try {
+  //       // Upload file to the backend
+  //       await ChatService.sendFileMessage(
+  //         chatId: chatId,
+  //         senderId: widget.userId,
+  //         file: tempFile,
+  //         webFileBytes: tempWebBytes,
+  //         fileName: tempFileName,
+  //         receiverFcmToken: receiverFCMToken!,
+  //       );
+  //       // Fetch updated messages from backend and replace the temporary message
+  //       _loadMessages(); // Refresh messages immediately
+  //     } catch (e) {
+  //       print("❌ Error sending file: $e");
+
+  //       // Remove the temporary message if an error occurs
+  //       setState(() {
+  //         messages.remove(tempMessage);
+  //       });
+  //     }
+  //   }
+  // }
   Future<void> _sendFileMessage() async {
-    String? receiverFCMToken =
-        await FirestoreService.getFCMTokenUser(widget.userId2);
-    if (selectedFile != null || webFileBytes != null) {
-      int fileSizeBytes = 0;
+    String? receiverFCMToken;
 
-      // 🔥 Check for file size before uploading
-      if (selectedFile != null) {
-        fileSizeBytes = await selectedFile!.length();
-      } else if (webFileBytes != null) {
-        fileSizeBytes = webFileBytes!.length;
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
       }
 
-      // ✅  Set your max size (e.g., 15MB)
-      const maxSizeInBytes = 10 * 1024 * 1024;
+      if ((selectedFile != null || webFileBytes != null) &&
+          receiverFCMToken != null) {
+        int fileSizeBytes = 0;
 
-      if (fileSizeBytes > maxSizeInBytes) {
-        _showErrorDialog("File too large",
-            "This file exceeds the 10MB limit. Please choose a smaller file.");
-        return; // ❌ Don't proceed with upload
-      }
-      // Create a temporary message to show in the UI immediately
-      Map<String, dynamic> tempMessage = {
-        'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
-        'senderId': widget.userId,
-        'fileName': selectedFileName,
-        'fileUrl': null, // No URL yet (file not uploaded)
-        'fileType': 'uploading', // Temporary "uploading" status
-        'isSeen': false,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
-
-      // Add the file message to UI instantly
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            messages.add(tempMessage);
-          });
-          _scrollToBottom();
+        // 🔥 Check for file size before uploading
+        if (selectedFile != null) {
+          fileSizeBytes = await selectedFile!.length();
+        } else if (webFileBytes != null) {
+          fileSizeBytes = webFileBytes!.length;
         }
-      });
 
-      // Save a copy of the selected file details
-      File? tempFile = selectedFile;
-      Uint8List? tempWebBytes = webFileBytes;
-      String tempFileName = selectedFileName!;
+        // ✅  Set your max size (e.g., 10MB)
+        const maxSizeInBytes = 10 * 1024 * 1024;
 
-      // Clear the selected file immediately
-      setState(() {
-        selectedFile = null;
-        selectedFileName = null;
-        webFileBytes = null;
-        showSendButton = _controller.text.isNotEmpty;
-      });
+        if (fileSizeBytes > maxSizeInBytes) {
+          _showErrorDialog(
+            "File too large",
+            "This file exceeds the 10MB limit. Please choose a smaller file.",
+          );
+          return;
+        }
 
-      try {
-        // Upload file to the backend
-        await ChatService.sendFileMessage(
-          chatId: chatId,
-          senderId: widget.userId,
-          file: tempFile,
-          webFileBytes: tempWebBytes,
-          fileName: tempFileName,
-          receiverFcmToken: receiverFCMToken!,
-        );
-        // Fetch updated messages from backend and replace the temporary message
-        _loadMessages(); // Refresh messages immediately
-      } catch (e) {
-        print("❌ Error sending file: $e");
+        // Create a temporary message to show in the UI immediately
+        Map<String, dynamic> tempMessage = {
+          'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
+          'senderId': widget.userId,
+          'fileName': selectedFileName,
+          'fileUrl': null,
+          'fileType': 'uploading',
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        };
 
-        // Remove the temporary message if an error occurs
-        setState(() {
-          messages.remove(tempMessage);
+        // Add the file message to UI instantly
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              messages.add(tempMessage);
+            });
+            _scrollToBottom();
+          }
         });
+
+        // Save a copy of the selected file details
+        File? tempFile = selectedFile;
+        Uint8List? tempWebBytes = webFileBytes;
+        String tempFileName = selectedFileName!;
+
+        // Clear the selected file immediately
+        setState(() {
+          selectedFile = null;
+          selectedFileName = null;
+          webFileBytes = null;
+          showSendButton = _controller.text.isNotEmpty;
+        });
+
+        try {
+          // Upload file to the backend
+          await ChatService.sendFileMessage(
+            chatId: chatId,
+            senderId: widget.userId,
+            file: tempFile,
+            webFileBytes: tempWebBytes,
+            fileName: tempFileName,
+            receiverFcmToken: receiverFCMToken,
+          );
+
+          _loadMessages(); // Refresh messages immediately
+        } catch (e) {
+          print("❌ Error sending file: $e");
+
+          // Remove the temporary message if an error occurs
+          setState(() {
+            messages.remove(tempMessage);
+          });
+        }
       }
+    } catch (e) {
+      print("❌ Error fetching FCM token: $e");
     }
   }
 
@@ -424,98 +733,248 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     ChatService().cancelListeners(chatId);
     counsellorStateRef.onDisconnect();
     _controller.dispose();
+    _focusNode.dispose(); // 👈 dispose it
     super.dispose();
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
+    final imageUrl = message['fileUrl'];
+
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
-          builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: InteractiveViewer(
-              panEnabled: true,
-              boundaryMargin: EdgeInsets.all(20),
-              minScale: 0.5,
-              maxScale: 3.0,
-              child: Image.network(
-                message['fileUrl'],
-                fit: BoxFit.contain,
+          builder: (_) => AlertDialog(
+            title: Text("Image Options"),
+            content: Text("View or download this image?"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFullImage(imageUrl); // existing viewer
+                },
+                child: Text("View"),
               ),
-            ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final success = await GallerySaver.saveImage(
+                    imageUrl,
+                    albumName: 'ProCounsellor',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success == true
+                          ? "✅ Image saved to Gallery"
+                          : "❌ Failed to save image"),
+                    ),
+                  );
+                },
+                child: Text("Download"),
+              ),
+            ],
           ),
         );
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
         child: Image.network(
-          message['fileUrl'],
+          imageUrl,
           width: 200,
           height: 200,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(child: CircularProgressIndicator());
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.error, color: Colors.red);
-          },
+          errorBuilder: (_, __, ___) => Icon(Icons.broken_image),
         ),
       ),
     );
   }
 
-  Widget _buildVideoMessage(Map<String, dynamic> message) {
-    if (kIsWeb) {
-      // On Web, open video in a new browser tab
-      return GestureDetector(
-        onTap: () {
-          _launchURL(message['fileUrl']);
-        },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-            ],
-          ),
+  void _showFullImage(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: InteractiveViewer(
+          panEnabled: true,
+          child: Image.network(url),
         ),
+      ),
+    );
+  }
+
+  Future<void> _downloadVideoWithDio(String videoUrl) async {
+    final hasPermission = await _requestImagePermission(); // same logic works
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
       );
-    } else {
-      // Mobile/Desktop: Show video preview and play inside the app
-      return GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (_) => Dialog(
-              backgroundColor: Colors.black,
-              child: VideoPlayerWidget(videoUrl: message['fileUrl']),
-            ),
-          );
+      return;
+    }
+
+    try {
+      final baseDir = Directory('/storage/emulated/0/Movies/ProCounsellor');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName = "pro_video_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(
+        videoUrl,
+        fullPath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            print(
+                "🎬 Downloading video: ${(received / total * 100).toStringAsFixed(0)}%");
+          }
         },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-            ],
-          ),
-        ),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Video saved to $fullPath");
+
+        // 👇 Trigger gallery scan
+        await MediaScanner.loadMedia(path: fullPath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ Video now visible in Gallery")),
+        );
+      } else {
+        print("❌ Video download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error downloading video: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to download video")),
       );
     }
+  }
+
+  // Widget _buildVideoMessage(Map<String, dynamic> message) {
+  //   if (kIsWeb) {
+  //     // On Web, open video in a new browser tab
+  //     return GestureDetector(
+  //       onTap: () {
+  //         _launchURL(message['fileUrl']);
+  //       },
+  //       child: Container(
+  //         width: 200,
+  //         height: 120,
+  //         decoration: BoxDecoration(
+  //           color: Colors.black,
+  //           borderRadius: BorderRadius.circular(8.0),
+  //         ),
+  //         child: Stack(
+  //           alignment: Alignment.center,
+  //           children: [
+  //             Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   } else {
+  //     // Mobile/Desktop: Show video preview and play inside the app
+  //     return GestureDetector(
+  //       onTap: () {
+  //         showDialog(
+  //           context: context,
+  //           builder: (_) => Dialog(
+  //             backgroundColor: Colors.black,
+  //             child: VideoPlayerWidget(videoUrl: message['fileUrl']),
+  //           ),
+  //         );
+  //       },
+  //       child: Container(
+  //         width: 200,
+  //         height: 120,
+  //         decoration: BoxDecoration(
+  //           color: Colors.black,
+  //           borderRadius: BorderRadius.circular(8.0),
+  //         ),
+  //         child: Stack(
+  //           alignment: Alignment.center,
+  //           children: [
+  //             Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
+
+  Widget _buildVideoMessage(Map<String, dynamic> message) {
+    final videoUrl = message['fileUrl'];
+
+    if (kIsWeb) {
+      return GestureDetector(
+        onTap: () => _launchURL(videoUrl),
+        child: _videoThumbnail(),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Video Options"),
+            content: Text("Play or download this video?"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (_) => Dialog(
+                      backgroundColor: Colors.black,
+                      child: VideoPlayerWidget(videoUrl: videoUrl),
+                    ),
+                  );
+                },
+                child: Text("Play"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final success = await GallerySaver.saveVideo(
+                    videoUrl,
+                    albumName: 'ProCounsellor',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success == true
+                          ? "✅ Video saved to Gallery"
+                          : "❌ Failed to save video"),
+                    ),
+                  );
+                },
+                child: Text("Download"),
+              ),
+            ],
+          ),
+        );
+      },
+      child: _videoThumbnail(),
+    );
+  }
+
+// 🔽 This is just your video box design extracted as a helper
+  Widget _videoThumbnail() {
+    return Container(
+      width: 200,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+        ],
+      ),
+    );
   }
 
 // Open Video in Browser on Web
@@ -668,9 +1127,13 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                     ),
                   ),
                   Text(
-                    isCounsellorOnline ? "Online" : "Offline",
+                    isTyping
+                        ? "Typing..."
+                        : (isCounsellorOnline ? "Online" : "Offline"),
                     style: TextStyle(
-                      color: isCounsellorOnline ? Colors.green : Colors.grey,
+                      color: isTyping
+                          ? Colors.purple
+                          : (isCounsellorOnline ? Colors.green : Colors.grey),
                       fontSize: 12,
                     ),
                   ),
@@ -771,6 +1234,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                       ],
                     ),
                   ),
+                if (isTyping && !isLoading) _buildTypingIndicator(),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -792,11 +1256,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                               : MediaQuery.of(context).size.width * 0.65,
                           child: TextField(
                             controller: _controller,
+                            focusNode: _focusNode,
                             onChanged: (text) {
                               setState(() {
                                 showSendButton = text.isNotEmpty ||
                                     selectedFile != null ||
                                     webFileBytes != null;
+                              });
+
+                              FirebaseDatabase.instance
+                                  .ref('userStates/${widget.userId}')
+                                  .update({
+                                'typing': text.isNotEmpty,
                               });
                             },
                             decoration: InputDecoration(
@@ -833,6 +1304,25 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, bottom: 5.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundImage: NetworkImage(userPhotoUrl),
+          ),
+          const SizedBox(width: 8),
+          const SpinKitThreeBounce(
+            color: Colors.grey,
+            size: 18.0,
+          ),
+        ],
+      ),
     );
   }
 }
