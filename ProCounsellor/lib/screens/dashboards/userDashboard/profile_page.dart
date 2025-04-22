@@ -12,6 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../services/api_utils.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../paymentScreens/add_bank_details.dart';
+import '../../paymentScreens/transaction_history.dart';
 import '../userDashboard/my_reviews.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -845,15 +847,30 @@ class _ProfilePageState extends State<ProfilePage> {
                       SizedBox(height: 16),
 
                       _buildSectionTile(
+                        title: "MY BANK DETAILS",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AddBankDetailsPage(username: widget.username),
+                            ),
+                          );
+                        },
+                      ),
+
+                      Divider(height: 1),
+
+                      _buildSectionTile(
                         title: "MY TRANSACTIONS",
                         onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) =>
-                          //         MyReviewPage(username: widget.username),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TransactionHistoryPage(username: widget.username),
+                            ),
+                          );
                         },
                       ),
 
