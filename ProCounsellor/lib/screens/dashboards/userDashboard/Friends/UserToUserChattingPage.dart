@@ -1297,12 +1297,61 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     );
   }
 
-  void _downloadFile(String url) async {
-    Uri uri = Uri.parse(url); // Convert string to Uri
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      print("Could not launch $url");
+  // void _downloadFile(String url) async {
+  //   Uri uri = Uri.parse(url); // Convert string to Uri
+  //   if (await canLaunchUrl(uri)) {
+  //     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  //   } else {
+  //     print("Could not launch $url");
+  //   }
+  // }
+
+  void _downloadFile(String fileUrl) async {
+    final hasPermission =
+        await _requestImagePermission(); // reuse permission logic
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
+      );
+      return;
+    }
+
+    try {
+      final baseDir = Directory('/storage/emulated/0/Download/ProCounsellor');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName =
+          "pro_file_${DateTime.now().millisecondsSinceEpoch}_${p.basename(fileUrl)}";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(
+        fileUrl,
+        fullPath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            print(
+                "📥 Downloading file: ${(received / total * 100).toStringAsFixed(0)}%");
+          }
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ File saved to $fullPath");
+        await MediaScanner.loadMedia(path: fullPath);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ File saved to Downloads: $fullPath")),
+        );
+      } else {
+        print("❌ File download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error downloading file: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to download file")),
+      );
     }
   }
 
