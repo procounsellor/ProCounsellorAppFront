@@ -421,9 +421,24 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       if (mounted) {
         setState(() {
           for (var message in newMessages) {
+            bool isTempDuplicate = messages.any((existingMessage) =>
+                existingMessage['id'].toString().startsWith('temp') &&
+                existingMessage['fileName'] == message['fileName'] &&
+                existingMessage['fileUrl'] == null);
+
+            if (isTempDuplicate) {
+              // 🔄 Remove temp message with same fileName and null fileUrl
+              messages.removeWhere((existingMessage) =>
+                  existingMessage['id'].toString().startsWith('temp') &&
+                  existingMessage['fileName'] == message['fileName']);
+            }
+
+            // Now add the real backend message if it’s new
             if (!messages.any(
                 (existingMessage) => existingMessage['id'] == message['id'])) {
               messages.add(message);
+
+              // Mark it as seen if it's from the other user
               if (message['senderId'] == widget.userId2) {
                 _markMessageAsSeen(message['id']);
               }
@@ -899,52 +914,57 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
       if ((selectedFile != null || webFileBytes != null) &&
           receiverFCMToken != null) {
-        // Save for later
-        File? tempFile = selectedFile;
-        Uint8List? tempWebBytes = webFileBytes;
-        String tempFileName = selectedFileName!;
+        int fileSizeBytes = selectedFile != null
+            ? await selectedFile!.length()
+            : webFileBytes!.length;
 
-        Uint8List? localBytes = tempWebBytes ?? await tempFile!.readAsBytes();
+        const maxSizeInBytes = 10 * 1024 * 1024;
+        if (fileSizeBytes > maxSizeInBytes) {
+          _showErrorDialog(
+              "File too large", "This file exceeds the 10MB limit.");
+          return;
+        }
 
-        // Create the temp message IMMEDIATELY
+        // Determine fileType early
+        String fileType =
+            _getMimeType(selectedFileName!) ?? 'application/octet-stream';
+
         final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+        final localBytes = webFileBytes ?? await selectedFile!.readAsBytes();
+
+        // Add temp message
         Map<String, dynamic> tempMessage = {
           'id': tempId,
           'senderId': widget.userId,
-          'fileName': tempFileName,
+          'fileName': selectedFileName,
           'fileUrl': null,
-          'fileType': _isVideo(tempFileName) ? 'video/mp4' : 'image/jpeg',
+          'fileType': fileType,
           'isSeen': false,
           'timestamp': DateTime.now().millisecondsSinceEpoch,
           'localBytes': localBytes,
+          'uploading': true,
         };
 
         setState(() {
           messages.add(tempMessage);
-          isUploading = true;
+        });
+        _scrollToBottom();
+
+        // Save file details for upload
+        File? tempFile = selectedFile;
+        Uint8List? tempWebBytes = webFileBytes;
+        String tempFileName = selectedFileName!;
+
+        // Clear selected file UI
+        setState(() {
           selectedFile = null;
           selectedFileName = null;
           webFileBytes = null;
           showSendButton = _controller.text.isNotEmpty;
         });
-        _scrollToBottom();
-
-        // THEN check size and upload
-        int fileSizeBytes = localBytes.length;
-        const maxSizeInBytes = 10 * 1024 * 1024;
-
-        if (fileSizeBytes > maxSizeInBytes) {
-          _showErrorDialog(
-              "File too large", "This file exceeds the 10MB limit.");
-          setState(() {
-            messages.removeWhere((msg) => msg['id'] == tempId);
-            isUploading = false;
-          });
-          return;
-        }
 
         try {
-          await ChatService.sendFileMessage(
+          final fileUrl = await ChatService.sendFileMessage(
             chatId: chatId,
             senderId: widget.userId,
             file: tempFile,
@@ -953,19 +973,36 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
             receiverFcmToken: receiverFCMToken,
           );
 
-          setState(() => isUploading = false);
-          _loadMessages();
+          // 🔄 Update the temp message with real data
+          setState(() {
+            int index = messages.indexWhere((msg) => msg['id'] == tempId);
+            if (index != -1) {
+              messages[index]['fileUrl'] = fileUrl;
+              messages[index]['uploading'] = false;
+              messages[index].remove('localBytes');
+            }
+          });
         } catch (e) {
           print("❌ Error sending file: $e");
           setState(() {
             messages.removeWhere((msg) => msg['id'] == tempId);
-            isUploading = false;
           });
         }
       }
     } catch (e) {
       print("❌ Error fetching FCM token: $e");
-      setState(() => isUploading = false);
+    }
+  }
+
+  String _getMimeType(String fileName) {
+    if (fileName.endsWith('.png') ||
+        fileName.endsWith('.jpg') ||
+        fileName.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    } else if (fileName.endsWith('.mp4')) {
+      return 'video/mp4';
+    } else {
+      return 'application/octet-stream';
     }
   }
 
@@ -1331,16 +1368,12 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   // }
 
   Widget _buildMessageWidget(Map<String, dynamic> message) {
-    print("🔍 BUILDING MESSAGE WIDGET: $message");
+    if (message['uploading'] == true) {
+      return _buildUploadingFileMessage(message);
+    }
 
-    if (message['fileUrl'] != null || message['fileType'] != null) {
+    if (message['fileUrl'] != null) {
       String fileType = message['fileType'] ?? 'unknown';
-
-      // Handle uploading temp message (no URL but localBytes exists)
-      if (message['fileUrl'] == null && message['localBytes'] != null) {
-        return _buildUploadingFileMessage(message);
-      }
-
       if (fileType.startsWith('image/')) {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
@@ -1350,13 +1383,9 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       }
     }
 
-    // If it's plain text
     return Text(
       message['text'] ?? 'No message',
-      style: TextStyle(
-        color: Colors.black,
-        fontSize: 16.0,
-      ),
+      style: TextStyle(color: Colors.black, fontSize: 16.0),
     );
   }
 
