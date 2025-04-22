@@ -50,7 +50,7 @@ class _DetailsPageState extends State<DetailsPage> {
   void initState() {
     super.initState();
     fetchCounsellorDetails(); // Fetch counsellor details on page load
-    fetchUserDetails(); 
+    fetchUserDetails();
     checkSubscriptionStatus(); // Check subscription status on page load
     checkFollowingStatus(); // Check following status on page load
     fetchReviews();
@@ -111,34 +111,35 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-  Future<void> fetchUserDetails() async {
-    final url = Uri.parse(
-        '${ApiUtils.baseUrl}/api/user/${widget.userId}');
-
-    try {
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          userDetails = json.decode(response.body);
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false; // Stop loading even if there's an error
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to fetch user details")),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
+   Future<void> fetchUserDetails() async {
+     final url = Uri.parse(
+         '${ApiUtils.baseUrl}/api/user/${widget.userId}');
+ 
+     try {
+       final response = await http.get(url);
+ 
+       if (response.statusCode == 200) {
+         setState(() {
+           userDetails = json.decode(response.body);
+           isLoading = false;
+         });
+       } else {
+         setState(() {
+           isLoading = false; // Stop loading even if there's an error
+         });
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Failed to fetch user details")),
+         );
+       }
+     } catch (e) {
+       setState(() {
+         isLoading = false;
+       });
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text("Error: $e")),
+       );
+     }
+   }
 
   Future<void> fetchClientDetails() async {
     final clientIdsRaw = counsellorDetails?['clientIds'];
@@ -170,7 +171,6 @@ class _DetailsPageState extends State<DetailsPage> {
       clientDetailsList = tempList;
       isLoadingClients = false;
     });
-
   }
 
   // Function to check if the user is already subscribed to the counsellor
@@ -237,67 +237,68 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+   Future<void> handleConditionalSubscription() async {
+   final userWallet = (userDetails?['walletAmount'] ?? 0).toDouble();
+   final ratePerYear = (counsellorDetails?['ratePerYear'] ?? 0).toDouble();
+ 
+   if (userWallet >= ratePerYear) {
+     // ✅ Sufficient funds, proceed to transfer and subscribe
+     final result = await Navigator.push(
+       context,
+       MaterialPageRoute(
+         builder: (context) => TransferFundsPage(
+           userId: widget.userId,
+           counsellorId: widget.counsellorId,
+           amount: ratePerYear,
+         ),
+       ),
+     );
+ 
+     if (result == true) {
+       await subscribe(); // Call subscribe after successful transfer
+     }
+ 
+   } else {
+     // ❌ Insufficient funds, redirect to add funds
+     final result = await Navigator.push(
+       context,
+       MaterialPageRoute(
+         builder: (context) => AddFundsPage(userName: widget.userId),
+       ),
+     );
+ 
+     if (result == true) {
+       // Re-fetch user details after adding funds
+       await fetchUserDetails();
+ 
+       final updatedWallet = (userDetails?['walletAmount'] ?? 0).toDouble();
+       if (updatedWallet >= ratePerYear) {
+         // Proceed to transfer after topping up
+         final transferResult = await Navigator.push(
+           context,
+           MaterialPageRoute(
+             builder: (context) => TransferFundsPage(
+               userId: widget.userId,
+               counsellorId: widget.counsellorId,
+               amount: ratePerYear,
+             ),
+           ),
+         );
+ 
+         if (transferResult == true) {
+           await subscribe(); // Subscribe after transfer
+         }
+       } else {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Still insufficient balance after adding funds")),
+         );
+       }
+     }
+   }
+ }
+ 
+
   // Function to call the subscribe API
-  Future<void> handleConditionalSubscription() async {
-  final userWallet = (userDetails?['walletAmount'] ?? 0).toDouble();
-  final ratePerYear = (counsellorDetails?['ratePerYear'] ?? 0).toDouble();
-
-  if (userWallet >= ratePerYear) {
-    // ✅ Sufficient funds, proceed to transfer and subscribe
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TransferFundsPage(
-          userId: widget.userId,
-          counsellorId: widget.counsellorId,
-          amount: ratePerYear,
-        ),
-      ),
-    );
-
-    if (result == true) {
-      await subscribe(); // Call subscribe after successful transfer
-    }
-
-  } else {
-    // ❌ Insufficient funds, redirect to add funds
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddFundsPage(userName: widget.userId),
-      ),
-    );
-
-    if (result == true) {
-      // Re-fetch user details after adding funds
-      await fetchUserDetails();
-
-      final updatedWallet = (userDetails?['walletAmount'] ?? 0).toDouble();
-      if (updatedWallet >= ratePerYear) {
-        // Proceed to transfer after topping up
-        final transferResult = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TransferFundsPage(
-              userId: widget.userId,
-              counsellorId: widget.counsellorId,
-              amount: ratePerYear,
-            ),
-          ),
-        );
-
-        if (transferResult == true) {
-          await subscribe(); // Subscribe after transfer
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Still insufficient balance after adding funds")),
-        );
-      }
-    }
-  }
-}
-
   Future<void> subscribe() async {
     final url = Uri.parse(
         '${ApiUtils.baseUrl}/api/user/${widget.userId}/subscribe/${widget.counsellorId}');
@@ -629,33 +630,6 @@ class _DetailsPageState extends State<DetailsPage> {
                                             fontSize: 14,
                                             color: Colors.black87),
                                       ),
-                                    ),
-                                  ),
-
-                                  // Subscribe Button
-                                  ElevatedButton.icon(
-                                    onPressed:
-                                        isSubscribed ? unsubscribe : handleConditionalSubscription,
-                                    icon: Icon(
-                                      isSubscribed
-                                          ? Icons.cancel
-                                          : Icons.subscriptions,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    label: Text(
-                                      isSubscribed
-                                          ? "Unsubscribe"
-                                          : "Subscribe",
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange
-                                          .withOpacity(
-                                              0.7), // Tinted orange button
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
                                       Text(
                                         "Experience: ${counsellorDetails?['experience'] ?? 'N/A'} years",
                                         style: GoogleFonts.outfit(
@@ -718,7 +692,7 @@ class _DetailsPageState extends State<DetailsPage> {
                               width: double.infinity,
                               child: TextButton.icon(
                                 onPressed:
-                                    isSubscribed ? unsubscribe : subscribe,
+                                    isSubscribed ? unsubscribe : handleConditionalSubscription,
                                 icon: Icon(
                                   isSubscribed
                                       ? Icons.cancel
