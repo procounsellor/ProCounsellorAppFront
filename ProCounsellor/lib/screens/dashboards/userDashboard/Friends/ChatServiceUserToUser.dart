@@ -95,56 +95,7 @@ class ChatService {
     }
   }
 
-  // static Future<void> sendFileMessage({
-  //   required String chatId,
-  //   required String senderId,
-  //   required File? file,
-  //   required Uint8List? webFileBytes,
-  //   required String fileName,
-  //   required String receiverFcmToken,
-  // }) async {
-  //   try {
-  //     var request = http.MultipartRequest(
-  //       'POST',
-  //       Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/files'),
-  //     );
-
-  //     request.fields['senderId'] = senderId;
-  //     request.fields['receiverFcmToken'] = receiverFcmToken;
-
-  //     // Determine file MIME type
-  //     String? mimeType;
-
-  //     if (kIsWeb && webFileBytes != null) {
-  //       mimeType = lookupMimeType(fileName); // Detect MIME type for Web
-  //       request.files.add(http.MultipartFile.fromBytes(
-  //         'file',
-  //         webFileBytes,
-  //         filename: fileName,
-  //         contentType: mimeType != null ? MediaType.parse(mimeType) : null,
-  //       ));
-  //     } else if (file != null) {
-  //       mimeType =
-  //           lookupMimeType(file.path); // Detect MIME type for Mobile/Desktop
-  //       request.files.add(await http.MultipartFile.fromPath(
-  //         'file',
-  //         file.path,
-  //         contentType: mimeType != null ? MediaType.parse(mimeType) : null,
-  //       ));
-  //     }
-
-  //     var response = await request.send();
-  //     if (response.statusCode == 201) {
-  //       print("✅ File sent successfully!");
-  //     } else {
-  //       print("❌ Failed to send file: ${response.reasonPhrase}");
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error sending file: $e");
-  //   }
-  // }
-
-  static Future<String> sendFileMessage({
+  static Future<void> sendFileMessage({
     required String chatId,
     required String senderId,
     required File? file,
@@ -165,7 +116,7 @@ class ChatService {
       String? mimeType;
 
       if (kIsWeb && webFileBytes != null) {
-        mimeType = lookupMimeType(fileName);
+        mimeType = lookupMimeType(fileName); // Detect MIME type for Web
         request.files.add(http.MultipartFile.fromBytes(
           'file',
           webFileBytes,
@@ -173,7 +124,8 @@ class ChatService {
           contentType: mimeType != null ? MediaType.parse(mimeType) : null,
         ));
       } else if (file != null) {
-        mimeType = lookupMimeType(file.path);
+        mimeType =
+            lookupMimeType(file.path); // Detect MIME type for Mobile/Desktop
         request.files.add(await http.MultipartFile.fromPath(
           'file',
           file.path,
@@ -181,32 +133,14 @@ class ChatService {
         ));
       }
 
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      var response = await request.send();
+      if (response.statusCode == 201) {
         print("✅ File sent successfully!");
-        final body = response.body;
-        print("🔵 Backend Response: $body");
-
-        // Extract URL from backend response
-        final regex = RegExp(r'URL:\s*(https?://\S+)', caseSensitive: false);
-        final match = regex.firstMatch(body);
-
-        if (match != null) {
-          final fileUrl = match.group(1);
-          print("🔗 Extracted URL: $fileUrl");
-          return fileUrl!;
-        } else {
-          throw Exception("URL not found in response: $body");
-        }
       } else {
         print("❌ Failed to send file: ${response.reasonPhrase}");
-        throw Exception("File upload failed");
       }
     } catch (e) {
       print("❌ Error sending file: $e");
-      rethrow;
     }
   }
 
