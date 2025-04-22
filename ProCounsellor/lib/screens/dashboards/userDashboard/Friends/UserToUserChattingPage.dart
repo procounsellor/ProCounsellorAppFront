@@ -71,6 +71,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   String userLastName = '';
 
   final ImagePicker _picker = ImagePicker();
+  bool isUploading = false;
 
   @override
   void initState() {
@@ -356,11 +357,39 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     });
   }
 
+  // Future<void> _loadMessages() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  //     // Load cached messages first
+  //     String? cachedData = prefs.getString('chat_cache_$chatId');
+  //     if (cachedData != null) {
+  //       List decoded = jsonDecode(cachedData);
+  //       setState(() {
+  //         messages = List<Map<String, dynamic>>.from(decoded);
+  //       });
+  //     }
+
+  //     // Fetch from backend
+  //     List<Map<String, dynamic>> fetchedMessages =
+  //         await ChatService().getChatMessages(chatId);
+
+  //     setState(() {
+  //       messages = fetchedMessages;
+  //     });
+
+  //     // Save to cache
+  //     prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
+
+  //     _scrollToBottom();
+  //   } catch (e) {
+  //     print('Error loading messages: $e');
+  //   }
+  // }
   Future<void> _loadMessages() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      // Load cached messages first
       String? cachedData = prefs.getString('chat_cache_$chatId');
       if (cachedData != null) {
         List decoded = jsonDecode(cachedData);
@@ -369,17 +398,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         });
       }
 
-      // Fetch from backend
       List<Map<String, dynamic>> fetchedMessages =
           await ChatService().getChatMessages(chatId);
 
       setState(() {
+        // Clean any temp message if now replaced by real one
+        messages.removeWhere(
+            (msg) => msg['id']?.toString().startsWith('temp-') ?? false);
+
         messages = fetchedMessages;
       });
 
-      // Save to cache
       prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
-
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -495,7 +525,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: type,
       allowedExtensions: allowedExtensions,
-      withData: true, // Ensures bytes are available for web
+      withData: true,
     );
 
     if (result != null) {
@@ -503,14 +533,13 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         selectedFileName = result.files.single.name;
 
         if (kIsWeb) {
-          // Web: Store file bytes
           webFileBytes = result.files.single.bytes;
-          selectedFile = null; // No File object on web
+          selectedFile = null;
         } else {
-          // Mobile/Desktop: Store file path
           selectedFile = File(result.files.single.path!);
-          webFileBytes = null;
+          webFileBytes = result.files.single.bytes; // Preload here!
         }
+
         showSendButton = true;
       });
     }
@@ -667,6 +696,195 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   //     }
   //   }
   // }
+  // Future<void> _sendFileMessage() async {
+  //   String? receiverFCMToken;
+
+  //   try {
+  //     if (widget.role == 'user') {
+  //       receiverFCMToken =
+  //           await FirestoreService.getFCMTokenUser(widget.userId2);
+  //     } else {
+  //       receiverFCMToken =
+  //           await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+  //     }
+
+  //     if ((selectedFile != null || webFileBytes != null) &&
+  //         receiverFCMToken != null) {
+  //       int fileSizeBytes = 0;
+
+  //       // 🔥 Check for file size before uploading
+  //       if (selectedFile != null) {
+  //         fileSizeBytes = await selectedFile!.length();
+  //       } else if (webFileBytes != null) {
+  //         fileSizeBytes = webFileBytes!.length;
+  //       }
+
+  //       // ✅  Set your max size (e.g., 10MB)
+  //       const maxSizeInBytes = 10 * 1024 * 1024;
+
+  //       if (fileSizeBytes > maxSizeInBytes) {
+  //         _showErrorDialog(
+  //           "File too large",
+  //           "This file exceeds the 10MB limit. Please choose a smaller file.",
+  //         );
+  //         return;
+  //       }
+
+  //       // Create a temporary message to show in the UI immediately
+  //       Map<String, dynamic> tempMessage = {
+  //         'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
+  //         'senderId': widget.userId,
+  //         'fileName': selectedFileName,
+  //         'fileUrl': null,
+  //         'fileType': 'uploading',
+  //         'isSeen': false,
+  //         'timestamp': DateTime.now().millisecondsSinceEpoch,
+  //       };
+
+  //       // Add the file message to UI instantly
+  //       WidgetsBinding.instance.addPostFrameCallback((_) {
+  //         if (mounted) {
+  //           setState(() {
+  //             messages.add(tempMessage);
+  //           });
+  //           _scrollToBottom();
+  //         }
+  //       });
+
+  //       // Save a copy of the selected file details
+  //       File? tempFile = selectedFile;
+  //       Uint8List? tempWebBytes = webFileBytes;
+  //       String tempFileName = selectedFileName!;
+
+  //       // Clear the selected file immediately
+  //       setState(() {
+  //         selectedFile = null;
+  //         selectedFileName = null;
+  //         webFileBytes = null;
+  //         showSendButton = _controller.text.isNotEmpty;
+  //       });
+
+  //       try {
+  //         // Upload file to the backend
+  //         await ChatService.sendFileMessage(
+  //           chatId: chatId,
+  //           senderId: widget.userId,
+  //           file: tempFile,
+  //           webFileBytes: tempWebBytes,
+  //           fileName: tempFileName,
+  //           receiverFcmToken: receiverFCMToken,
+  //         );
+
+  //         _loadMessages(); // Refresh messages immediately
+  //       } catch (e) {
+  //         print("❌ Error sending file: $e");
+
+  //         // Remove the temporary message if an error occurs
+  //         setState(() {
+  //           messages.remove(tempMessage);
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error fetching FCM token: $e");
+  //   }
+  // }
+
+  // Future<void> _sendFileMessage() async {
+  //   String? receiverFCMToken;
+
+  //   try {
+  //     if (widget.role == 'user') {
+  //       receiverFCMToken =
+  //           await FirestoreService.getFCMTokenUser(widget.userId2);
+  //     } else {
+  //       receiverFCMToken =
+  //           await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+  //     }
+
+  //     if ((selectedFile != null || webFileBytes != null) &&
+  //         receiverFCMToken != null) {
+  //       int fileSizeBytes = 0;
+
+  //       // 🔥 Check for file size before uploading
+  //       if (selectedFile != null) {
+  //         fileSizeBytes = await selectedFile!.length();
+  //       } else if (webFileBytes != null) {
+  //         fileSizeBytes = webFileBytes!.length;
+  //       }
+
+  //       const maxSizeInBytes = 10 * 1024 * 1024;
+  //       if (fileSizeBytes > maxSizeInBytes) {
+  //         _showErrorDialog(
+  //             "File too large", "This file exceeds the 10MB limit.");
+  //         return;
+  //       }
+
+  //       // 💬 Create a temporary message with uploading spinner
+  //       final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+  //       Map<String, dynamic> tempMessage = {
+  //         'id': tempId,
+  //         'senderId': widget.userId,
+  //         'fileName': selectedFileName,
+  //         'fileUrl': null,
+  //         'fileType': 'uploading',
+  //         'isSeen': false,
+  //         'timestamp': DateTime.now().millisecondsSinceEpoch,
+  //         'localBytes': tempWebBytes,
+  //       };
+
+  //       // Add temporary message and set isUploading true
+  //       setState(() {
+  //         messages.add(tempMessage);
+  //         isUploading = true;
+  //       });
+  //       _scrollToBottom();
+
+  //       // Save file details for upload
+  //       File? tempFile = selectedFile;
+  //       Uint8List? tempWebBytes = webFileBytes;
+  //       String tempFileName = selectedFileName!;
+
+  //       // Clear selected file UI
+  //       setState(() {
+  //         selectedFile = null;
+  //         selectedFileName = null;
+  //         webFileBytes = null;
+  //         showSendButton = _controller.text.isNotEmpty;
+  //       });
+
+  //       try {
+  //         // 📤 Upload file to backend
+  //         await ChatService.sendFileMessage(
+  //           chatId: chatId,
+  //           senderId: widget.userId,
+  //           file: tempFile,
+  //           webFileBytes: tempWebBytes,
+  //           fileName: tempFileName,
+  //           receiverFcmToken: receiverFCMToken,
+  //         );
+
+  //         // ✅ Upload done, refresh messages & hide spinner
+  //         setState(() {
+  //           isUploading = false;
+  //         });
+  //         _loadMessages(); // Reload messages to replace temp
+  //       } catch (e) {
+  //         print("❌ Error sending file: $e");
+
+  //         // Remove temp message on failure & hide spinner
+  //         setState(() {
+  //           messages.removeWhere((msg) => msg['id'] == tempId);
+  //           isUploading = false;
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error fetching FCM token: $e");
+  //     setState(() => isUploading = false);
+  //   }
+  // }
+
   Future<void> _sendFileMessage() async {
     String? receiverFCMToken;
 
@@ -681,62 +899,51 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
       if ((selectedFile != null || webFileBytes != null) &&
           receiverFCMToken != null) {
-        int fileSizeBytes = 0;
-
-        // 🔥 Check for file size before uploading
-        if (selectedFile != null) {
-          fileSizeBytes = await selectedFile!.length();
-        } else if (webFileBytes != null) {
-          fileSizeBytes = webFileBytes!.length;
-        }
-
-        // ✅  Set your max size (e.g., 10MB)
-        const maxSizeInBytes = 10 * 1024 * 1024;
-
-        if (fileSizeBytes > maxSizeInBytes) {
-          _showErrorDialog(
-            "File too large",
-            "This file exceeds the 10MB limit. Please choose a smaller file.",
-          );
-          return;
-        }
-
-        // Create a temporary message to show in the UI immediately
-        Map<String, dynamic> tempMessage = {
-          'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
-          'senderId': widget.userId,
-          'fileName': selectedFileName,
-          'fileUrl': null,
-          'fileType': 'uploading',
-          'isSeen': false,
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-        };
-
-        // Add the file message to UI instantly
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              messages.add(tempMessage);
-            });
-            _scrollToBottom();
-          }
-        });
-
-        // Save a copy of the selected file details
+        // Save for later
         File? tempFile = selectedFile;
         Uint8List? tempWebBytes = webFileBytes;
         String tempFileName = selectedFileName!;
 
-        // Clear the selected file immediately
+        Uint8List? localBytes = tempWebBytes ?? await tempFile!.readAsBytes();
+
+        // Create the temp message IMMEDIATELY
+        final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+        Map<String, dynamic> tempMessage = {
+          'id': tempId,
+          'senderId': widget.userId,
+          'fileName': tempFileName,
+          'fileUrl': null,
+          'fileType': _isVideo(tempFileName) ? 'video/mp4' : 'image/jpeg',
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'localBytes': localBytes,
+        };
+
         setState(() {
+          messages.add(tempMessage);
+          isUploading = true;
           selectedFile = null;
           selectedFileName = null;
           webFileBytes = null;
           showSendButton = _controller.text.isNotEmpty;
         });
+        _scrollToBottom();
+
+        // THEN check size and upload
+        int fileSizeBytes = localBytes.length;
+        const maxSizeInBytes = 10 * 1024 * 1024;
+
+        if (fileSizeBytes > maxSizeInBytes) {
+          _showErrorDialog(
+              "File too large", "This file exceeds the 10MB limit.");
+          setState(() {
+            messages.removeWhere((msg) => msg['id'] == tempId);
+            isUploading = false;
+          });
+          return;
+        }
 
         try {
-          // Upload file to the backend
           await ChatService.sendFileMessage(
             chatId: chatId,
             senderId: widget.userId,
@@ -746,18 +953,19 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
             receiverFcmToken: receiverFCMToken,
           );
 
-          _loadMessages(); // Refresh messages immediately
+          setState(() => isUploading = false);
+          _loadMessages();
         } catch (e) {
           print("❌ Error sending file: $e");
-
-          // Remove the temporary message if an error occurs
           setState(() {
-            messages.remove(tempMessage);
+            messages.removeWhere((msg) => msg['id'] == tempId);
+            isUploading = false;
           });
         }
       }
     } catch (e) {
       print("❌ Error fetching FCM token: $e");
+      setState(() => isUploading = false);
     }
   }
 
@@ -1098,13 +1306,42 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
+  // Widget _buildMessageWidget(Map<String, dynamic> message) {
+  //   if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
+  //     String fileType = message['fileType'] ?? 'unknown';
+
+  //     if (fileType == 'uploading') {
+  //       return _buildUploadingFileMessage(message);
+  //     } else if (fileType.startsWith('image/')) {
+  //       return _buildImageMessage(message);
+  //     } else if (fileType.startsWith('video/')) {
+  //       return _buildVideoMessage(message);
+  //     } else {
+  //       return _buildFileMessage(message);
+  //     }
+  //   }
+
+  //   return Text(
+  //     message['text'] ?? 'No message',
+  //     style: TextStyle(
+  //       color: Colors.black,
+  //       fontSize: 16.0,
+  //     ),
+  //   );
+  // }
+
   Widget _buildMessageWidget(Map<String, dynamic> message) {
-    if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
+    print("🔍 BUILDING MESSAGE WIDGET: $message");
+
+    if (message['fileUrl'] != null || message['fileType'] != null) {
       String fileType = message['fileType'] ?? 'unknown';
 
-      if (fileType == 'uploading') {
+      // Handle uploading temp message (no URL but localBytes exists)
+      if (message['fileUrl'] == null && message['localBytes'] != null) {
         return _buildUploadingFileMessage(message);
-      } else if (fileType.startsWith('image/')) {
+      }
+
+      if (fileType.startsWith('image/')) {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
         return _buildVideoMessage(message);
@@ -1113,6 +1350,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       }
     }
 
+    // If it's plain text
     return Text(
       message['text'] ?? 'No message',
       style: TextStyle(
@@ -1122,23 +1360,90 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     );
   }
 
-  Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
+// Dimmed overlay helper
+  Widget _dimmedOverlayWithLoader() {
+    return Positioned.fill(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Center(child: CircularProgressIndicator()),
       ),
-      child: Row(
+    );
+  }
+
+  // Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
+  //   return Container(
+  //     padding: EdgeInsets.all(10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey.withOpacity(0.2),
+  //       borderRadius: BorderRadius.circular(8),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Icon(Icons.upload, color: Colors.blue),
+  //         SizedBox(width: 8),
+  //         Expanded(
+  //           child: Text(
+  //             message['fileName'] ?? "Uploading...",
+  //             overflow: TextOverflow.ellipsis,
+  //           ),
+  //         ),
+  //         CircularProgressIndicator(),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
+    final localBytes = message['localBytes'];
+    final fileType = message['fileType'] ?? 'unknown';
+
+    print("📝 FILE TYPE CHECK: $fileType");
+
+    Widget preview;
+
+    // Strictly validate image types
+    if (fileType.startsWith('image/')) {
+      preview = ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          localBytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.black.withOpacity(0.4),
+          colorBlendMode: BlendMode.darken,
+          errorBuilder: (context, error, stackTrace) {
+            print("❌ Image error: $error");
+            return Container(
+              color: Colors.grey,
+              child: Icon(Icons.document_scanner, color: Colors.grey, size: 40),
+            );
+          },
+        ),
+      );
+    } else if (fileType.startsWith('video/')) {
+      preview = Container(
+        color: Colors.black,
+        child: Icon(Icons.play_circle_fill,
+            color: Colors.white.withOpacity(0.7), size: 50),
+      );
+    } else {
+      preview = Container(
+        color: Colors.grey[300],
+        child: Icon(Icons.insert_drive_file, color: Colors.black54, size: 50),
+      );
+    }
+
+    return Container(
+      width: 150,
+      height: 150,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Icon(Icons.upload, color: Colors.blue),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message['fileName'] ?? "Uploading...",
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          preview,
           CircularProgressIndicator(),
         ],
       ),
@@ -1277,31 +1582,113 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                     },
                   ),
                 ),
-                if (selectedFileName != null) // Show selected file
+                if (selectedFileName != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.insert_drive_file, color: Colors.black54),
-                        SizedBox(width: 10),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Media Preview OR File Icon
+                            if (webFileBytes != null &&
+                                !_isVideo(selectedFileName!) &&
+                                !_isDocument(selectedFileName!))
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  child: Image.memory(webFileBytes!,
+                                      fit: BoxFit.cover),
+                                ),
+                              )
+                            else if (_isVideo(selectedFileName!))
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.play_circle_fill,
+                                    color: Colors.white, size: 36),
+                              )
+                            else
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.insert_drive_file,
+                                    color: Colors.blueGrey, size: 30),
+                              ),
+
+                            // 🔄 Loading Spinner Overlay
+                            if (isUploading) // <-- Add this state
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        SizedBox(width: 12),
+                        // File Name + Status
                         Expanded(
-                          child: Text(
-                            selectedFileName!,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                selectedFileName!,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                isUploading ? "Uploading..." : "Ready to send",
+                                style: TextStyle(
+                                    color: isUploading
+                                        ? Colors.orange
+                                        : Colors.green,
+                                    fontSize: 12),
+                              ),
+                            ],
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.red),
+                          icon: Icon(Icons.cancel, color: Colors.red, size: 22),
                           onPressed: () {
                             setState(() {
                               selectedFile = null;
                               selectedFileName = null;
                               webFileBytes = null;
+                              isUploading = false;
                             });
                           },
                         ),
@@ -1382,6 +1769,41 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
               ],
             ),
     );
+  }
+
+  // bool _isDocument(String fileName) {
+  //   return fileName.endsWith('.pdf') ||
+  //       fileName.endsWith('.doc') ||
+  //       fileName.endsWith('.docx') ||
+  //       fileName.endsWith('.xls') ||
+  //       fileName.endsWith('.xlsx') ||
+  //       fileName.endsWith('.ppt') ||
+  //       fileName.endsWith('.pptx') ||
+  //       fileName.endsWith('.txt');
+  // }
+
+  bool _isImage(String fileName) {
+    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    return imageExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
+  }
+
+  bool _isVideo(String fileName) {
+    final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+    return videoExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
+  }
+
+  bool _isDocument(String fileName) {
+    final docExtensions = [
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+      '.ppt',
+      '.pptx',
+      '.txt'
+    ];
+    return docExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
   }
 
   Widget _buildTypingIndicator() {
