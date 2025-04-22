@@ -25,6 +25,7 @@ import 'package:media_scanner/media_scanner.dart';
 
 import 'dart:typed_data';
 import 'package:gallery_saver/gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -68,6 +69,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   String userPhotoUrl = 'https://via.placeholder.com/150';
   String userFirstName = '';
   String userLastName = '';
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -113,6 +116,77 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   //     );
   //   }
   // }
+
+  Future<void> _captureImageFromCamera() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      File imageFile = File(image.path);
+
+      setState(() {
+        selectedFile = imageFile;
+        selectedFileName = p.basename(imageFile.path);
+        webFileBytes = null;
+        showSendButton = true;
+      });
+
+      await _sendFileMessage(); // Automatically send after capture
+    }
+  }
+
+  Future<void> _captureVideoFromCamera() async {
+    final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
+
+    if (video != null) {
+      File videoFile = File(video.path);
+
+      setState(() {
+        selectedFile = videoFile;
+        selectedFileName = p.basename(videoFile.path);
+        webFileBytes = null;
+        showSendButton = true;
+      });
+
+      await _sendFileMessage(); // Automatically send after capture
+    }
+  }
+
+  void _showCameraOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(15),
+          height: 150,
+          child: Column(
+            children: [
+              Text(
+                "Capture From Camera",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _fileOption("Take Photo", Icons.camera_alt, () {
+                    _captureImageFromCamera();
+                    Navigator.pop(context);
+                  }),
+                  _fileOption("Record Video", Icons.videocam, () {
+                    _captureVideoFromCamera();
+                    Navigator.pop(context);
+                  }),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _downloadImageWithDio(String imageUrl) async {
     // Request proper permission
@@ -1246,7 +1320,9 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                       if (!showSendButton)
                         IconButton(
                           icon: Icon(Icons.camera_alt, color: Colors.black54),
-                          onPressed: () {},
+                          onPressed: () {
+                            _showCameraOptions(context);
+                          },
                         ),
                       Expanded(
                         child: AnimatedContainer(
@@ -1302,6 +1378,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                     ],
                   ),
                 ),
+                SizedBox(height: 20),
               ],
             ),
     );
