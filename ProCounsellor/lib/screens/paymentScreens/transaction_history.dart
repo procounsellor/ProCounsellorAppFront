@@ -14,6 +14,9 @@ class TransactionHistoryPage extends StatefulWidget {
 class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   late Future<List<Map<String, dynamic>>> _transactionsFuture;
 
+  static const String USERS_COLLECTION = 'users';
+  static const String COUNSELLORS_COLLECTION = 'counsellors';
+
   @override
   void initState() {
     super.initState();
@@ -22,20 +25,35 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   Future<List<Map<String, dynamic>>> _fetchTransactions() async {
   try {
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('users')
+    DocumentSnapshot docSnapshot;
+
+    // Step 1: Check users collection
+    docSnapshot = await FirebaseFirestore.instance
+        .collection(USERS_COLLECTION)
         .doc(widget.username)
         .get();
 
-    if (docSnapshot.exists && docSnapshot.data()!.containsKey('transactions')) {
-      List<dynamic> transactionsRaw = docSnapshot.data()!['transactions'];
+    // Step 2: If not found, check counsellors collection
+    if (!docSnapshot.exists) {
+      docSnapshot = await FirebaseFirestore.instance
+          .collection(COUNSELLORS_COLLECTION)
+          .doc(widget.username)
+          .get();
 
-      // Ensure it's a list of maps
+      if (!docSnapshot.exists) {
+        throw Exception("User or Counsellor not found");
+      }
+    }
+
+    final data = docSnapshot.data() as Map<String, dynamic>?;
+
+    if (data != null && data.containsKey('transactions')) {
+      List<dynamic> transactionsRaw = data['transactions'];
+
       List<Map<String, dynamic>> transactions = transactionsRaw
           .map((txn) => Map<String, dynamic>.from(txn))
           .toList();
 
-      // Sort manually by timestamp (descending)
       transactions.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
 
       return transactions;
@@ -48,6 +66,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 }
 
+
   String _formatTimestamp(int timestamp) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     return DateFormat('dd MMM yyyy, hh:mm a').format(date);
@@ -56,6 +75,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Transaction History")),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _transactionsFuture,

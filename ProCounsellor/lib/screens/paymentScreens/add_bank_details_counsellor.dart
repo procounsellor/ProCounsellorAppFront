@@ -1,18 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'update_bank_details.dart';
+import 'update_bank_details_counsellor.dart';
 
-class AddBankDetailsPage extends StatefulWidget {
+class AddBankDetailsCounsellorPage extends StatefulWidget {
   final String username;
 
-  AddBankDetailsPage({required this.username});
+  AddBankDetailsCounsellorPage({required this.username});
 
   @override
-  _AddBankDetailsPageState createState() => _AddBankDetailsPageState();
+  _AddBankDetailsCounsellorPageState createState() => _AddBankDetailsCounsellorPageState();
 }
 
-class _AddBankDetailsPageState extends State<AddBankDetailsPage> {
+class _AddBankDetailsCounsellorPageState extends State<AddBankDetailsCounsellorPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _accountNumberController = TextEditingController();
   final TextEditingController _ifscCodeController = TextEditingController();
@@ -31,7 +31,7 @@ class _AddBankDetailsPageState extends State<AddBankDetailsPage> {
   Future<void> _fetchBankDetails() async {
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('counsellors')
           .doc(widget.username)
           .get();
 
@@ -66,7 +66,7 @@ class _AddBankDetailsPageState extends State<AddBankDetailsPage> {
 
       try {
         await FirebaseFirestore.instance
-            .collection('users')
+            .collection('counsellors')
             .doc(widget.username)
             .update({'bankDetails': bankDetails});
 
@@ -120,7 +120,7 @@ class _AddBankDetailsPageState extends State<AddBankDetailsPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => UpdateBankDetailsPage(username: widget.username),
+                              builder: (context) => UpdateBankDetailsCounsellorPage(username: widget.username),
                             ),
                           );
                         },
