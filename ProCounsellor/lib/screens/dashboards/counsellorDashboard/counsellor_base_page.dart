@@ -4,9 +4,8 @@ import 'package:http/http.dart' as http; // Import http for API calls
 import 'dart:convert'; // For JSON decoding
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_community_page.dart';
 import '../../../services/api_utils.dart';
+import '../../paymentScreens/transaction_history.dart';
 import 'counsellor_dashboard.dart';
-import 'counsellor_my_activities_page.dart'; // Import My Activities Page
-import 'counsellor_transactions_page.dart'; // Import Transactions Page
 import 'counsellor_profile_page.dart';
 import 'ActivityPage.dart';
 import 'counsellor_state_notifier.dart';
@@ -68,7 +67,7 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     _pages.add(CounsellorDashboard(
         onSignOut: widget.onSignOut,
         counsellorId: widget.counsellorId)); // User Dashboard
-    _pages.add(CounsellorTransactionsPage()); // Transactions Page
+    _pages.add(TransactionHistoryPage(username: widget.counsellorId)); // Transactions Page
     _pages.add(CounsellorCommunityPage()); // Community Page
     // _pages.add(CounsellorMyActivitiesPage(
     //     username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page

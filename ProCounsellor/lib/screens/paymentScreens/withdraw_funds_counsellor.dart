@@ -4,16 +4,16 @@ import 'dart:convert';
 
 import '../../services/api_utils.dart';
 
-class WithdrawFundsPage extends StatefulWidget {
+class WithdrawFundsCounsellorPage extends StatefulWidget {
   final String userName;
 
-  WithdrawFundsPage({required this.userName});
+  WithdrawFundsCounsellorPage({required this.userName});
 
   @override
-  _WithdrawFundsPageState createState() => _WithdrawFundsPageState();
+  _WithdrawFundsCounsellorPageState createState() => _WithdrawFundsCounsellorPageState();
 }
 
-class _WithdrawFundsPageState extends State<WithdrawFundsPage> {
+class _WithdrawFundsCounsellorPageState extends State<WithdrawFundsCounsellorPage> {
   final TextEditingController _amountController = TextEditingController();
   bool _isLoading = true;
   Map<String, dynamic>? _bankDetails;
@@ -22,13 +22,13 @@ class _WithdrawFundsPageState extends State<WithdrawFundsPage> {
   @override
   void initState() {
     super.initState();
-    _fetchUserDetails();
+    _fetchCounsellorDetails();
   }
 
-  Future<void> _fetchUserDetails() async {
+  Future<void> _fetchCounsellorDetails() async {
     try {
       final response = await http.get(
-        Uri.parse("${ApiUtils.baseUrl}/api/user/${widget.userName}"),
+        Uri.parse("${ApiUtils.baseUrl}/api/counsellor/${widget.userName}"),
       );
 
       if (response.statusCode == 200) {
@@ -51,7 +51,7 @@ class _WithdrawFundsPageState extends State<WithdrawFundsPage> {
       } else {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to fetch user details.")),
+          SnackBar(content: Text("Failed to fetch counsellor details.")),
         );
       }
     } catch (e) {

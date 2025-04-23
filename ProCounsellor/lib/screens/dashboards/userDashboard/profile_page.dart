@@ -1,5 +1,6 @@
 import 'package:ProCounsellor/screens/dashboards/userDashboard/components/deadlines/AllDeadlinesPage.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/details_page.dart';
+import 'package:ProCounsellor/screens/paymentScreens/withdraw_funds.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -854,6 +855,21 @@ class _ProfilePageState extends State<ProfilePage> {
                             MaterialPageRoute(
                               builder: (_) =>
                                   AddBankDetailsPage(username: widget.username),
+                            ),
+                          );
+                        },
+                      ),
+
+                      Divider(height: 1),
+
+                      _buildSectionTile(
+                        title: "WITHDRAW FUNDS",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  WithdrawFundsPage(userName: widget.username),
                             ),
                           );
                         },

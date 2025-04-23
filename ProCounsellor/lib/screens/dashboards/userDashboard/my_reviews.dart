@@ -155,7 +155,7 @@ class _MyReviewPageState extends State<MyReviewPage> {
             SizedBox(height: 6),
             Row(
               children: List.generate(
-                review["rating"] ?? 0,
+                (review["rating"] ?? 0).toInt(),
                 (index) => Icon(Icons.star, color: Colors.orange, size: 16),
               ),
             ),

@@ -414,7 +414,7 @@ class _DetailsPageState extends State<DetailsPage> {
 
     for (var review in reviews) {
       if (review is Map<String, dynamic>) {
-        int rating = (review['rating'] ?? 0).toInt(); // Ensure it's an int
+        int rating = (review['rating'] ?? 0).toInt();
         if (rating > 0 && rating <= 5) {
           starCounts[rating] = (starCounts[rating] ?? 0) + 1;
           averageRating += rating;
@@ -424,11 +424,11 @@ class _DetailsPageState extends State<DetailsPage> {
 
     if (totalRatings > 0) {
       averageRating /=
-          totalRatings.toDouble(); // Ensure division returns a double
+          totalRatings.toDouble();
     }
 
     return {
-      "averageRating": averageRating, // It's okay to return double here
+      "averageRating": averageRating,
       "totalRatings": totalRatings,
       "starCounts": starCounts,
     };
@@ -668,11 +668,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    (counsellorDetails?['expertise']
-                                            as List<dynamic>)
-                                        .join(', '),
-                                    style: GoogleFonts.outfit(
-                                        fontSize: 14, color: Colors.black87),
+                                    (counsellorDetails?['expertise'] as List<dynamic>? ?? []).join(', '),
+                                    style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87),
                                   ),
                                 ],
                               ),

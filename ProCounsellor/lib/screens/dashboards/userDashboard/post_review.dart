@@ -16,7 +16,7 @@ class PostUserReview extends StatefulWidget {
 
 class _PostUserReviewState extends State<PostUserReview> {
   final TextEditingController _reviewController = TextEditingController();
-  double _rating = 0.0;
+  int _rating = 0;
   bool _isSubmitting = false;
   String? counsellorPhotoUrl;
   String? counsellorFullName;
@@ -51,7 +51,7 @@ class _PostUserReviewState extends State<PostUserReview> {
 
     final body = {
       'reviewText': _reviewController.text,
-      'rating': _rating.toString(),
+      'rating': _rating,
     };
 
     final headers = {
@@ -89,7 +89,7 @@ class _PostUserReviewState extends State<PostUserReview> {
           ),
           onPressed: () {
             setState(() {
-              _rating = index + 1.0;
+              _rating = index + 1;
             });
           },
         );

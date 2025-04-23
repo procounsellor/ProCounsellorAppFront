@@ -1,8 +1,10 @@
+import 'package:ProCounsellor/screens/paymentScreens/withdraw_funds_counsellor.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_reviews.dart';
 import 'dart:convert';
 import '../../../services/api_utils.dart';
+import '../../paymentScreens/add_bank_details_counsellor.dart';
 import 'client_details_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -21,15 +23,39 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   List<dynamic> clients = [];
   List<dynamic> filteredClients = [];
   String counsellorName = "";
-  double earnings = 150.0;
   List<Map<String, dynamic>> reviews = [];
+  double? _walletBalance;
+  Map<String, dynamic>? _bankDetails;
 
   @override
   void initState() {
     super.initState();
     fetchDashboardData();
+    fetchUserDetails();
     fetchReviews();
   }
+
+  Future<void> fetchUserDetails() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}"),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['walletAmount'] != null && data ['bankDetails'] != null) {
+            _walletBalance = (data['walletAmount'] ?? 0).toDouble();
+            _bankDetails = data['bankDetails'];
+          }
+        }
+      }
+      catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
 
   Future<void> fetchDashboardData() async {
     final clientUrl = Uri.parse(
@@ -300,7 +326,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                         Icon(Icons.currency_rupee,
                                             color: Colors.green, size: 24),
                                         Text(
-                                          earnings.toStringAsFixed(2),
+                                          _walletBalance.toString(),
                                           style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -312,7 +338,14 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                   ],
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => WithdrawFundsCounsellorPage(userName: widget.counsellorId),
+                                      ),
+                                    );
+                                  },
                                   child: Text("Withdraw"),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
@@ -321,6 +354,69 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddBankDetailsCounsellorPage(username: widget.counsellorId),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            color: Colors.white,
+                            elevation: 4,
+                            shadowColor: Colors.black.withOpacity(0.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Bank Details",
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 12),
+                                  _bankDetails != null
+                                      ? Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text("Account Number: ${_bankDetails!['bankAccountNumber']}"),
+                                            Text("IFSC Code: ${_bankDetails!['ifscCode']}"),
+                                            Text("Account Holder: ${_bankDetails!['fullName']}"),
+                                            SizedBox(height: 16),
+                                            Text(
+                                              "Tap to update",
+                                              style: TextStyle(color: Colors.blueGrey, fontSize: 12),
+                                            ),
+                                          ],
+                                        )
+                                      : Center(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => AddBankDetailsCounsellorPage(username: widget.counsellorId),
+                                                ),
+                                              );
+                                            },
+                                            child: Text("Add Bank Account"),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
