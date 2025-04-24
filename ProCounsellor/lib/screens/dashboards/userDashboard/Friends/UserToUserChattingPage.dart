@@ -125,37 +125,68 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   void _showCameraOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.black.withOpacity(0.5), // Dimmed Background
+      barrierColor:
+          Colors.black.withOpacity(0.5), // Dims background outside sheet
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(15),
-          height: 150,
-          child: Column(
-            children: [
-              Text(
-                "Capture From Camera",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _fileOption("Take Photo", Icons.camera_alt, () {
+          padding: EdgeInsets.all(20),
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _circleOption(
+                  icon: Icons.camera_alt,
+                  label: "Camera",
+                  onTap: () {
+                    Navigator.pop(context);
                     _captureImageFromCamera();
+                  },
+                ),
+                _circleOption(
+                  icon: Icons.videocam,
+                  label: "Video",
+                  onTap: () {
                     Navigator.pop(context);
-                  }),
-                  _fileOption("Record Video", Icons.videocam, () {
                     _captureVideoFromCamera();
-                    Navigator.pop(context);
-                  }),
-                ],
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+// Helper for Circular Buttons
+  Widget _circleOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.grey.withOpacity(0.8),
+            child: Icon(icon, size: 30, color: Colors.white),
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(label, style: TextStyle(color: Colors.white, fontSize: 14)),
+      ],
     );
   }
 
@@ -760,24 +791,41 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         return false;
       }
 
-      // Re-encode as PNG (NO EXIF possible)
       final pngBytes = img.encodePng(decodedImage);
 
-      // Save fresh
-      final baseDir = Directory('/storage/emulated/0/Pictures/ProCounsellor');
-      if (!(await baseDir.exists())) {
-        await baseDir.create(recursive: true);
+      // ✅ Platform-specific handling
+      if (Platform.isAndroid) {
+        final baseDir = Directory('/storage/emulated/0/Pictures/ProCounsellor');
+        if (!(await baseDir.exists())) {
+          await baseDir.create(recursive: true);
+        }
+
+        final fileName =
+            "pro_image_${DateTime.now().millisecondsSinceEpoch}.png";
+        final fullPath = '${baseDir.path}/$fileName';
+
+        final file = await File(fullPath).writeAsBytes(pngBytes);
+        await file.setLastModified(DateTime.now());
+        await MediaScanner.loadMedia(path: file.path);
+
+        print("✅ PNG saved on Android: $fullPath");
+        return true;
+      } else if (Platform.isIOS) {
+        // Save PNG bytes to temp file
+        final tempDir = await getTemporaryDirectory();
+        final tempPath =
+            '${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.png';
+        final tempFile = await File(tempPath).writeAsBytes(pngBytes);
+
+        // Use GallerySaver on iOS
+        final success = await GallerySaver.saveImage(tempFile.path,
+            albumName: 'ProCounsellor');
+        print(success == true ? "✅ PNG saved on iOS" : "❌ Failed on iOS");
+        return success ?? false;
+      } else {
+        print("❌ Unsupported Platform");
+        return false;
       }
-
-      final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.png";
-      final fullPath = '${baseDir.path}/$fileName';
-
-      final file = await File(fullPath).writeAsBytes(pngBytes);
-      await file.setLastModified(DateTime.now());
-      await MediaScanner.loadMedia(path: file.path);
-
-      print("✅ PNG saved fresh: $fullPath");
-      return true;
     } catch (e) {
       print("❌ Error saving PNG: $e");
       return false;
