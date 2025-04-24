@@ -18,14 +18,15 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../userDashboard/details_page.dart';
 import 'package:dio/dio.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:media_scanner/media_scanner.dart';
-
+import 'package:exif/exif.dart';
 import 'dart:typed_data';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -86,37 +87,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       }
     });
   }
-
-  // Future<void> _downloadImageWithDio(String imageUrl) async {
-  //   final hasPermission = await _requestImagePermission();
-
-  //   if (!hasPermission) {
-  //     print("❌ Permission not granted");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("❌ Permission denied")),
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     final dir = await getExternalStorageDirectory(); // still works
-  //     final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.jpg";
-  //     final fullPath = "${dir!.path}/$fileName";
-
-  //     final response = await Dio().download(imageUrl, fullPath);
-  //     if (response.statusCode == 200) {
-  //       print("✅ Image saved to $fullPath");
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("✅ Image saved")),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("❌ Failed to download image")),
-  //     );
-  //   }
-  // }
 
   Future<void> _captureImageFromCamera() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
@@ -190,7 +160,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   }
 
   Future<void> _downloadImageWithDio(String imageUrl) async {
-    // Request proper permission
     final hasPermission = await _requestImagePermission();
     if (!hasPermission) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,8 +169,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
 
     try {
-      // Custom path: /storage/emulated/0/Pictures/ProCounsellor/
-      final baseDir = Directory('/storage/emulated/0/Pictures');
+      final baseDir = Directory('/storage/emulated/0/Pictures/ProCounsellor');
       if (!(await baseDir.exists())) {
         await baseDir.create(recursive: true);
       }
@@ -213,6 +181,18 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       if (response.statusCode == 200) {
         print("✅ Image saved to $fullPath");
 
+        final file = File(fullPath);
+
+        // 1. Set modified date to now
+        await file.setLastModified(DateTime.now());
+
+        // 2. Re-create file (ensures Gallery re-indexes correctly)
+        final tempPath = "$fullPath.tmp";
+        await file.copy(tempPath);
+        await file.delete();
+        await File(tempPath).rename(fullPath);
+
+        // 3. Scan for media
         await MediaScanner.loadMedia(path: fullPath);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -228,20 +208,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       );
     }
   }
-
-  // Future<bool> _requestImagePermission() async {
-  //   if (Platform.isAndroid) {
-  //     final sdk = await _getAndroidSdkVersion();
-  //     if (sdk >= 33) {
-  //       final status = await Permission.photos.request();
-  //       return status.isGranted;
-  //     } else {
-  //       final status = await Permission.storage.request();
-  //       return status.isGranted;
-  //     }
-  //   }
-  //   return true; // iOS/web fallback
-  // }
 
   Future<bool> _requestImagePermission() async {
     if (Platform.isAndroid) {
@@ -297,22 +263,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
-  // Future<void> _fetchUserProfile() async {
-  //   try {
-  //     String url = '${ApiUtils.baseUrl}/api/user/${widget.userId2}';
-  //     final response = await http.get(Uri.parse(url));
-  //     if (response.statusCode == 200) {
-  //       final data = Map<String, dynamic>.from(json.decode(response.body));
-  //       setState(() {
-  //         userPhotoUrl = data['photo'] ?? userPhotoUrl;
-  //         userFirstName = data['firstName'] ?? '';
-  //         userLastName = data['lastName'] ?? '';
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Error fetching user profile: $e');
-  //   }
-  // }
   Future<void> _fetchUserProfile() async {
     try {
       String url;
@@ -357,35 +307,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     });
   }
 
-  // Future<void> _loadMessages() async {
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-  //     // Load cached messages first
-  //     String? cachedData = prefs.getString('chat_cache_$chatId');
-  //     if (cachedData != null) {
-  //       List decoded = jsonDecode(cachedData);
-  //       setState(() {
-  //         messages = List<Map<String, dynamic>>.from(decoded);
-  //       });
-  //     }
-
-  //     // Fetch from backend
-  //     List<Map<String, dynamic>> fetchedMessages =
-  //         await ChatService().getChatMessages(chatId);
-
-  //     setState(() {
-  //       messages = fetchedMessages;
-  //     });
-
-  //     // Save to cache
-  //     prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
-
-  //     _scrollToBottom();
-  //   } catch (e) {
-  //     print('Error loading messages: $e');
-  //   }
-  // }
   Future<void> _loadMessages() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -545,38 +466,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
-  // Future<void> _sendMessage() async {
-  //   String? receiverFCMToken =
-  //       await FirestoreService.getFCMTokenUser(widget.userId2);
-  //   print(widget.userId2);
-  //   print(receiverFCMToken);
-  //   if (_controller.text.isNotEmpty) {
-  //     try {
-  //       MessageRequest messageRequest = MessageRequest(
-  //         senderId: widget.userId,
-  //         text: _controller.text,
-  //         receiverFcmToken: receiverFCMToken!,
-  //       );
-  //       print(messageRequest);
-
-  //       await ChatService().sendMessage(chatId, messageRequest);
-
-  //       _controller.clear();
-  //       setState(() {
-  //         showSendButton = selectedFile != null || webFileBytes != null;
-  //       });
-  //       _scrollToBottom();
-  //       await FirebaseDatabase.instance
-  //           .ref('userStates/${widget.userId}')
-  //           .update({
-  //         'typing': false,
-  //       });
-  //     } catch (e) {
-  //       print('Error sending message: $e' +
-  //           "method name is user2userchatting _sendMsg*()");
-  //     }
-  //   }
-  // }
   Future<void> _sendMessage() async {
     String? receiverFCMToken;
 
@@ -618,272 +507,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
           'Error sending message: $e (method: _sendMessage, user2userchatting)');
     }
   }
-
-  // Future<void> _sendFileMessage() async {
-  //   String? receiverFCMToken =
-  //       await FirestoreService.getFCMTokenUser(widget.userId2);
-  //   if (selectedFile != null || webFileBytes != null) {
-  //     int fileSizeBytes = 0;
-
-  //     // 🔥 Check for file size before uploading
-  //     if (selectedFile != null) {
-  //       fileSizeBytes = await selectedFile!.length();
-  //     } else if (webFileBytes != null) {
-  //       fileSizeBytes = webFileBytes!.length;
-  //     }
-
-  //     // ✅  Set your max size (e.g., 15MB)
-  //     const maxSizeInBytes = 10 * 1024 * 1024;
-
-  //     if (fileSizeBytes > maxSizeInBytes) {
-  //       _showErrorDialog("File too large",
-  //           "This file exceeds the 10MB limit. Please choose a smaller file.");
-  //       return; // ❌ Don't proceed with upload
-  //     }
-  //     // Create a temporary message to show in the UI immediately
-  //     Map<String, dynamic> tempMessage = {
-  //       'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
-  //       'senderId': widget.userId,
-  //       'fileName': selectedFileName,
-  //       'fileUrl': null, // No URL yet (file not uploaded)
-  //       'fileType': 'uploading', // Temporary "uploading" status
-  //       'isSeen': false,
-  //       'timestamp': DateTime.now().millisecondsSinceEpoch,
-  //     };
-
-  //     // Add the file message to UI instantly
-  //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //       if (mounted) {
-  //         setState(() {
-  //           messages.add(tempMessage);
-  //         });
-  //         _scrollToBottom();
-  //       }
-  //     });
-
-  //     // Save a copy of the selected file details
-  //     File? tempFile = selectedFile;
-  //     Uint8List? tempWebBytes = webFileBytes;
-  //     String tempFileName = selectedFileName!;
-
-  //     // Clear the selected file immediately
-  //     setState(() {
-  //       selectedFile = null;
-  //       selectedFileName = null;
-  //       webFileBytes = null;
-  //       showSendButton = _controller.text.isNotEmpty;
-  //     });
-
-  //     try {
-  //       // Upload file to the backend
-  //       await ChatService.sendFileMessage(
-  //         chatId: chatId,
-  //         senderId: widget.userId,
-  //         file: tempFile,
-  //         webFileBytes: tempWebBytes,
-  //         fileName: tempFileName,
-  //         receiverFcmToken: receiverFCMToken!,
-  //       );
-  //       // Fetch updated messages from backend and replace the temporary message
-  //       _loadMessages(); // Refresh messages immediately
-  //     } catch (e) {
-  //       print("❌ Error sending file: $e");
-
-  //       // Remove the temporary message if an error occurs
-  //       setState(() {
-  //         messages.remove(tempMessage);
-  //       });
-  //     }
-  //   }
-  // }
-  // Future<void> _sendFileMessage() async {
-  //   String? receiverFCMToken;
-
-  //   try {
-  //     if (widget.role == 'user') {
-  //       receiverFCMToken =
-  //           await FirestoreService.getFCMTokenUser(widget.userId2);
-  //     } else {
-  //       receiverFCMToken =
-  //           await FirestoreService.getFCMTokenCounsellor(widget.userId2);
-  //     }
-
-  //     if ((selectedFile != null || webFileBytes != null) &&
-  //         receiverFCMToken != null) {
-  //       int fileSizeBytes = 0;
-
-  //       // 🔥 Check for file size before uploading
-  //       if (selectedFile != null) {
-  //         fileSizeBytes = await selectedFile!.length();
-  //       } else if (webFileBytes != null) {
-  //         fileSizeBytes = webFileBytes!.length;
-  //       }
-
-  //       // ✅  Set your max size (e.g., 10MB)
-  //       const maxSizeInBytes = 10 * 1024 * 1024;
-
-  //       if (fileSizeBytes > maxSizeInBytes) {
-  //         _showErrorDialog(
-  //           "File too large",
-  //           "This file exceeds the 10MB limit. Please choose a smaller file.",
-  //         );
-  //         return;
-  //       }
-
-  //       // Create a temporary message to show in the UI immediately
-  //       Map<String, dynamic> tempMessage = {
-  //         'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
-  //         'senderId': widget.userId,
-  //         'fileName': selectedFileName,
-  //         'fileUrl': null,
-  //         'fileType': 'uploading',
-  //         'isSeen': false,
-  //         'timestamp': DateTime.now().millisecondsSinceEpoch,
-  //       };
-
-  //       // Add the file message to UI instantly
-  //       WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         if (mounted) {
-  //           setState(() {
-  //             messages.add(tempMessage);
-  //           });
-  //           _scrollToBottom();
-  //         }
-  //       });
-
-  //       // Save a copy of the selected file details
-  //       File? tempFile = selectedFile;
-  //       Uint8List? tempWebBytes = webFileBytes;
-  //       String tempFileName = selectedFileName!;
-
-  //       // Clear the selected file immediately
-  //       setState(() {
-  //         selectedFile = null;
-  //         selectedFileName = null;
-  //         webFileBytes = null;
-  //         showSendButton = _controller.text.isNotEmpty;
-  //       });
-
-  //       try {
-  //         // Upload file to the backend
-  //         await ChatService.sendFileMessage(
-  //           chatId: chatId,
-  //           senderId: widget.userId,
-  //           file: tempFile,
-  //           webFileBytes: tempWebBytes,
-  //           fileName: tempFileName,
-  //           receiverFcmToken: receiverFCMToken,
-  //         );
-
-  //         _loadMessages(); // Refresh messages immediately
-  //       } catch (e) {
-  //         print("❌ Error sending file: $e");
-
-  //         // Remove the temporary message if an error occurs
-  //         setState(() {
-  //           messages.remove(tempMessage);
-  //         });
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error fetching FCM token: $e");
-  //   }
-  // }
-
-  // Future<void> _sendFileMessage() async {
-  //   String? receiverFCMToken;
-
-  //   try {
-  //     if (widget.role == 'user') {
-  //       receiverFCMToken =
-  //           await FirestoreService.getFCMTokenUser(widget.userId2);
-  //     } else {
-  //       receiverFCMToken =
-  //           await FirestoreService.getFCMTokenCounsellor(widget.userId2);
-  //     }
-
-  //     if ((selectedFile != null || webFileBytes != null) &&
-  //         receiverFCMToken != null) {
-  //       int fileSizeBytes = 0;
-
-  //       // 🔥 Check for file size before uploading
-  //       if (selectedFile != null) {
-  //         fileSizeBytes = await selectedFile!.length();
-  //       } else if (webFileBytes != null) {
-  //         fileSizeBytes = webFileBytes!.length;
-  //       }
-
-  //       const maxSizeInBytes = 10 * 1024 * 1024;
-  //       if (fileSizeBytes > maxSizeInBytes) {
-  //         _showErrorDialog(
-  //             "File too large", "This file exceeds the 10MB limit.");
-  //         return;
-  //       }
-
-  //       // 💬 Create a temporary message with uploading spinner
-  //       final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
-  //       Map<String, dynamic> tempMessage = {
-  //         'id': tempId,
-  //         'senderId': widget.userId,
-  //         'fileName': selectedFileName,
-  //         'fileUrl': null,
-  //         'fileType': 'uploading',
-  //         'isSeen': false,
-  //         'timestamp': DateTime.now().millisecondsSinceEpoch,
-  //         'localBytes': tempWebBytes,
-  //       };
-
-  //       // Add temporary message and set isUploading true
-  //       setState(() {
-  //         messages.add(tempMessage);
-  //         isUploading = true;
-  //       });
-  //       _scrollToBottom();
-
-  //       // Save file details for upload
-  //       File? tempFile = selectedFile;
-  //       Uint8List? tempWebBytes = webFileBytes;
-  //       String tempFileName = selectedFileName!;
-
-  //       // Clear selected file UI
-  //       setState(() {
-  //         selectedFile = null;
-  //         selectedFileName = null;
-  //         webFileBytes = null;
-  //         showSendButton = _controller.text.isNotEmpty;
-  //       });
-
-  //       try {
-  //         // 📤 Upload file to backend
-  //         await ChatService.sendFileMessage(
-  //           chatId: chatId,
-  //           senderId: widget.userId,
-  //           file: tempFile,
-  //           webFileBytes: tempWebBytes,
-  //           fileName: tempFileName,
-  //           receiverFcmToken: receiverFCMToken,
-  //         );
-
-  //         // ✅ Upload done, refresh messages & hide spinner
-  //         setState(() {
-  //           isUploading = false;
-  //         });
-  //         _loadMessages(); // Reload messages to replace temp
-  //       } catch (e) {
-  //         print("❌ Error sending file: $e");
-
-  //         // Remove temp message on failure & hide spinner
-  //         setState(() {
-  //           messages.removeWhere((msg) => msg['id'] == tempId);
-  //           isUploading = false;
-  //         });
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error fetching FCM token: $e");
-  //     setState(() => isUploading = false);
-  //   }
-  // }
 
   Future<void> _sendFileMessage() async {
     String? receiverFCMToken;
@@ -1037,16 +660,30 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                 },
                 child: Text("View"),
               ),
+              // TextButton(
+              //   onPressed: () async {
+              //     Navigator.pop(context);
+              //     final success = await GallerySaver.saveImage(
+              //       imageUrl,
+              //       albumName: 'ProCounsellor',
+              //     );
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       SnackBar(
+              //         content: Text(success == true
+              //             ? "✅ Image saved to Gallery"
+              //             : "❌ Failed to save image"),
+              //       ),
+              //     );
+              //   },
+              //   child: Text("Download"),
+              // ),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
-                  final success = await GallerySaver.saveImage(
-                    imageUrl,
-                    albumName: 'ProCounsellor',
-                  );
+                  final success = await _downloadAndSaveAsPng(imageUrl);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success == true
+                      content: Text(success
                           ? "✅ Image saved to Gallery"
                           : "❌ Failed to save image"),
                     ),
@@ -1071,6 +708,26 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     );
   }
 
+  Future<bool> _requestStoragePermission() async {
+    if (Platform.isAndroid) {
+      final sdk = await DeviceInfoPlugin()
+          .androidInfo
+          .then((info) => info.version.sdkInt);
+
+      if (sdk >= 30) {
+        // Android 11+
+        return await Permission.manageExternalStorage.request().isGranted;
+      } else if (sdk >= 23) {
+        // Android 6-10
+        return await Permission.storage.request().isGranted;
+      } else {
+        // Older versions don't need runtime permission
+        return true;
+      }
+    }
+    return true; // iOS/Web don't need this
+  }
+
   void _showFullImage(String url) {
     showDialog(
       context: context,
@@ -1083,6 +740,136 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
       ),
     );
   }
+
+  Future<bool> _downloadAndSaveAsPng(String imageUrl) async {
+    try {
+      if (!(await _requestStoragePermission())) {
+        print("❌ Permission denied");
+        return false;
+      }
+
+      final response = await Dio().get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      final originalBytes = Uint8List.fromList(response.data!);
+      final decodedImage = img.decodeImage(originalBytes);
+      if (decodedImage == null) {
+        print("❌ Could not decode image");
+        return false;
+      }
+
+      // Re-encode as PNG (NO EXIF possible)
+      final pngBytes = img.encodePng(decodedImage);
+
+      // Save fresh
+      final baseDir = Directory('/storage/emulated/0/Pictures/ProCounsellor');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName = "pro_image_${DateTime.now().millisecondsSinceEpoch}.png";
+      final fullPath = '${baseDir.path}/$fileName';
+
+      final file = await File(fullPath).writeAsBytes(pngBytes);
+      await file.setLastModified(DateTime.now());
+      await MediaScanner.loadMedia(path: file.path);
+
+      print("✅ PNG saved fresh: $fullPath");
+      return true;
+    } catch (e) {
+      print("❌ Error saving PNG: $e");
+      return false;
+    }
+  }
+
+  // Future<bool> _downloadAndSaveImageWithNewDate(String imageUrl) async {
+  //   try {
+  //     // Request permissions based on Android version
+  //     if (!(await _requestImagePermission())) {
+  //       print("❌ Permission denied");
+  //       return false;
+  //     }
+
+  //     // Download image as bytes
+  //     final response = await Dio().get<List<int>>(
+  //       imageUrl,
+  //       options: Options(responseType: ResponseType.bytes),
+  //     );
+
+  //     final originalBytes = Uint8List.fromList(response.data!);
+  //     final decodedImage = img.decodeImage(originalBytes);
+  //     if (decodedImage == null) {
+  //       print("❌ Could not decode image");
+  //       return false;
+  //     }
+
+  //     // Re-encode image without metadata
+  //     final strippedBytes = img.encodeJpg(decodedImage);
+
+  //     // Save re-encoded image to temp
+  //     final tempDir = await getTemporaryDirectory();
+  //     final tempPath =
+  //         '${tempDir.path}/image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+  //     final tempFile = await File(tempPath).writeAsBytes(strippedBytes);
+
+  //     // Save to gallery
+  //     final gallerySaved = await GallerySaver.saveImage(tempFile.path,
+  //         albumName: 'ProCounsellor');
+
+  //     if (gallerySaved == true) {
+  //       print("✅ Image saved with new date: $tempPath");
+  //     } else {
+  //       print("❌ GallerySaver failed");
+  //     }
+
+  //     // Optionally delete temp file
+  //     if (await tempFile.exists()) {
+  //       await tempFile.delete();
+  //     }
+
+  //     return gallerySaved ?? false;
+  //   } catch (e) {
+  //     print("❌ Error saving image with new date: $e");
+  //     return false;
+  //   }
+  // }
+
+  // Future<bool> _downloadAndSaveImageWithoutMetadata(String imageUrl) async {
+  //   try {
+  //     final tempDir = await getTemporaryDirectory();
+  //     final tempPath =
+  //         '${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+  //     // 1. Download image
+  //     final response = await Dio().get<List<int>>(
+  //       imageUrl,
+  //       options: Options(responseType: ResponseType.bytes),
+  //     );
+
+  //     // 2. Decode image to strip metadata
+  //     final originalBytes = Uint8List.fromList(response.data!);
+  //     final decodedImage = img.decodeImage(originalBytes);
+  //     if (decodedImage == null) throw Exception("Image decode failed");
+
+  //     // 3. Encode without metadata
+  //     final strippedBytes = img.encodeJpg(decodedImage);
+
+  //     // 4. Save to temp file
+  //     final tempFile = await File(tempPath).writeAsBytes(strippedBytes);
+
+  //     // 5. Move to gallery
+  //     final galleryResult = await GallerySaver.saveImage(tempFile.path,
+  //         albumName: 'ProCounsellor');
+  //     print("✅ Image saved with new date: $galleryResult");
+
+  //     return galleryResult ?? false;
+  //   } catch (e) {
+  //     print("❌ Error saving image without metadata: $e");
+  //     return false;
+  //   }
+  // }
 
   Future<void> _downloadVideoWithDio(String videoUrl) async {
     final hasPermission = await _requestImagePermission(); // same logic works
@@ -1819,17 +1606,6 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
             ),
     );
   }
-
-  // bool _isDocument(String fileName) {
-  //   return fileName.endsWith('.pdf') ||
-  //       fileName.endsWith('.doc') ||
-  //       fileName.endsWith('.docx') ||
-  //       fileName.endsWith('.xls') ||
-  //       fileName.endsWith('.xlsx') ||
-  //       fileName.endsWith('.ppt') ||
-  //       fileName.endsWith('.pptx') ||
-  //       fileName.endsWith('.txt');
-  // }
 
   bool _isImage(String fileName) {
     final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
