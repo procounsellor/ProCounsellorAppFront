@@ -23,10 +23,16 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:media_scanner/media_scanner.dart';
 import 'package:exif/exif.dart';
+
+import 'dart:math';
+
 import 'dart:typed_data';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:flutter_sound/flutter_sound.dart';
+
+import 'package:flutter/services.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -74,11 +80,26 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   final ImagePicker _picker = ImagePicker();
   bool isUploading = false;
 
+  FlutterSoundRecorder? _audioRecorder;
+  bool isRecording = false;
+  String? audioPath; // Store path of recorded file
+
+  FlutterSoundPlayer? _audioPlayer;
+  bool isPlaying = false;
+  Map<String, bool> playingStates = {};
+  Map<String, List<double>> waveformHeights = {};
+  Map<String, Timer?> waveformTimers = {};
+  Timer? _recordingTimer;
+  int _recordedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
     _listenToCounsellorStatus();
+    _initRecorder();
+    _audioPlayer = FlutterSoundPlayer();
+    _audioPlayer!.openPlayer();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         FirebaseDatabase.instance.ref('userStates/${widget.userId}').update({
@@ -86,6 +107,243 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         });
       }
     });
+  }
+
+  Future<void> _initRecorder() async {
+    _audioRecorder = FlutterSoundRecorder();
+    await _audioRecorder!.openRecorder();
+
+    if (await Permission.microphone.request().isDenied) {
+      throw RecordingPermissionException('Microphone permission not granted');
+    }
+  }
+
+  Future<void> _startRecording() async {
+    final dir = await getTemporaryDirectory();
+    audioPath =
+        '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.aac';
+
+    await _audioRecorder!.startRecorder(
+      toFile: audioPath,
+      codec: Codec.aacADTS,
+    );
+    _recordedSeconds = 0; // Reset
+    _recordingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _recordedSeconds++;
+      });
+    });
+
+    setState(() => isRecording = true);
+  }
+
+  Future<void> _stopRecordingAndSend() async {
+    await _audioRecorder!.stopRecorder();
+    _recordingTimer?.cancel();
+    setState(() => isRecording = false);
+
+    if (audioPath != null) {
+      File audioFile = File(audioPath!);
+      print("Recorded seconds" + _recordedSeconds.toString());
+      // ✅ duration in sec
+      await _sendAudioFile(audioFile, _recordedSeconds);
+    }
+  }
+
+  Future<void> _sendAudioFile(File audioFile, int durationInSeconds) async {
+    String? receiverFCMToken;
+    print("Duration in seconds " + durationInSeconds.toString());
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+      }
+
+      if (receiverFCMToken != null && audioFile.existsSync()) {
+        final audioBytes = await audioFile.readAsBytes();
+        final tempId = 'temp-audio-${DateTime.now().millisecondsSinceEpoch}';
+
+        Map<String, dynamic> tempMessage = {
+          'id': tempId,
+          'senderId': widget.userId,
+          'fileName': 'Voice Note',
+          'fileUrl': null,
+          'fileType': 'audio/mpeg',
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'duration': durationInSeconds,
+          'localBytes': audioBytes,
+          // 👈 Include duration
+        };
+        print("Temp Message");
+        print(tempMessage);
+
+        setState(() {
+          messages.add(tempMessage);
+          isUploading = true;
+        });
+        _scrollToBottom();
+
+        try {
+          await ChatService.sendFileMessage(
+            chatId: chatId,
+            senderId: widget.userId,
+            file: audioFile,
+            webFileBytes: null,
+            fileName: 'voice_note.aac',
+            receiverFcmToken: receiverFCMToken,
+            // extraData: {'duration': durationInSeconds},
+          );
+
+          setState(() => isUploading = false);
+          _loadMessages();
+        } catch (e) {
+          print("❌ Error sending audio: $e");
+          setState(() {
+            messages.removeWhere((msg) => msg['id'] == tempId);
+            isUploading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error preparing to send audio: $e");
+      setState(() => isUploading = false);
+    }
+  }
+
+  Widget _buildAudioMessage(Map<String, dynamic> message) {
+    final audioUrl = message['fileUrl'];
+    final messageId = message['id'];
+    final isThisPlaying = playingStates[messageId] ?? false;
+
+    // Assuming duration is stored in seconds now
+    final durationSec = message['duration']?.toString() ?? '0';
+    print("Build Audio Message " + durationSec);
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.5,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.orangeAccent),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orangeAccent.withOpacity(0.1),
+            blurRadius: 5,
+            offset: Offset(2, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.audiotrack, color: Colors.orange, size: 24),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                isThisPlaying
+                    ? _waveformBars(messageId, true)
+                    : Text("Voice Note",
+                        style: TextStyle(fontWeight: FontWeight.w500)),
+                SizedBox(height: 4),
+                // Text(
+                //   "$durationSec sec",
+                //   style: TextStyle(fontSize: 12, color: Colors.grey),
+                // ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(isThisPlaying ? Icons.stop : Icons.play_arrow,
+                color: Colors.black54),
+            onPressed: () async {
+              if (isThisPlaying) {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates[messageId] = false;
+                  _stopWaveformAnimation(messageId);
+                });
+              } else {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates.updateAll((key, value) => false);
+                });
+
+                await _audioPlayer!.startPlayer(
+                  fromURI: audioUrl,
+                  codec: Codec.aacADTS,
+                  whenFinished: () {
+                    setState(() {
+                      playingStates[messageId] = false;
+                      _stopWaveformAnimation(messageId);
+                    });
+                  },
+                );
+
+                setState(() {
+                  playingStates[messageId] = true;
+                  _startWaveformAnimation(messageId);
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _waveformBars(String messageId, bool isPlaying) {
+    List<double> heights = waveformHeights[messageId] ??
+        List<double>.filled(5, 8); // Default heights
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: heights.map((height) {
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          margin: EdgeInsets.symmetric(horizontal: 2),
+          width: 4,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.orange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _startWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+
+    waveformTimers[messageId] =
+        Timer.periodic(Duration(milliseconds: 100), (_) {
+      setState(() {
+        waveformHeights[messageId] = List.generate(5, (_) {
+          return 6 + (Random().nextDouble() * 14); // Heights between 6 and 20
+        });
+      });
+    });
+  }
+
+  void _stopWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+    waveformTimers[messageId] = null;
+    setState(() {
+      waveformHeights[messageId] = List<double>.filled(5, 8); // Reset
+    });
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(1, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$secs';
   }
 
   Future<void> _captureImageFromCamera() async {
@@ -359,6 +617,11 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
             (msg) => msg['id']?.toString().startsWith('temp-') ?? false);
 
         messages = fetchedMessages;
+      });
+
+      print("Fetched Messages Durations:");
+      fetchedMessages.forEach((msg) {
+        print("ID: ${msg['id']} Duration: ${msg['duration']}");
       });
 
       prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
@@ -669,6 +932,11 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     ChatService().cancelListeners(chatId);
     counsellorStateRef.onDisconnect();
     _controller.dispose();
+    _audioPlayer!.closePlayer();
+    waveformTimers.forEach((_, timer) {
+      timer?.cancel();
+    });
+    _audioPlayer = null;
     _focusNode.dispose(); // 👈 dispose it
     super.dispose();
   }
@@ -1190,32 +1458,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     }
   }
 
-  // Widget _buildMessageWidget(Map<String, dynamic> message) {
-  //   if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
-  //     String fileType = message['fileType'] ?? 'unknown';
-
-  //     if (fileType == 'uploading') {
-  //       return _buildUploadingFileMessage(message);
-  //     } else if (fileType.startsWith('image/')) {
-  //       return _buildImageMessage(message);
-  //     } else if (fileType.startsWith('video/')) {
-  //       return _buildVideoMessage(message);
-  //     } else {
-  //       return _buildFileMessage(message);
-  //     }
-  //   }
-
-  //   return Text(
-  //     message['text'] ?? 'No message',
-  //     style: TextStyle(
-  //       color: Colors.black,
-  //       fontSize: 16.0,
-  //     ),
-  //   );
-  // }
-
   Widget _buildMessageWidget(Map<String, dynamic> message) {
-    print("🔍 BUILDING MESSAGE WIDGET: $message");
+    //print("🔍 BUILDING MESSAGE WIDGET: $message");
 
     if (message['fileUrl'] != null || message['fileType'] != null) {
       String fileType = message['fileType'] ?? 'unknown';
@@ -1229,6 +1473,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
         return _buildVideoMessage(message);
+      } else if (fileType.startsWith('audio/')) {
+        return _buildAudioMessage(message);
       } else {
         return _buildFileMessage(message);
       }
@@ -1633,19 +1879,45 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          showSendButton ? Icons.send : Icons.mic,
-                          color: Colors.black54,
-                        ),
-                        onPressed: showSendButton
-                            ? () {
+                      showSendButton
+                          ? IconButton(
+                              icon: Icon(Icons.send, color: Colors.black54),
+                              onPressed: () {
                                 if (_controller.text.isNotEmpty) _sendMessage();
                                 if (selectedFile != null ||
                                     webFileBytes != null) _sendFileMessage();
-                              }
-                            : null,
-                      ),
+                              },
+                            )
+                          : GestureDetector(
+                              onLongPressStart: (_) async {
+                                HapticFeedback.lightImpact();
+                                await _startRecording();
+                                setState(() => isRecording = true);
+                              },
+                              onLongPressEnd: (_) async {
+                                await _stopRecordingAndSend();
+                                setState(() => isRecording = false);
+                              },
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (isRecording)
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.red.withOpacity(0.3),
+                                      ),
+                                      child: Icon(Icons.mic,
+                                          color: Colors.red, size: 30),
+                                    )
+                                  else
+                                    Icon(Icons.mic,
+                                        color: Colors.black54, size: 30),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 ),
