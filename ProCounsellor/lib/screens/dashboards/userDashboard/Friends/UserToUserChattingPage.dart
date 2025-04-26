@@ -23,10 +23,13 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:media_scanner/media_scanner.dart';
 import 'package:exif/exif.dart';
+import 'dart:math';
+
 import 'dart:typed_data';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:flutter_sound/flutter_sound.dart';
 
 class UserToUserChattingPage extends StatefulWidget {
   final String itemName;
@@ -74,17 +77,238 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
   final ImagePicker _picker = ImagePicker();
   bool isUploading = false;
 
+  FlutterSoundRecorder? _audioRecorder;
+  bool isRecording = false;
+  String? audioPath; // Store path of recorded file
+
+  FlutterSoundPlayer? _audioPlayer;
+  bool isPlaying = false;
+  Map<String, bool> playingStates = {};
+  Map<String, List<double>> waveformHeights = {};
+  Map<String, Timer?> waveformTimers = {};
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
     _listenToCounsellorStatus();
+    _initRecorder();
+    _audioPlayer = FlutterSoundPlayer();
+    _audioPlayer!.openPlayer();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         FirebaseDatabase.instance.ref('userStates/${widget.userId}').update({
           'typing': false,
         });
       }
+    });
+  }
+
+  Future<void> _initRecorder() async {
+    _audioRecorder = FlutterSoundRecorder();
+    await _audioRecorder!.openRecorder();
+
+    if (await Permission.microphone.request().isDenied) {
+      throw RecordingPermissionException('Microphone permission not granted');
+    }
+  }
+
+  Future<void> _startRecording() async {
+    final dir = await getTemporaryDirectory();
+    audioPath =
+        '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.aac';
+
+    await _audioRecorder!.startRecorder(
+      toFile: audioPath,
+      codec: Codec.aacADTS,
+    );
+
+    setState(() => isRecording = true);
+  }
+
+  Future<void> _stopRecordingAndSend() async {
+    await _audioRecorder!.stopRecorder();
+    setState(() => isRecording = false);
+
+    if (audioPath != null) {
+      File audioFile = File(audioPath!);
+      // 🔥 Now send audioFile similar to how you send other files
+      await _sendAudioFile(audioFile);
+    }
+  }
+
+  Future<void> _sendAudioFile(File audioFile) async {
+    String? receiverFCMToken;
+
+    try {
+      if (widget.role == 'user') {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenUser(widget.userId2);
+      } else {
+        receiverFCMToken =
+            await FirestoreService.getFCMTokenCounsellor(widget.userId2);
+      }
+
+      if (receiverFCMToken != null && audioFile.existsSync()) {
+        // Read bytes for temp preview
+        final audioBytes = await audioFile.readAsBytes();
+        final tempId = 'temp-audio-${DateTime.now().millisecondsSinceEpoch}';
+
+        // Add temporary voice note message to UI
+        Map<String, dynamic> tempMessage = {
+          'id': tempId,
+          'senderId': widget.userId,
+          'fileName': 'Voice Note',
+          'fileUrl': null,
+          'fileType': 'audio/mpeg', // or 'audio/aac' based on codec
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'localBytes': audioBytes,
+        };
+
+        setState(() {
+          messages.add(tempMessage);
+          isUploading = true;
+        });
+        _scrollToBottom();
+
+        // Upload to backend
+        try {
+          await ChatService.sendFileMessage(
+            chatId: chatId,
+            senderId: widget.userId,
+            file: audioFile,
+            webFileBytes: null,
+            fileName: 'voice_note.aac',
+            receiverFcmToken: receiverFCMToken,
+          );
+
+          setState(() => isUploading = false);
+          _loadMessages(); // Refresh to replace temp message
+        } catch (e) {
+          print("❌ Error sending audio: $e");
+          setState(() {
+            messages.removeWhere((msg) => msg['id'] == tempId);
+            isUploading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error preparing to send audio: $e");
+      setState(() => isUploading = false);
+    }
+  }
+
+  Widget _buildAudioMessage(Map<String, dynamic> message) {
+    final audioUrl = message['fileUrl'];
+    final messageId = message['id'];
+    final isThisPlaying = playingStates[messageId] ?? false;
+
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.5,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.orangeAccent),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orangeAccent.withOpacity(0.1),
+            blurRadius: 5,
+            offset: Offset(2, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.audiotrack, color: Colors.orange, size: 24),
+          SizedBox(width: 10),
+          Expanded(
+            child: isThisPlaying
+                ? _waveformBars(messageId, true)
+                : Text("Voice Note",
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+          ),
+          IconButton(
+            icon: Icon(isThisPlaying ? Icons.stop : Icons.play_arrow,
+                color: Colors.black54),
+            onPressed: () async {
+              if (isThisPlaying) {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates[messageId] = false;
+                  _stopWaveformAnimation(messageId);
+                });
+              } else {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates.updateAll((key, value) => false);
+                });
+
+                await _audioPlayer!.startPlayer(
+                  fromURI: audioUrl,
+                  codec: Codec.aacADTS,
+                  whenFinished: () {
+                    setState(() {
+                      playingStates[messageId] = false;
+                      _stopWaveformAnimation(messageId);
+                    });
+                  },
+                );
+
+                setState(() {
+                  playingStates[messageId] = true;
+                  _startWaveformAnimation(messageId);
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _waveformBars(String messageId, bool isPlaying) {
+    List<double> heights = waveformHeights[messageId] ??
+        List<double>.filled(5, 8); // Default heights
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: heights.map((height) {
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          margin: EdgeInsets.symmetric(horizontal: 2),
+          width: 4,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.orange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _startWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+
+    waveformTimers[messageId] =
+        Timer.periodic(Duration(milliseconds: 100), (_) {
+      setState(() {
+        waveformHeights[messageId] = List.generate(5, (_) {
+          return 6 + (Random().nextDouble() * 14); // Heights between 6 and 20
+        });
+      });
+    });
+  }
+
+  void _stopWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+    waveformTimers[messageId] = null;
+    setState(() {
+      waveformHeights[messageId] = List<double>.filled(5, 8); // Reset
     });
   }
 
@@ -669,6 +893,11 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
     ChatService().cancelListeners(chatId);
     counsellorStateRef.onDisconnect();
     _controller.dispose();
+    _audioPlayer!.closePlayer();
+    waveformTimers.forEach((_, timer) {
+      timer?.cancel();
+    });
+    _audioPlayer = null;
     _focusNode.dispose(); // 👈 dispose it
     super.dispose();
   }
@@ -1229,6 +1458,8 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
         return _buildImageMessage(message);
       } else if (fileType.startsWith('video/')) {
         return _buildVideoMessage(message);
+      } else if (fileType.startsWith('audio/')) {
+        return _buildAudioMessage(message);
       } else {
         return _buildFileMessage(message);
       }
@@ -1633,18 +1864,37 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
                           ),
                         ),
                       ),
+                      // IconButton(
+                      //   icon: Icon(
+                      //     showSendButton ? Icons.send : Icons.mic,
+                      //     color: Colors.black54,
+                      //   ),
+                      //   onPressed: showSendButton
+                      //       ? () {
+                      //           if (_controller.text.isNotEmpty) _sendMessage();
+                      //           if (selectedFile != null ||
+                      //               webFileBytes != null) _sendFileMessage();
+                      //         }
+                      //       : null,
+                      // ),
                       IconButton(
                         icon: Icon(
-                          showSendButton ? Icons.send : Icons.mic,
+                          showSendButton
+                              ? Icons.send
+                              : (isRecording ? Icons.stop : Icons.mic),
                           color: Colors.black54,
                         ),
-                        onPressed: showSendButton
-                            ? () {
-                                if (_controller.text.isNotEmpty) _sendMessage();
-                                if (selectedFile != null ||
-                                    webFileBytes != null) _sendFileMessage();
-                              }
-                            : null,
+                        onPressed: () {
+                          if (showSendButton) {
+                            if (_controller.text.isNotEmpty) _sendMessage();
+                            if (selectedFile != null || webFileBytes != null)
+                              _sendFileMessage();
+                          } else {
+                            isRecording
+                                ? _stopRecordingAndSend()
+                                : _startRecording();
+                          }
+                        },
                       ),
                     ],
                   ),
