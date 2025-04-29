@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
+import 'package:google_fonts/google_fonts.dart';
 
 class ChatPage extends StatefulWidget {
   final String counsellorId;
@@ -141,6 +142,7 @@ class _ChatPageState extends State<ChatPage> {
               .get(Uri.parse('${ApiUtils.baseUrl}/api/chats/$chatId/messages'));
           if (msgRes.statusCode == 200) {
             final messages = json.decode(msgRes.body);
+            //if (messages.isEmpty) continue;
             if (messages.isNotEmpty) {
               final last = messages.last;
               final ts = last['timestamp'];
@@ -169,6 +171,15 @@ class _ChatPageState extends State<ChatPage> {
                 'isSeen': isSeen,
                 'senderId': senderId,
               });
+            } else {
+              // No message yet → show "No messages yet!"
+              chatInfo.addAll({
+                'lastMessage': 'No messages yet!',
+                'timestampRaw': 0, // No timestamp
+                'timestamp': '', // No need to show date
+                'isSeen': true,
+                'senderId': '',
+              });
             }
           }
         } catch (_) {}
@@ -176,8 +187,11 @@ class _ChatPageState extends State<ChatPage> {
         fetchedChats.add(chatInfo);
       }
 
-      fetchedChats.sort(
-          (a, b) => (b['timestampRaw'] ?? 0).compareTo(a['timestampRaw'] ?? 0));
+      fetchedChats.sort((a, b) {
+        final tsA = a['timestampRaw'] ?? 0;
+        final tsB = b['timestampRaw'] ?? 0;
+        return tsB.compareTo(tsA); // latest first
+      });
       await ApiCache.set(cacheKey, json.encode(fetchedChats));
 
       if (!mounted) return;
@@ -217,6 +231,7 @@ class _ChatPageState extends State<ChatPage> {
 
   void _updateChat(String chatId, DataSnapshot snapshot) {
     if (!mounted) return;
+
     final msg = Map<String, dynamic>.from(snapshot.value as Map);
     final index = allChats.indexWhere((c) => c['chatId'] == chatId);
     if (index == -1) return;
@@ -247,11 +262,52 @@ class _ChatPageState extends State<ChatPage> {
     chat['isSeen'] = isSeen;
     chat['senderId'] = senderId;
 
-    allChats.removeAt(index);
-    allChats.insert(0, chat);
+    allChats[index] = chat;
 
-    _applyFilters();
+    // Sort the whole list again
+    allChats.sort(
+        (a, b) => (b['timestampRaw'] ?? 0).compareTo(a['timestampRaw'] ?? 0));
+
+    _applyFilters(); // this respects sort order
   }
+
+  // void _updateChat(String chatId, DataSnapshot snapshot) {
+  //   if (!mounted) return;
+  //   final msg = Map<String, dynamic>.from(snapshot.value as Map);
+  //   final index = allChats.indexWhere((c) => c['chatId'] == chatId);
+  //   if (index == -1) return;
+
+  //   final chat = allChats[index];
+  //   final ts = msg['timestamp'];
+  //   final senderId = msg['senderId'] ?? '';
+  //   final isSeen = msg['isSeen'] ?? true;
+
+  //   String text = msg['text'] ?? 'Media';
+  //   if (msg['text'] == null && msg['fileType'] != null) {
+  //     final type = msg['fileType'];
+  //     text = type.startsWith('image/')
+  //         ? '📷 Image'
+  //         : type.startsWith('video/')
+  //             ? '🎥 Video'
+  //             : '📄 File';
+  //   }
+
+  //   if (senderId == widget.counsellorId) {
+  //     text = "Me: $text";
+  //   }
+
+  //   chat['lastMessage'] = text;
+  //   chat['timestampRaw'] = ts;
+  //   chat['timestamp'] = DateFormat('dd MMM, h:mm a')
+  //       .format(DateTime.fromMillisecondsSinceEpoch(ts));
+  //   chat['isSeen'] = isSeen;
+  //   chat['senderId'] = senderId;
+
+  //   allChats.removeAt(index);
+  //   allChats.insert(0, chat);
+
+  //   _applyFilters();
+  // }
 
   Widget buildFilterChips() {
     const options = ['All', 'Friends', 'Counsellors'];
@@ -281,7 +337,19 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Chats")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          "My Chats",
+          style: GoogleFonts.outfit(
+            // 👈 or any font like Roboto, Lato, Poppins
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.black, // since background is white
+          ),
+        ),
+        backgroundColor: Colors.white,
+      ),
       body: isLoading
           ? Center(
               child: LoadingAnimationWidget.staggeredDotsWave(
@@ -304,14 +372,23 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                 ),
-                buildFilterChips(),
+                //  buildFilterChips(),
                 Expanded(
                   child: visibleChats.isEmpty
                       ? Center(child: Text("No chats found"))
                       : ListView.separated(
                           controller: _scrollController,
                           itemCount: visibleChats.length,
-                          separatorBuilder: (_, __) => Divider(),
+                          separatorBuilder: (_, __) => Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Divider(
+                              color: Colors.grey
+                                  .withOpacity(0.3), // lighter and subtle
+                              thickness: 0.6, // thinner than default
+                              height: 20, // adds spacing vertically
+                            ),
+                          ),
                           itemBuilder: (context, i) {
                             final chat = visibleChats[i];
                             return ListTile(
@@ -325,7 +402,7 @@ class _ChatPageState extends State<ChatPage> {
                                   Text(chat['lastMessage'] ?? '',
                                       overflow: TextOverflow.ellipsis),
                                   Text(chat['timestamp'] ?? '',
-                                      style: TextStyle(
+                                      style: GoogleFonts.outfit(
                                           fontSize: 12, color: Colors.grey)),
                                 ],
                               ),
