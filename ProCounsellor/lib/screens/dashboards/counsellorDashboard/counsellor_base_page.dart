@@ -295,12 +295,12 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
                   255, 0, 0, 0)), // Set the title color to #F0BB78
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer(); // Open the drawer
-          },
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.menu),
+        //   onPressed: () {
+        //     _scaffoldKey.currentState?.openDrawer(); // Open the drawer
+        //   },
+        // ),
         actions: [
           Stack(
             children: [
@@ -391,89 +391,89 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
           ),
         ],
       ),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFFF0BB78),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    backgroundImage:
-                        _photoUrl != null ? NetworkImage(_photoUrl!) : null,
-                    child: _isLoadingPhoto || _photoUrl == null
-                        ? Icon(Icons.person, size: 40, color: Color(0xFFF0BB78))
-                        : null,
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    _fullName,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                _navigateToPage(0);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.currency_rupee),
-              title: Text('Transactions'),
-              onTap: () {
-                _navigateToPage(1);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.groups),
-              title: Text('Community'),
-              onTap: () {
-                _navigateToPage(2);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.list_alt),
-              title: Text('My Activities'),
-              onTap: () {
-                _navigateToPage(3);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Profile'),
-              onTap: () {
-                _navigateToPage(4);
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Logout'),
-              onTap: () {
-                _stateChangeTimer?.cancel(); // Cancel any pending timer
-                _counsellorStateNotifier
-                    .setOffline(); // Explicitly set state to offline on logout
-                widget.onSignOut();
-              },
-            ),
-          ],
-        ),
-      ),
+      // drawer: Drawer(
+      //   backgroundColor: Colors.white,
+      //   child: ListView(
+      //     padding: EdgeInsets.zero,
+      //     children: [
+      //       DrawerHeader(
+      //         decoration: BoxDecoration(
+      //           color: Color(0xFFF0BB78),
+      //         ),
+      //         child: Column(
+      //           crossAxisAlignment: CrossAxisAlignment.start,
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           children: [
+      //             CircleAvatar(
+      //               radius: 30,
+      //               backgroundColor: Colors.white,
+      //               backgroundImage:
+      //                   _photoUrl != null ? NetworkImage(_photoUrl!) : null,
+      //               child: _isLoadingPhoto || _photoUrl == null
+      //                   ? Icon(Icons.person, size: 40, color: Color(0xFFF0BB78))
+      //                   : null,
+      //             ),
+      //             SizedBox(height: 10),
+      //             Text(
+      //               _fullName,
+      //               style: TextStyle(
+      //                 color: Colors.white,
+      //                 fontSize: 18,
+      //                 fontWeight: FontWeight.w600,
+      //               ),
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      //       ListTile(
+      //         leading: Icon(Icons.home),
+      //         title: Text('Home'),
+      //         onTap: () {
+      //           _navigateToPage(0);
+      //         },
+      //       ),
+      //       ListTile(
+      //         leading: Icon(Icons.currency_rupee),
+      //         title: Text('Transactions'),
+      //         onTap: () {
+      //           _navigateToPage(1);
+      //         },
+      //       ),
+      //       ListTile(
+      //         leading: Icon(Icons.groups),
+      //         title: Text('Community'),
+      //         onTap: () {
+      //           _navigateToPage(2);
+      //         },
+      //       ),
+      //       ListTile(
+      //         leading: Icon(Icons.list_alt),
+      //         title: Text('My Activities'),
+      //         onTap: () {
+      //           _navigateToPage(3);
+      //         },
+      //       ),
+      //       ListTile(
+      //         leading: Icon(Icons.person),
+      //         title: Text('Profile'),
+      //         onTap: () {
+      //           _navigateToPage(4);
+      //         },
+      //       ),
+      //       Divider(),
+      //       ListTile(
+      //         leading: Icon(Icons.logout),
+      //         title: Text('Logout'),
+      //         onTap: () {
+      //           _stateChangeTimer?.cancel(); // Cancel any pending timer
+      //           _counsellorStateNotifier
+      //               .setOffline(); // Explicitly set state to offline on logout
+      //           widget.onSignOut();
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
       body: _pages[_selectedIndex], // Display the selected page
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
