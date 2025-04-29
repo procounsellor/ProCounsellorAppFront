@@ -1584,6 +1584,7 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                     ],
                   ),
                 ),
+                SizedBox(height: 20),
               ],
             ),
     );
