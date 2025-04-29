@@ -7,6 +7,13 @@ import '../../../services/api_utils.dart';
 import '../../paymentScreens/add_bank_details_counsellor.dart';
 import 'client_details_page.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import '../userDashboard/top_news_carousel.dart';
+import '../userDashboard/headersText/TrendingHeader.dart';
+import '../userDashboard/components/TopEvents.dart';
+import '../userDashboard/components/TopColleges.dart';
+import '../userDashboard/components/TopExamsList.dart';
+import '../userDashboard/components/TrendingCoursesList.dart';
+import '../userDashboard/components/InfiniteCollegeRanking.dart';
 
 class CounsellorDashboard extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -28,8 +35,27 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   Map<String, dynamic>? _bankDetails;
 
   @override
+  late void Function() myMethod;
+  void _onScroll() {
+    if (!mounted) return; // <-- Safe check
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      try {
+        myMethod.call();
+        print("call");
+      } catch (e) {
+        print("⚠️ Error calling myMethod: $e");
+      }
+    }
+  }
+
+  ScrollController _scrollController = ScrollController();
+
+  @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll); // ✅ Add this
+
     fetchDashboardData();
     fetchUserDetails();
     fetchReviews();
@@ -43,25 +69,23 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['walletAmount'] != null && data ['bankDetails'] != null) {
-            _walletBalance = (data['walletAmount'] ?? 0).toDouble();
-            _bankDetails = data['bankDetails'];
-          }
+        if (data['walletAmount'] != null && data['bankDetails'] != null) {
+          _walletBalance = (data['walletAmount'] ?? 0).toDouble();
+          _bankDetails = data['bankDetails'];
         }
       }
-      catch (e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
     }
   }
 
-
   Future<void> fetchDashboardData() async {
     final clientUrl = Uri.parse(
         '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}/clients');
-    final detailsUrl = Uri.parse(
-        '${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
+    final detailsUrl =
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}');
 
     try {
       final clientResponse = await http.get(clientUrl);
@@ -129,6 +153,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
               child: CircularProgressIndicator(),
             )
           : SingleChildScrollView(
+              controller: _scrollController, // Attach controller here ✅
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -342,7 +367,9 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => WithdrawFundsCounsellorPage(userName: widget.counsellorId),
+                                        builder: (context) =>
+                                            WithdrawFundsCounsellorPage(
+                                                userName: widget.counsellorId),
                                       ),
                                     );
                                   },
@@ -363,7 +390,9 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddBankDetailsCounsellorPage(username: widget.counsellorId),
+                                builder: (context) =>
+                                    AddBankDetailsCounsellorPage(
+                                        username: widget.counsellorId),
                               ),
                             );
                           },
@@ -381,20 +410,28 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                 children: [
                                   Text(
                                     "Bank Details",
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   SizedBox(height: 12),
                                   _bankDetails != null
                                       ? Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Text("Account Number: ${_bankDetails!['bankAccountNumber']}"),
-                                            Text("IFSC Code: ${_bankDetails!['ifscCode']}"),
-                                            Text("Account Holder: ${_bankDetails!['fullName']}"),
+                                            Text(
+                                                "Account Number: ${_bankDetails!['bankAccountNumber']}"),
+                                            Text(
+                                                "IFSC Code: ${_bankDetails!['ifscCode']}"),
+                                            Text(
+                                                "Account Holder: ${_bankDetails!['fullName']}"),
                                             SizedBox(height: 16),
                                             Text(
                                               "Tap to update",
-                                              style: TextStyle(color: Colors.blueGrey, fontSize: 12),
+                                              style: TextStyle(
+                                                  color: Colors.blueGrey,
+                                                  fontSize: 12),
                                             ),
                                           ],
                                         )
@@ -404,7 +441,10 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (context) => AddBankDetailsCounsellorPage(username: widget.counsellorId),
+                                                  builder: (context) =>
+                                                      AddBankDetailsCounsellorPage(
+                                                          username: widget
+                                                              .counsellorId),
                                                 ),
                                               );
                                             },
@@ -548,6 +588,44 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                     ),
                   ),
                   // review section
+                  TrendingHeader(title: "Top News"),
+                  TopNewsCarousel(),
+                  SizedBox(height: 10),
+
+                  TrendingHeader(title: "Top Events"),
+                  EventCarousel(),
+                  SizedBox(height: 10),
+
+                  TrendingHeader(title: "Top Colleges"),
+                  TopCollegesList(username: "counsellor"),
+                  SizedBox(height: 10),
+
+                  TrendingHeader(title: "Trending Exams"),
+                  TopExamsList(username: "counsellor"),
+                  SizedBox(height: 10),
+
+                  TrendingHeader(title: "Trending Courses"),
+                  SizedBox(height: 10),
+                  TrendingCoursesList(),
+
+                  // TrendingHeader(title: "Explore More"),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 8.0), // Custom padding here
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TrendingHeader(title: "Explore More"),
+                        InfiniteCollegeRanking(
+                          builder: (BuildContext context,
+                              void Function() methodFromChild) {
+                            myMethod = methodFromChild;
+                          },
+                          username: "counsellor",
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

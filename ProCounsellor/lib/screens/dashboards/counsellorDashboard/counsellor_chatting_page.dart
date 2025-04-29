@@ -13,6 +13,14 @@ import '../../../services/chat_service.dart';
 import '../../newCallingScreen/save_fcm_token.dart';
 import 'client_details_page.dart'; // Import the Client Details Page
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:media_scanner/media_scanner.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class CounsellorChattingPage extends StatefulWidget {
   final String itemName;
@@ -44,10 +52,43 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   String? selectedFileName; // Store file name
   Uint8List? webFileBytes; // For Web
 
+  bool isUserTyping = false;
+  late DatabaseReference userStateRef;
+  bool isUploading = false;
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
+    _listenToUserTyping();
+  }
+
+  //download
+  Future<bool> _requestStoragePermission() async {
+    if (Platform.isAndroid) {
+      final sdk = await DeviceInfoPlugin()
+          .androidInfo
+          .then((info) => info.version.sdkInt);
+      if (sdk >= 33) {
+        return await Permission.photos.request().isGranted;
+      } else {
+        return await Permission.storage.request().isGranted;
+      }
+    }
+    return true; // iOS or Web
+  }
+
+  //typing
+  void _listenToUserTyping() {
+    userStateRef = FirebaseDatabase.instance.ref('userStates/${widget.userId}');
+    userStateRef.onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        setState(() {
+          isUserTyping = data['typing'] == true;
+        });
+      }
+    });
   }
 
   Future<void> _initializeChat() async {
@@ -240,35 +281,61 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
     );
   }
 
+  // Future<void> _pickFile(FileType type,
+  //     {List<String>? allowedExtensions}) async {
+  //   FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //     type: type,
+  //     allowedExtensions: allowedExtensions,
+  //     withData: true, // Ensures bytes are available for web
+  //   );
+
+  //   if (result != null) {
+  //     setState(() {
+  //       selectedFileName = result.files.single.name;
+
+  //       if (kIsWeb) {
+  //         // Web: Store file bytes
+  //         webFileBytes = result.files.single.bytes;
+  //         selectedFile = null; // No File object on web
+  //       } else {
+  //         // Mobile/Desktop: Store file path
+  //         selectedFile = File(result.files.single.path!);
+  //         webFileBytes = null;
+  //       }
+  //       showSendButton = true;
+  //     });
+  //     print("Selected File: $selectedFileName");
+  //   }
+  // }
+
   Future<void> _pickFile(FileType type,
       {List<String>? allowedExtensions}) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: type,
       allowedExtensions: allowedExtensions,
-      withData: true, // Ensures bytes are available for web
+      withData: true, // Ensures bytes are available for web or preview
     );
 
     if (result != null) {
-      setState(() {
-        selectedFileName = result.files.single.name;
+      selectedFileName = result.files.single.name;
 
-        if (kIsWeb) {
-          // Web: Store file bytes
-          webFileBytes = result.files.single.bytes;
-          selectedFile = null; // No File object on web
-        } else {
-          // Mobile/Desktop: Store file path
-          selectedFile = File(result.files.single.path!);
-          webFileBytes = null;
-        }
+      if (kIsWeb) {
+        webFileBytes = result.files.single.bytes;
+        selectedFile = null;
+      } else {
+        selectedFile = File(result.files.single.path!);
+        webFileBytes = await selectedFile!.readAsBytes(); // ✅ Await here
+      }
+
+      setState(() {
         showSendButton = true;
       });
-      print("Selected File: $selectedFileName");
     }
   }
 
   Future<void> _sendMessage() async {
-    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(widget.userId);
+    String? receiverFCMToken =
+        await FirestoreService.getFCMTokenUser(widget.userId);
 
     if (_controller.text.isNotEmpty) {
       try {
@@ -292,7 +359,8 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   }
 
   Future<void> _sendFileMessage() async {
-    String? receiverFCMToken = await FirestoreService.getFCMTokenUser(widget.userId);
+    String? receiverFCMToken =
+        await FirestoreService.getFCMTokenUser(widget.userId);
     if (selectedFile != null || webFileBytes != null) {
       int fileSizeBytes = 0;
 
@@ -426,94 +494,122 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
+    final imageUrl = message['fileUrl'];
+
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
-          builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: InteractiveViewer(
-              panEnabled: true,
-              boundaryMargin: EdgeInsets.all(20),
-              minScale: 0.5,
-              maxScale: 3.0,
-              child: Image.network(
-                message['fileUrl'],
-                fit: BoxFit.contain,
+          builder: (_) => AlertDialog(
+            title: Text("Image Options"),
+            content: Text("View or download this image?"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFullImage(imageUrl);
+                },
+                child: Text("View"),
               ),
-            ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final success = await GallerySaver.saveImage(imageUrl,
+                      albumName: 'ProCounsellor');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            success == true ? "✅ Image saved" : "❌ Failed")),
+                  );
+                },
+                child: Text("Download"),
+              ),
+            ],
           ),
         );
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
         child: Image.network(
-          message['fileUrl'],
+          imageUrl,
           width: 200,
           height: 200,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(child: CircularProgressIndicator());
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.error, color: Colors.red);
-          },
+          errorBuilder: (_, __, ___) => Icon(Icons.broken_image),
+        ),
+      ),
+    );
+  }
+
+  void _showFullImage(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: InteractiveViewer(
+          panEnabled: true,
+          child: Image.network(url),
         ),
       ),
     );
   }
 
   Widget _buildVideoMessage(Map<String, dynamic> message) {
-    if (kIsWeb) {
-      // On Web, open video in a new browser tab
-      return GestureDetector(
-        onTap: () {
-          _launchURL(message['fileUrl']);
-        },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+    final videoUrl = message['fileUrl'];
+
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Video Options"),
+            content: Text("Play or download this video?"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (_) => Dialog(
+                      backgroundColor: Colors.black,
+                      child: VideoPlayerWidget(videoUrl: videoUrl),
+                    ),
+                  );
+                },
+                child: Text("Play"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  final success = await GallerySaver.saveVideo(videoUrl,
+                      albumName: 'ProCounsellor');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            success == true ? "✅ Video saved" : "❌ Failed")),
+                  );
+                },
+                child: Text("Download"),
+              ),
             ],
           ),
+        );
+      },
+      child: Container(
+        width: 200,
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8.0),
         ),
-      );
-    } else {
-      // Mobile/Desktop: Show video preview and play inside the app
-      return GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (_) => Dialog(
-              backgroundColor: Colors.black,
-              child: VideoPlayerWidget(videoUrl: message['fileUrl']),
-            ),
-          );
-        },
-        child: Container(
-          width: 200,
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
-            ],
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(Icons.play_circle_fill, color: Colors.white, size: 50),
+          ],
         ),
-      );
-    }
+      ),
+    );
   }
 
 // Open Video in Browser on Web
@@ -525,6 +621,55 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
       print("Could not launch $url");
     }
   }
+
+  void _downloadFile(String fileUrl) async {
+    final hasPermission = await _requestStoragePermission();
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Permission denied")),
+      );
+      return;
+    }
+
+    try {
+      final baseDir = Directory('/storage/emulated/0/Download/ProCounsellor');
+      if (!(await baseDir.exists())) {
+        await baseDir.create(recursive: true);
+      }
+
+      final fileName =
+          "pro_file_${DateTime.now().millisecondsSinceEpoch}_${p.basename(fileUrl)}";
+      final fullPath = p.join(baseDir.path, fileName);
+
+      final response = await Dio().download(fileUrl, fullPath);
+      if (response.statusCode == 200) {
+        print("✅ File saved to $fullPath");
+        await MediaScanner.loadMedia(path: fullPath);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ File saved to Downloads")),
+        );
+      } else {
+        print("❌ File download failed: ${response.statusMessage}");
+      }
+    } catch (e) {
+      print("❌ Error downloading file: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to download file")),
+      );
+    }
+  }
+
+  // void _downloadFile(String url) async {
+  //   Uri uri = Uri.parse(url); // Convert string to Uri
+
+  //   print("Downloading file from: $url");
+
+  //   if (await canLaunchUrl(uri)) {
+  //     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  //   } else {
+  //     print("Could not launch $url");
+  //   }
+  // }
 
   Widget _buildFileMessage(Map<String, dynamic> message) {
     return GestureDetector(
@@ -552,18 +697,6 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
         ),
       ),
     );
-  }
-
-  void _downloadFile(String url) async {
-    Uri uri = Uri.parse(url); // Convert string to Uri
-
-    print("Downloading file from: $url");
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      print("Could not launch $url");
-    }
   }
 
   Widget _buildMessageWidget(Map<String, dynamic> message) {
@@ -611,6 +744,25 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
         ],
       ),
     );
+  }
+
+  bool _isVideo(String fileName) {
+    final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+    return videoExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
+  }
+
+  bool _isDocument(String fileName) {
+    final docExtensions = [
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+      '.ppt',
+      '.pptx',
+      '.txt'
+    ];
+    return docExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
   }
 
   @override
@@ -679,14 +831,28 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  widget.itemName.isNotEmpty ? widget.itemName : 'Unknown User',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.itemName.isNotEmpty
+                          ? widget.itemName
+                          : 'Unknown User',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      isUserTyping ? "Typing..." : "",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -746,26 +912,85 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                     },
                   ),
                 ),
-                if (selectedFileName != null) // Show selected file
+                if (selectedFileName != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.insert_drive_file, color: Colors.black54),
-                        SizedBox(width: 10),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (webFileBytes != null &&
+                                !_isVideo(selectedFileName!) &&
+                                !_isDocument(selectedFileName!))
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  child: Image.memory(webFileBytes!,
+                                      fit: BoxFit.cover),
+                                ),
+                              )
+                            else if (_isVideo(selectedFileName!))
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.play_circle_fill,
+                                    color: Colors.white, size: 36),
+                              )
+                            else
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.insert_drive_file,
+                                    color: Colors.blueGrey, size: 30),
+                              ),
+                          ],
+                        ),
+                        SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            selectedFileName!,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                selectedFileName!,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                "Ready to send",
+                                style: TextStyle(
+                                    color: Colors.green, fontSize: 12),
+                              ),
+                            ],
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.red),
+                          icon: Icon(Icons.cancel, color: Colors.red, size: 22),
                           onPressed: () {
                             setState(() {
                               selectedFile = null;
@@ -773,6 +998,23 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                               webFileBytes = null;
                             });
                           },
+                        ),
+                      ],
+                    ),
+                  ),
+                if (isUserTyping)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, bottom: 5.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundImage: NetworkImage(widget.photo ?? ''),
+                        ),
+                        const SizedBox(width: 8),
+                        const SpinKitThreeBounce(
+                          color: Colors.grey,
+                          size: 18.0,
                         ),
                       ],
                     ),
@@ -803,6 +1045,12 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                                 showSendButton = text.isNotEmpty ||
                                     selectedFile != null ||
                                     webFileBytes != null;
+                              });
+
+                              FirebaseDatabase.instance
+                                  .ref('userStates/${widget.counsellorId}')
+                                  .update({
+                                'typing': text.isNotEmpty,
                               });
                             },
                             decoration: InputDecoration(
