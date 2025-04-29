@@ -583,7 +583,7 @@ class _ChattingPageState extends State<UserToUserChattingPage> {
 
   void _listenToCounsellorStatus() {
     counsellorStateRef =
-        FirebaseDatabase.instance.ref('userStates/${widget.userId2}');
+        FirebaseDatabase.instance.ref('counsellorStates/${widget.userId2}');
 
     counsellorStateRef.onValue.listen((event) {
       if (event.snapshot.value != null) {

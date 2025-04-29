@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-
+import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +21,11 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'dart:math';
+import 'package:flutter/services.dart';
 
 class CounsellorChattingPage extends StatefulWidget {
   final String itemName;
@@ -56,11 +61,259 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   late DatabaseReference userStateRef;
   bool isUploading = false;
 
+  FlutterSoundRecorder? _audioRecorder;
+  bool isRecording = false;
+  String? audioPath; // Store path of recorded file
+
+  FlutterSoundPlayer? _audioPlayer;
+  bool isPlaying = false;
+  Map<String, bool> playingStates = {};
+  Map<String, List<double>> waveformHeights = {};
+  Map<String, Timer?> waveformTimers = {};
+  Timer? _recordingTimer;
+  int _recordedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
     _initializeChat();
     _listenToUserTyping();
+    _initRecorder();
+    _audioPlayer = FlutterSoundPlayer();
+    _audioPlayer!.openPlayer();
+  }
+
+  Future<void> _initRecorder() async {
+    _audioRecorder = FlutterSoundRecorder();
+    await _audioRecorder!.openRecorder();
+
+    if (await Permission.microphone.request().isDenied) {
+      throw RecordingPermissionException('Microphone permission not granted');
+    }
+  }
+
+  Future<void> _startRecording() async {
+    final dir = await getTemporaryDirectory();
+    audioPath =
+        '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.aac';
+
+    await _audioRecorder!.startRecorder(
+      toFile: audioPath,
+      codec: Codec.aacADTS,
+    );
+    _recordedSeconds = 0; // Reset
+    _recordingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _recordedSeconds++;
+      });
+    });
+
+    setState(() => isRecording = true);
+  }
+
+  Future<void> _stopRecordingAndSend() async {
+    await _audioRecorder!.stopRecorder();
+    _recordingTimer?.cancel();
+    setState(() => isRecording = false);
+
+    if (audioPath != null) {
+      File audioFile = File(audioPath!);
+      print("Recorded seconds" + _recordedSeconds.toString());
+      // ✅ duration in sec
+      await _sendAudioFile(audioFile, _recordedSeconds);
+    }
+  }
+
+  Future<void> _sendAudioFile(File audioFile, int durationInSeconds) async {
+    String? receiverFCMToken;
+    print("Duration in seconds " + durationInSeconds.toString());
+    try {
+      receiverFCMToken = await FirestoreService.getFCMTokenUser(widget.userId);
+
+      if (receiverFCMToken != null && audioFile.existsSync()) {
+        final audioBytes = await audioFile.readAsBytes();
+        final tempId = 'temp-audio-${DateTime.now().millisecondsSinceEpoch}';
+
+        Map<String, dynamic> tempMessage = {
+          'id': tempId,
+          'senderId': widget.counsellorId,
+          'fileName': 'Voice Note',
+          'fileUrl': null,
+          'fileType': 'audio/mpeg',
+          'isSeen': false,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'duration': durationInSeconds,
+          'localBytes': audioBytes,
+          // 👈 Include duration
+        };
+        print("Temp Message");
+        print(tempMessage);
+
+        setState(() {
+          messages.add(tempMessage);
+          isUploading = true;
+        });
+        _scrollToBottom();
+
+        try {
+          await ChatService.sendFileMessage(
+            chatId: chatId,
+            senderId: widget.counsellorId,
+            file: audioFile,
+            webFileBytes: null,
+            fileName: 'voice_note.aac',
+            receiverFcmToken: receiverFCMToken,
+            // extraData: {'duration': durationInSeconds},
+          );
+
+          setState(() => isUploading = false);
+          _loadMessages();
+        } catch (e) {
+          print("❌ Error sending audio: $e");
+          setState(() {
+            messages.removeWhere((msg) => msg['id'] == tempId);
+            isUploading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error preparing to send audio: $e");
+      setState(() => isUploading = false);
+    }
+  }
+
+  Widget _buildAudioMessage(Map<String, dynamic> message) {
+    final audioUrl = message['fileUrl'];
+    final messageId = message['id'];
+    final isThisPlaying = playingStates[messageId] ?? false;
+
+    // Assuming duration is stored in seconds now
+    final durationSec = message['duration']?.toString() ?? '0';
+    print("Build Audio Message " + durationSec);
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.5,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.orangeAccent),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orangeAccent.withOpacity(0.1),
+            blurRadius: 5,
+            offset: Offset(2, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.audiotrack, color: Colors.orange, size: 24),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                isThisPlaying
+                    ? _waveformBars(messageId, true)
+                    : Text("Voice Note",
+                        style: TextStyle(fontWeight: FontWeight.w500)),
+                SizedBox(height: 4),
+                // Text(
+                //   "$durationSec sec",
+                //   style: TextStyle(fontSize: 12, color: Colors.grey),
+                // ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(isThisPlaying ? Icons.stop : Icons.play_arrow,
+                color: Colors.black54),
+            onPressed: () async {
+              if (isThisPlaying) {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates[messageId] = false;
+                  _stopWaveformAnimation(messageId);
+                });
+              } else {
+                await _audioPlayer!.stopPlayer();
+                setState(() {
+                  playingStates.updateAll((key, value) => false);
+                });
+
+                await _audioPlayer!.startPlayer(
+                  fromURI: audioUrl,
+                  fromDataBuffer:
+                      audioUrl == null ? message['localBytes'] : null,
+                  codec: Codec.aacADTS,
+                  whenFinished: () {
+                    setState(() {
+                      playingStates[messageId] = false;
+                      _stopWaveformAnimation(messageId);
+                    });
+                  },
+                );
+
+                setState(() {
+                  playingStates[messageId] = true;
+                  _startWaveformAnimation(messageId);
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _waveformBars(String messageId, bool isPlaying) {
+    List<double> heights = waveformHeights[messageId] ??
+        List<double>.filled(5, 8); // Default heights
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: heights.map((height) {
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          margin: EdgeInsets.symmetric(horizontal: 2),
+          width: 4,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.orange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _startWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+
+    waveformTimers[messageId] =
+        Timer.periodic(Duration(milliseconds: 100), (_) {
+      setState(() {
+        waveformHeights[messageId] = List.generate(5, (_) {
+          return 6 + (Random().nextDouble() * 14); // Heights between 6 and 20
+        });
+      });
+    });
+  }
+
+  void _stopWaveformAnimation(String messageId) {
+    waveformTimers[messageId]?.cancel();
+    waveformTimers[messageId] = null;
+    setState(() {
+      waveformHeights[messageId] = List<double>.filled(5, 8); // Reset
+    });
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(1, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$secs';
   }
 
   //download
@@ -364,57 +617,47 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
     if (selectedFile != null || webFileBytes != null) {
       int fileSizeBytes = 0;
 
-      // 🔥 Check for file size before uploading
+      // Get size for validation
       if (selectedFile != null) {
         fileSizeBytes = await selectedFile!.length();
       } else if (webFileBytes != null) {
         fileSizeBytes = webFileBytes!.length;
       }
 
-      // ✅  Set your max size (e.g., 15MB)
       const maxSizeInBytes = 10 * 1024 * 1024;
-
       if (fileSizeBytes > maxSizeInBytes) {
-        _showErrorDialog("File too large",
-            "This file exceeds the 10MB limit. Please choose a smaller file.");
-        return; // ❌ Don't proceed with upload
+        _showErrorDialog("File too large", "This file exceeds the 10MB limit.");
+        return;
       }
-      // Create a temporary message to show in the UI immediately
-      Map<String, dynamic> tempMessage = {
-        'id': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
-        'senderId': widget.counsellorId,
-        'fileName': selectedFileName,
-        'fileUrl': null, // No URL yet (file not uploaded)
-        'fileType': 'uploading', // Temporary "uploading" status
-        'isSeen': false,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
 
-      // Add the file message to UI instantly
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            messages.add(tempMessage);
-          });
-          _scrollToBottom();
-        }
-      });
-
-      // Save a copy of the selected file details
+      // ✅ Store file values in temp variables
       File? tempFile = selectedFile;
       Uint8List? tempWebBytes = webFileBytes;
-      String tempFileName = selectedFileName!;
+      String tempFileName = selectedFileName ?? "file";
 
-      // Clear the selected file immediately
+      Uint8List? localBytes = tempWebBytes ?? await tempFile!.readAsBytes();
+
+      Map<String, dynamic> tempMessage = {
+        'id': 'temp-${DateTime.now().millisecondsSinceEpoch}',
+        'senderId': widget.counsellorId,
+        'fileName': tempFileName,
+        'fileUrl': null,
+        'fileType': 'uploading',
+        'isSeen': false,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'localBytes': localBytes,
+      };
+
       setState(() {
+        messages.add(tempMessage);
         selectedFile = null;
         selectedFileName = null;
         webFileBytes = null;
         showSendButton = _controller.text.isNotEmpty;
       });
+      _scrollToBottom();
 
       try {
-        // Upload file to the backend
         await ChatService.sendFileMessage(
           chatId: chatId,
           senderId: widget.counsellorId,
@@ -423,17 +666,11 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
           fileName: tempFileName,
           receiverFcmToken: receiverFCMToken!,
         );
-
-        print("✅ File uploaded successfully!");
-
-        // Fetch updated messages from backend and replace the temporary message
-        _loadMessages(); // Refresh messages immediately
+        _loadMessages();
       } catch (e) {
         print("❌ Error sending file: $e");
-
-        // Remove the temporary message if an error occurs
         setState(() {
-          messages.remove(tempMessage);
+          messages.removeWhere((msg) => msg['id'] == tempMessage['id']);
         });
       }
     }
@@ -490,53 +727,47 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   void dispose() {
     ChatService().cancelListeners(chatId);
     _controller.dispose();
+    _audioPlayer!.closePlayer();
+    waveformTimers.forEach((_, timer) {
+      timer?.cancel();
+    });
+    _audioPlayer = null;
     super.dispose();
   }
 
   Widget _buildImageMessage(Map<String, dynamic> message) {
     final imageUrl = message['fileUrl'];
+    final localBytes = message['localBytes'];
 
     return GestureDetector(
       onTap: () {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text("Image Options"),
-            content: Text("View or download this image?"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showFullImage(imageUrl);
-                },
-                child: Text("View"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  final success = await GallerySaver.saveImage(imageUrl,
-                      albumName: 'ProCounsellor');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            success == true ? "✅ Image saved" : "❌ Failed")),
-                  );
-                },
-                child: Text("Download"),
-              ),
-            ],
-          ),
-        );
+        if (imageUrl != null) {
+          _showFullImage(imageUrl);
+        }
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-        child: Image.network(
-          imageUrl,
-          width: 200,
-          height: 200,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Icon(Icons.broken_image),
-        ),
+        child: imageUrl != null
+            ? Image.network(
+                imageUrl,
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(Icons.broken_image),
+              )
+            : localBytes != null
+                ? Image.memory(
+                    localBytes,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 200,
+                    height: 200,
+                    color: Colors.grey,
+                    child: Icon(Icons.image_not_supported),
+                  ),
       ),
     );
   }
@@ -546,9 +777,28 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.transparent,
-        child: InteractiveViewer(
-          panEnabled: true,
-          child: Image.network(url),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              child: Image.network(url),
+            ),
+            IconButton(
+              icon: Icon(Icons.download, color: Colors.white),
+              onPressed: () async {
+                final success = await GallerySaver.saveImage(url,
+                    albumName: 'ProCounsellor');
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        success == true ? "✅ Image saved" : "❌ Failed to save"),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -699,31 +949,138 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
     );
   }
 
-  Widget _buildMessageWidget(Map<String, dynamic> message) {
-    if (message['fileUrl'] != null || message['fileType'] == 'uploading') {
-      String fileType = message['fileType'] ?? 'unknown';
+  bool _isImage(String fileName) {
+    final lower = fileName.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp');
+  }
 
-      if (fileType == 'uploading') {
+  // Widget _buildMessageWidget(Map<String, dynamic> message) {
+  //   // 🟨 PRIORITY: If uploading, show loader widget
+  //   if (message['fileType'] == 'uploading') {
+  //     return _buildUploadingFileMessage(message);
+
+  //   }
+
+  //   // 🟩 File with URL or localBytes (after upload)
+  //   if ((message['fileUrl'] != null || message['localBytes'] != null) &&
+  //       (message.containsKey('fileType') || message.containsKey('fileName'))) {
+  //     final fileType = message['fileType'] ?? 'unknown';
+  //     final fileName = message['fileName'] ?? '';
+
+  //     if (_isImage(fileName)) {
+  //       return _buildImageMessage(message);
+  //     } else if (fileType.startsWith('video/')) {
+  //       return _buildVideoMessage(message);
+  //     } else if (fileType.startsWith('audio/')) {
+  //       return _buildAudioMessage(message);
+  //     } else {
+  //       return _buildFileMessage(message);
+  //     }
+  //   }
+
+  //   // 🟦 Default to text
+  //   return Text(
+  //     message['text'] ?? 'No message',
+  //     style: TextStyle(
+  //       color: Colors.black,
+  //       fontSize: 16.0,
+  //     ),
+  //   );
+  // }
+
+  Widget _buildMessageWidget(Map<String, dynamic> message) {
+    final fileType = message['fileType'] ?? '';
+    final hasLocalBytes = message['localBytes'] != null;
+    final fileUrl = message['fileUrl'];
+
+    if (fileUrl == null && hasLocalBytes) {
+      if (fileType.startsWith('image/'))
         return _buildUploadingFileMessage(message);
-      } else if (fileType.startsWith('image/')) {
-        return _buildImageMessage(message);
-      } else if (fileType.startsWith('video/')) {
-        return _buildVideoMessage(message);
-      } else {
-        return _buildFileMessage(message);
-      }
+      if (fileType.startsWith('video/'))
+        return _buildUploadingFileMessage(message);
+      if (fileType.startsWith('audio/'))
+        return _buildUploadingAudioMessage(message); // 👈 Add this
+      return _buildUploadingFileMessage(message); // fallback
     }
+
+    if (fileType.startsWith('image/')) return _buildImageMessage(message);
+    if (fileType.startsWith('video/')) return _buildVideoMessage(message);
+    if (fileType.startsWith('audio/')) return _buildAudioMessage(message);
+    if (fileType != '') return _buildFileMessage(message);
 
     return Text(
       message['text'] ?? 'No message',
-      style: TextStyle(
-        color: Colors.black,
-        fontSize: 16.0,
+      style: TextStyle(color: Colors.black, fontSize: 16),
+    );
+  }
+
+  Widget _buildUploadingAudioMessage(Map<String, dynamic> message) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.5,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.orangeAccent),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orangeAccent.withOpacity(0.1),
+            blurRadius: 5,
+            offset: Offset(2, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.audiotrack, color: Colors.orange, size: 24),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Uploading...",
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+                SizedBox(height: 4),
+                LinearProgressIndicator(minHeight: 4),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildUploadingFileMessage(Map<String, dynamic> message) {
+    final localBytes = message['localBytes'];
+    final fileName = message['fileName'] ?? '';
+
+    if (_isImage(fileName)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Image.memory(
+              localBytes,
+              width: 150,
+              height: 150,
+              fit: BoxFit.cover,
+              color: Colors.black.withOpacity(0.4),
+              colorBlendMode: BlendMode.darken,
+            ),
+            CircularProgressIndicator(),
+          ],
+        ),
+      );
+    }
+
+    // fallback for other types
     return Container(
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -736,7 +1093,7 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              message['fileName'] ?? "Uploading...",
+              fileName,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -763,6 +1120,106 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
       '.txt'
     ];
     return docExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
+  }
+
+  void _showCameraOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.5), // Dimmed Background
+      barrierColor:
+          Colors.black.withOpacity(0.5), // Dims background outside sheet
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20),
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _circleOption(
+                  icon: Icons.camera_alt,
+                  label: "Camera",
+                  onTap: () {
+                    Navigator.pop(context);
+                    _captureFromCamera();
+                  },
+                ),
+                _circleOption(
+                  icon: Icons.videocam,
+                  label: "Video",
+                  onTap: () {
+                    Navigator.pop(context);
+                    _captureVideoFromCamera();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+// Helper for Circular Buttons
+  Widget _circleOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.grey.withOpacity(0.8),
+            child: Icon(icon, size: 30, color: Colors.white),
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(label, style: TextStyle(color: Colors.white, fontSize: 14)),
+      ],
+    );
+  }
+
+  Future<void> _captureFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? capturedFile =
+        await picker.pickImage(source: ImageSource.camera);
+
+    if (capturedFile != null) {
+      selectedFile = File(capturedFile.path);
+      selectedFileName = p.basename(capturedFile.path);
+      webFileBytes = await selectedFile!.readAsBytes();
+
+      setState(() {
+        showSendButton = true;
+      });
+    }
+  }
+
+  Future<void> _captureVideoFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? capturedVideo =
+        await picker.pickVideo(source: ImageSource.camera);
+
+    if (capturedVideo != null) {
+      selectedFile = File(capturedVideo.path);
+      selectedFileName = p.basename(capturedVideo.path);
+      webFileBytes = await selectedFile!.readAsBytes();
+
+      setState(() {
+        showSendButton = true;
+      });
+    }
   }
 
   @override
@@ -839,18 +1296,32 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                           ? widget.itemName
                           : 'Unknown User',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      isUserTyping ? "Typing..." : "",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple,
-                      ),
+                    StreamBuilder<String>(
+                      stream: getUserState(widget.userId),
+                      builder: (context, snapshot) {
+                        final state = snapshot.data ?? 'offline';
+                        final bool typing =
+                            isUserTyping; // ✅ Your typing boolean
+                        return Text(
+                          typing
+                              ? "Typing..."
+                              : (state == 'online' ? "Online" : "Offline"),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: typing
+                                ? Colors.purple
+                                : (state == 'online'
+                                    ? Colors.green
+                                    : Colors.grey),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1030,7 +1501,9 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                       if (!showSendButton)
                         IconButton(
                           icon: Icon(Icons.camera_alt, color: Colors.black54),
-                          onPressed: () {},
+                          onPressed: () {
+                            _showCameraOptions(context); // ✅ New function
+                          },
                         ),
                       Expanded(
                         child: AnimatedContainer(
@@ -1069,22 +1542,49 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          showSendButton ? Icons.send : Icons.mic,
-                          color: Colors.black54,
-                        ),
-                        onPressed: showSendButton
-                            ? () {
+                      showSendButton
+                          ? IconButton(
+                              icon: Icon(Icons.send, color: Colors.black54),
+                              onPressed: () {
                                 if (_controller.text.isNotEmpty) _sendMessage();
                                 if (selectedFile != null ||
                                     webFileBytes != null) _sendFileMessage();
-                              }
-                            : null,
-                      ),
+                              },
+                            )
+                          : GestureDetector(
+                              onLongPressStart: (_) async {
+                                HapticFeedback.lightImpact();
+                                await _startRecording();
+                                setState(() => isRecording = true);
+                              },
+                              onLongPressEnd: (_) async {
+                                await _stopRecordingAndSend();
+                                setState(() => isRecording = false);
+                              },
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (isRecording)
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.red.withOpacity(0.3),
+                                      ),
+                                      child: Icon(Icons.mic,
+                                          color: Colors.red, size: 30),
+                                    )
+                                  else
+                                    Icon(Icons.mic,
+                                        color: Colors.black54, size: 30),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 ),
+                SizedBox(height: 20),
               ],
             ),
     );
