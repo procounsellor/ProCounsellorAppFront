@@ -344,15 +344,27 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
     });
   }
 
+  // Future<void> _initializeChat() async {
+  //   await _startChat();
+  //   if (!isLoading) {
+  //     await _loadMessages();
+
+  //     _markUnreadMessagesAsSeen();
+  //     _listenForNewMessages();
+  //     _listenForSeenStatusUpdates();
+  //     _listenForIsSeenChanges();
+  //   }
+
+  // }
+
   Future<void> _initializeChat() async {
     await _startChat();
-    if (!isLoading) {
-      await _loadMessages();
-      _markUnreadMessagesAsSeen();
-      _listenForNewMessages();
-      _listenForSeenStatusUpdates();
-      _listenForIsSeenChanges();
-    }
+
+    await _loadMessages();
+    _markUnreadMessagesAsSeen();
+    _listenForNewMessages();
+    _listenForSeenStatusUpdates();
+    _listenForIsSeenChanges();
   }
 
   Future<void> _startChat() async {
@@ -390,7 +402,6 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
 
       // Save to cache
       prefs.setString('chat_cache_$chatId', jsonEncode(fetchedMessages));
-
       _scrollToBottom();
     } catch (e) {
       print('Error loading messages: $e');
@@ -695,7 +706,11 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.minScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -1336,10 +1351,11 @@ class _CounsellorChattingPageState extends State<CounsellorChattingPage> {
               children: [
                 Expanded(
                   child: ListView.builder(
+                    reverse: true,
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final message = messages[index];
+                      final message = messages[messages.length - 1 - index];
                       final isUserMessage =
                           message['senderId'] == widget.userId;
                       final isCounsellorMessage =
