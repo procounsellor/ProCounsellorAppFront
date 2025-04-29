@@ -1,4 +1,5 @@
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_chatting_page.dart';
+import '../userDashboard/Friends/UserToUserChattingPage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -335,7 +336,8 @@ class _ChatPageState extends State<ChatPage> {
                                   : null,
                               onTap: () async {
                                 MainService _mainService = MainService();
-                                final user = await _mainService.getUserFromUserId(chat['userId']);
+                                final user = await _mainService
+                                    .getUserFromUserId(chat['userId']);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(

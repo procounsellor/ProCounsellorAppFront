@@ -2,7 +2,6 @@ import 'dart:async'; // Import Timer
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import http for API calls
 import 'dart:convert'; // For JSON decoding
-import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_community_page.dart';
 import '../../../services/api_utils.dart';
 import '../../paymentScreens/transaction_history.dart';
 import 'counsellor_dashboard.dart';
@@ -13,6 +12,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'counsellor_chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'call_history_page.dart';
+import '../userDashboard/communities/communities_home_page.dart';
 
 class CounsellorBasePage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -67,8 +67,9 @@ class _CounsellorBasePageState extends State<CounsellorBasePage>
     _pages.add(CounsellorDashboard(
         onSignOut: widget.onSignOut,
         counsellorId: widget.counsellorId)); // User Dashboard
-    _pages.add(TransactionHistoryPage(username: widget.counsellorId)); // Transactions Page
-    _pages.add(CounsellorCommunityPage()); // Community Page
+    _pages.add(TransactionHistoryPage(
+        username: widget.counsellorId)); // Transactions Page
+    _pages.add(CommunitiesHomePage()); // Community Page
     // _pages.add(CounsellorMyActivitiesPage(
     //     username: widget.counsellorId, onSignOut: widget.onSignOut,)); // My Activities Page
     _pages.add(CallHistoryPage(
