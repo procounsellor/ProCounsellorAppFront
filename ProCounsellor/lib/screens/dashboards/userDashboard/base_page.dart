@@ -72,7 +72,10 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
       onSignOut: widget.onSignOut,
       onMissedCallUpdated: _resetMissedCallCount,
     ));
-    _pages.add(ProfilePage(username: widget.username));
+    _pages.add(ProfilePage(
+      username: widget.username,
+      onSignOut: widget.onSignOut,
+    ));
     _pages.add(
         FriendsPage(username: widget.username, onSignOut: widget.onSignOut));
   }
@@ -301,16 +304,16 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           ),
         ],
         centerTitle: true,
-        leading: Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
-            ),
-          ],
-        ),
+        // leading: Stack(
+        //   children: [
+        //     IconButton(
+        //       icon: const Icon(Icons.menu),
+        //       onPressed: () {
+        //         _scaffoldKey.currentState?.openDrawer();
+        //       },
+        //     ),
+        //   ],
+        // ),
 
         // actions: [
         //   IconButton(
@@ -324,25 +327,25 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
         //   ),
         // ],
       ),
-      drawer: UserDrawer(
-        fullName: _drawerName,
-        photoUrl: _drawerPhotoUrl,
-        isLoadingPhoto: _isLoadingPhoto,
-        onLogout: () async {
-          _stateChangeTimer?.cancel();
-          _userStateNotifier.setOffline();
-          await widget.onSignOut();
-        },
-        navigateToPage: _navigateToPage,
-        username: widget.username,
-        onSignOut: widget.onSignOut,
-        onProfileUpdated: (updatedName, updatedPhoto) {
-          setState(() {
-            _drawerName = updatedName;
-            _drawerPhotoUrl = updatedPhoto;
-          });
-        },
-      ),
+      // drawer: UserDrawer(
+      //   fullName: _drawerName,
+      //   photoUrl: _drawerPhotoUrl,
+      //   isLoadingPhoto: _isLoadingPhoto,
+      //   onLogout: () async {
+      //     _stateChangeTimer?.cancel();
+      //     _userStateNotifier.setOffline();
+      //     await widget.onSignOut();
+      //   },
+      //   navigateToPage: _navigateToPage,
+      //   username: widget.username,
+      //   onSignOut: widget.onSignOut,
+      //   onProfileUpdated: (updatedName, updatedPhoto) {
+      //     setState(() {
+      //       _drawerName = updatedName;
+      //       _drawerPhotoUrl = updatedPhoto;
+      //     });
+      //   },
+      // ),
 
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(

@@ -19,8 +19,9 @@ import '../userDashboard/my_reviews.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
+  final Future<void> Function() onSignOut;
 
-  ProfilePage({required this.username});
+  ProfilePage({required this.username, required this.onSignOut});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -83,6 +84,55 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       print('❌ Error fetching wallet balance: $e');
     }
+  }
+
+  //logout function
+  Widget _buildLogoutTile() {
+    return InkWell(
+      onTap: () async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Confirm Logout", style: GoogleFonts.outfit()),
+            content: Text("Are you sure you want to log out?",
+                style: GoogleFonts.outfit()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel", style: GoogleFonts.outfit()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Logout",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          await widget.onSignOut(); // Call the passed sign-out function
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "LOGOUT",
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black, // Black instead of grey
+              ),
+            ),
+            Icon(Icons.logout, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _fetchSubscribedCounsellors() async {
@@ -967,6 +1017,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           // );
                         },
                       ),
+                      Divider(height: 1),
+                      _buildLogoutTile(),
 
                       Center(
                         child: ElevatedButton(
