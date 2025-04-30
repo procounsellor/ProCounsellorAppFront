@@ -1,6 +1,8 @@
+import 'package:ProCounsellor/main.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/components/deadlines/AllDeadlinesPage.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/details_page.dart';
 import 'package:ProCounsellor/screens/paymentScreens/withdraw_funds.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -16,6 +18,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../paymentScreens/add_bank_details.dart';
 import '../../paymentScreens/transaction_history.dart';
 import '../userDashboard/my_reviews.dart';
+import 'package:ProCounsellor/screens/signInScreens/user_signin_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -111,7 +114,8 @@ class _ProfilePageState extends State<ProfilePage> {
         );
 
         if (confirm == true) {
-          await widget.onSignOut(); // Call the passed sign-out function
+          //await widget.onSignOut(); // Call the passed sign-out function
+          await restartApp();
         }
       },
       borderRadius: BorderRadius.circular(8),
@@ -319,6 +323,31 @@ class _ProfilePageState extends State<ProfilePage> {
         SnackBar(content: Text('Error: $error')),
       );
     }
+  }
+
+  Future<void> restartApp() async {
+    print("🚪 Logging out...");
+
+    try {
+      // Step 1: Delete secure storage
+      await storage.deleteAll();
+      final remaining = await storage.readAll();
+      print("🧼 Remaining after deleteAll(): $remaining");
+
+      // Step 2: Delete FCM Token
+      await FirebaseMessaging.instance.deleteToken();
+      print("🔥 FCM token deleted");
+    } catch (e) {
+      print("⚠️ Error during logout cleanup: $e");
+    }
+
+    // Step 4: Navigate to login screen and clear backstack
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => UserSignInPage(onSignOut: restartApp),
+      ),
+      (route) => false,
+    );
   }
 
   void _showUpdateModal() async {
