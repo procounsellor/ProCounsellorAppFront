@@ -55,6 +55,35 @@ class _ProfilePageState extends State<ProfilePage> {
     _fetchProfileData();
     _fetchSubscribedCounsellors();
   }
+  // wallet
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Add a post-frame callback to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchWalletBalanceOnly();
+    });
+  }
+
+  Future<void> _fetchWalletBalanceOnly() async {
+    final url = '${ApiUtils.baseUrl}/api/user/${widget.username}';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            profileData?['walletAmount'] = data['walletAmount'];
+          });
+        }
+      } else {
+        print('❌ Failed to fetch wallet balance');
+      }
+    } catch (e) {
+      print('❌ Error fetching wallet balance: $e');
+    }
+  }
 
   Future<void> _fetchSubscribedCounsellors() async {
     final url =
@@ -596,14 +625,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                     ),
-                                    onPressed: () {
-                                      Navigator.push(
+                                    onPressed: () async {
+                                      final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => AddFundsPage(
                                               userName: widget.username),
                                         ),
                                       );
+
+                                      if (result == true) {
+                                        _fetchWalletBalanceOnly(); // 👈 Refresh just the wallet balance
+                                      }
                                     },
                                     child: Text(
                                       "Add Funds",
@@ -883,8 +916,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  TransactionHistoryPage(username: widget.username),
+                              builder: (_) => TransactionHistoryPage(
+                                  username: widget.username),
                             ),
                           );
                         },
