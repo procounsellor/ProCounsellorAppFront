@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../../services/api_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AddFundsPage extends StatefulWidget {
   final String userName;
@@ -109,30 +110,88 @@ class _AddFundsPageState extends State<AddFundsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text("Add Funds")),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: "Enter Amount",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _createPaymentOrder,
-                      child: Text("Proceed to Pay"),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        title: Text(
+          "ADD FUNDS",
+          style: GoogleFonts.outfit(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Centered Amount Input
+              TextField(
+                controller: _amountController,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.outfit(
+                    fontSize: 36, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding:
+                        const EdgeInsets.only(top: 8.0), // Center it vertically
+                    child: Text(
+                      '₹',
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-          ],
+                  prefixIconConstraints:
+                      BoxConstraints(minWidth: 0, minHeight: 0),
+                  hintText: "Enter Amount",
+                  hintStyle:
+                      GoogleFonts.outfit(fontSize: 24, color: Colors.grey),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.grey.shade400, width: 2),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Pay Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[600],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : _createPaymentOrder,
+                  child: _isLoading
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          "PROCEED TO PAY",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
