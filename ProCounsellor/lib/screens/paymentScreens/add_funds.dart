@@ -75,7 +75,8 @@ class _AddFundsPageState extends State<AddFundsPage> {
       if (response.statusCode == 200) {
         final order = json.decode(response.body);
         final options = {
-          'key': 'rzp_test_8xOADtg8bQfRYt', // Replace with your actual key in prod
+          'key':
+              'rzp_test_8xOADtg8bQfRYt', // Replace with your actual key in prod
           'amount': (amount * 100).toInt(),
           'currency': 'INR',
           'order_id': order['id'],
