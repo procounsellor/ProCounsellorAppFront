@@ -8,8 +8,13 @@ import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_
 
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/followers_page.dart';
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/subscribers_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../services/api_utils.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'counsellor_info_page.dart';
 
 class CounsellorProfilePage extends StatefulWidget {
   final String username;
@@ -28,11 +33,291 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
 
   final ImagePicker _picker = ImagePicker();
 
+  List<Map<String, dynamic>> reviewList = [];
+
   @override
   void initState() {
     super.initState();
     _fetchProfileData();
+    fetchReviews(); // 👈 Add this
   }
+
+  Future<List<Map<String, dynamic>>> fetchTransactionData(
+      String username) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('counsellors')
+        .doc(username)
+        .get();
+    final transactions = List<Map<String, dynamic>>.from(doc['transactions']);
+    transactions
+        .sort((a, b) => (a['timestamp'] ?? 0).compareTo(b['timestamp'] ?? 0));
+    return transactions;
+  }
+
+  Widget buildTransactionGraph(List<Map<String, dynamic>> transactions) {
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.center, // brings bars closer
+        groupsSpace: 18, // reduce spacing between groups
+        maxY: transactions
+                .map((txn) => txn['amount']?.toDouble() ?? 0)
+                .reduce((a, b) => a > b ? a : b) +
+            20,
+        barTouchData: BarTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          topTitles: AxisTitles(
+              sideTitles: SideTitles(showTitles: false)), // removed top titles
+          rightTitles: AxisTitles(
+              sideTitles:
+                  SideTitles(showTitles: false)), // removed right titles
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 50,
+              reservedSize: 30,
+              getTitlesWidget: (value, _) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: 1,
+              getTitlesWidget: (value, _) {
+                if (value.toInt() < transactions.length) {
+                  final txn = transactions[value.toInt()];
+                  final timestamp = txn['timestamp'];
+                  final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      "${date.day}/${date.month}",
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 50,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.grey.withOpacity(0.3),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border(
+            left: BorderSide(color: Colors.black87),
+            bottom: BorderSide(color: Colors.black87),
+            top: BorderSide.none,
+            right: BorderSide.none,
+          ),
+        ),
+        barGroups: transactions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final txn = entry.value;
+          final double amount = txn['amount']?.toDouble() ?? 0;
+          final isCredit = txn['type'] == 'credit';
+
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: amount,
+                width: 18,
+                borderRadius: BorderRadius.circular(1),
+                color: isCredit ? Colors.green : Colors.redAccent,
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: amount + 20,
+                  color: Colors.grey.shade200,
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Future<void> fetchReviews() async {
+    try {
+      final response = await http.get(Uri.parse(
+          '${ApiUtils.baseUrl}/api/reviews/counsellor/${widget.username}'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as List;
+        setState(() {
+          reviewList = data.cast<Map<String, dynamic>>();
+        });
+      } else {
+        throw Exception('Failed to load reviews');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching reviews: $e")),
+      );
+    }
+  }
+
+  Map<String, dynamic> calculateRatingSummary(List<dynamic> reviews) {
+    int totalRatings = reviews.length;
+    double averageRating = 0.0;
+    Map<int, int> starCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+
+    for (var review in reviews) {
+      if (review is Map<String, dynamic>) {
+        int rating = (review['rating'] ?? 0).toInt();
+        if (rating > 0 && rating <= 5) {
+          starCounts[rating] = (starCounts[rating] ?? 0) + 1;
+          averageRating += rating;
+        }
+      }
+    }
+
+    if (totalRatings > 0) {
+      averageRating /= totalRatings.toDouble();
+    }
+
+    return {
+      "averageRating": averageRating,
+      "totalRatings": totalRatings,
+      "starCounts": starCounts,
+    };
+  }
+
+// Widget for Rating Summary
+  Widget buildRatingSummary(List<Map<String, dynamic>> reviews) {
+    final ratingSummary = calculateRatingSummary(reviews);
+
+    double averageRating = ratingSummary['averageRating'];
+    int totalRatings = ratingSummary['totalRatings'];
+    Map<int, int> starCounts = ratingSummary['starCounts'];
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Average Rating and Total Reviews
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                averageRating.toStringAsFixed(2),
+                style: GoogleFonts.outfit(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        Icons.star,
+                        color: index < averageRating.round()
+                            ? Colors.orange
+                            : Colors.grey,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "$totalRatings ratings",
+                    style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(width: 16),
+
+          // Star Rating Breakdown
+          Expanded(
+            child: Column(
+              children: List.generate(5, (index) {
+                int star = 5 - index;
+                int count = starCounts[star] ?? 0;
+                double percentage =
+                    totalRatings > 0 ? (count / totalRatings) * 100 : 0;
+
+                return Row(
+                  children: [
+                    Text(
+                      "$star",
+                      style: GoogleFonts.outfit(
+                          fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey[300],
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: percentage / 100,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: star == 5
+                                  ? Colors.green
+                                  : star == 4
+                                      ? Colors.lightGreen
+                                      : star == 3
+                                          ? Colors.amber
+                                          : star == 2
+                                              ? Colors.orange
+                                              : Colors.red,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      count.toString(),
+                      style:
+                          GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // summary section end
 
   Future<void> _fetchProfileData() async {
     final url = '${ApiUtils.baseUrl}/api/counsellor/${widget.username}';
@@ -212,58 +497,98 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                         ],
                       ),
                       SizedBox(height: 15),
-                      // Counsellor Description
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(
-                          profileData!['description'] ?? "Not provided",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                            fontStyle: FontStyle.italic,
-                          ),
+
+                      SizedBox(height: 20),
+                      //graph
+                      Text(
+                        "EARNINGS",
+                        style: TextStyle(
+                          fontSize: 14,
+                          letterSpacing: 1.2,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       SizedBox(height: 20),
-                      // Profile Details
-                      Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
+                      FutureBuilder(
+                        future: fetchTransactionData(widget.username),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text("Error loading data");
+                          } else {
+                            final data = snapshot.data!;
+                            return AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: buildTransactionGraph(data),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+
+                      Text(
+                        "MY RATING",
+                        style: TextStyle(
+                          fontSize: 14,
+                          letterSpacing: 1.2,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w600,
                         ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+
+                      if (reviewList.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: buildRatingSummary(reviewList),
+                        ),
+
+                      // Profile Details
+                      // Placeholder for MY INFO
+                      SizedBox(height: 20),
+                      InkWell(
+                        onTap: () {
+                          if (profileData != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CounsellorInfoPage(
+                                    profileData: profileData!),
+                              ),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0, vertical: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildListItem(
-                                  "Organisation",
-                                  profileData!["organisationName"],
-                                  Icons.business),
-                              _buildListItem("Experience",
-                                  profileData!["experience"], Icons.work),
-                              _buildListItem(
-                                  "State",
-                                  profileData!["stateOfCounsellor"],
-                                  Icons.location_on),
-                              _buildListItem("Expertise",
-                                  profileData!["expertise"], Icons.star),
-                              _buildListItem(
-                                  "Rate Per Year",
-                                  profileData!["ratePerYear"],
-                                  Icons.attach_money),
-                              _buildListItem(
-                                  "Languages Known",
-                                  profileData!["languagesKnow"]?.join(", ") ??
-                                      "Not provided",
-                                  Icons.language),
+                              Text(
+                                "MY INFO",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  letterSpacing: 1.2,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios,
+                                  size: 16, color: Colors.grey[600]),
                             ],
                           ),
                         ),
                       ),
-                      SizedBox(height: 20), // spacing
+
+                      Divider(thickness: 1.2, color: Colors.grey[300]),
+
+                      SizedBox(height: 40), // spacing
                       Center(
                         child: ElevatedButton.icon(
                           onPressed: () async {
