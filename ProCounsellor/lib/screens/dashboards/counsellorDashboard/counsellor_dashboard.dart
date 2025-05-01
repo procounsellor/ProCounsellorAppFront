@@ -396,69 +396,240 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
                               ),
                             );
                           },
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 4,
-                            shadowColor: Colors.black.withOpacity(0.2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15.0),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Bank Details",
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(height: 12),
-                                  _bankDetails != null
-                                      ? Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                                "Account Number: ${_bankDetails!['bankAccountNumber']}"),
-                                            Text(
-                                                "IFSC Code: ${_bankDetails!['ifscCode']}"),
-                                            Text(
-                                                "Account Holder: ${_bankDetails!['fullName']}"),
-                                            SizedBox(height: 16),
-                                            Text(
-                                              "Tap to update",
-                                              style: TextStyle(
-                                                  color: Colors.blueGrey,
-                                                  fontSize: 12),
-                                            ),
-                                          ],
-                                        )
-                                      : Center(
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AddBankDetailsCounsellorPage(
-                                                          username: widget
-                                                              .counsellorId),
-                                                ),
-                                              );
-                                            },
-                                            child: Text("Add Bank Account"),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green,
-                                              foregroundColor: Colors.white,
-                                            ),
+                          child: Container(
+                            width: double.infinity, // 🔥 FULL WIDTH
+                            child: Card(
+                              //color: Colors.white,
+                              color: Color(0xFF210F37),
+
+                              elevation: 4,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              child: InkWell(
+                                onTap: _bankDetails != null
+                                    ? () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                AddBankDetailsCounsellorPage(
+                                                    username:
+                                                        widget.counsellorId),
                                           ),
+                                        );
+                                      }
+                                    : null,
+                                borderRadius: BorderRadius.circular(15.0),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "BANK DETAILS",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                          color: Color(0xFFDCA06D),
                                         ),
-                                ],
+                                      ),
+                                      SizedBox(height: 12),
+                                      _bankDetails != null
+                                          ? Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        TextStyle(fontSize: 14),
+                                                    children: [
+                                                      TextSpan(
+                                                        text:
+                                                            "ACCOUNT NUMBER: ",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
+                                                      ),
+                                                      TextSpan(
+                                                        text: _bankDetails![
+                                                                'bankAccountNumber'] ??
+                                                            '',
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 6),
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        TextStyle(fontSize: 14),
+                                                    children: [
+                                                      TextSpan(
+                                                        text: "IFSC CODE: ",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
+                                                      ),
+                                                      TextSpan(
+                                                        text: _bankDetails![
+                                                                'ifscCode'] ??
+                                                            '',
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 6),
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        TextStyle(fontSize: 14),
+                                                    children: [
+                                                      TextSpan(
+                                                        text:
+                                                            "ACCOUNT HOLDER: ",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
+                                                      ),
+                                                      TextSpan(
+                                                        text: _bankDetails![
+                                                                'fullName'] ??
+                                                            '',
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 16),
+                                                Text(
+                                                  "TAP TO UPDATE",
+                                                  style: TextStyle(
+                                                    color: Color(0xFFDCA06D),
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Center(
+                                              child: ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          AddBankDetailsCounsellorPage(
+                                                              username: widget
+                                                                  .counsellorId),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Text("Add Bank Account"),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.green,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+
+                          // child: Card(
+                          //   color: Colors.white,
+                          //   elevation: 4,
+                          //   shadowColor: Colors.black.withOpacity(0.2),
+                          //   shape: RoundedRectangleBorder(
+                          //     borderRadius: BorderRadius.circular(15.0),
+                          //   ),
+                          //   child: Padding(
+                          //     padding: const EdgeInsets.all(16.0),
+                          //     child: Column(
+                          //       crossAxisAlignment: CrossAxisAlignment.start,
+                          //       children: [
+                          //         Text(
+                          //           "Bank Details",
+                          //           style: TextStyle(
+                          //               fontSize: 18,
+                          //               fontWeight: FontWeight.bold),
+                          //         ),
+                          //         SizedBox(height: 12),
+                          //         _bankDetails != null
+                          //             ? Column(
+                          //                 crossAxisAlignment:
+                          //                     CrossAxisAlignment.start,
+                          //                 children: [
+                          //                   Text(
+                          //                       "Account Number: ${_bankDetails!['bankAccountNumber']}"),
+                          //                   Text(
+                          //                       "IFSC Code: ${_bankDetails!['ifscCode']}"),
+                          //                   Text(
+                          //                       "Account Holder: ${_bankDetails!['fullName']}"),
+                          //                   SizedBox(height: 16),
+                          //                   Text(
+                          //                     "Tap to update",
+                          //                     style: TextStyle(
+                          //                         color: Colors.blueGrey,
+                          //                         fontSize: 12),
+                          //                   ),
+                          //                 ],
+                          //               )
+                          //             : Center(
+                          //                 child: ElevatedButton(
+                          //                   onPressed: () {
+                          //                     Navigator.push(
+                          //                       context,
+                          //                       MaterialPageRoute(
+                          //                         builder: (context) =>
+                          //                             AddBankDetailsCounsellorPage(
+                          //                                 username: widget
+                          //                                     .counsellorId),
+                          //                       ),
+                          //                     );
+                          //                   },
+                          //                   child: Text("Add Bank Account"),
+                          //                   style: ElevatedButton.styleFrom(
+                          //                     backgroundColor: Colors.green,
+                          //                     foregroundColor: Colors.white,
+                          //                   ),
+                          //                 ),
+                          //               ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
                         ),
                         SizedBox(height: 20),
                         Card(
