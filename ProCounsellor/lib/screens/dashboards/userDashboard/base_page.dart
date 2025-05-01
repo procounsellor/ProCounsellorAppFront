@@ -351,13 +351,13 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Color(0xFFF0BB78), // Custom color for selected item
+        selectedItemColor: Colors.orange, // Custom color for selected item
         unselectedItemColor: Colors.grey, // Color for unselected items
         backgroundColor:
             Colors.white, // Set a consistent white background color
         type: BottomNavigationBarType
             .fixed, // Use fixed to keep the white background
-        showSelectedLabels: true, // Show label only for selected item
+        showSelectedLabels: false, // Show label only for selected item
         showUnselectedLabels: false, // Hide labels for unselected items
         items: [
           BottomNavigationBarItem(
@@ -366,7 +366,7 @@ class _BasePageState extends State<BasePage> with WidgetsBindingObserver {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb),
-            label: "Learn with Us",
+            label: "Learn",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.groups),
