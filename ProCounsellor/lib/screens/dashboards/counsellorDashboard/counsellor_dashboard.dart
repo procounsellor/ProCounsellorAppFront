@@ -25,7 +25,8 @@ class CounsellorDashboard extends StatefulWidget {
   _CounsellorDashboardState createState() => _CounsellorDashboardState();
 }
 
-class _CounsellorDashboardState extends State<CounsellorDashboard> {
+class _CounsellorDashboardState extends State<CounsellorDashboard>
+    with WidgetsBindingObserver {
   bool isLoading = true;
   List<dynamic> clients = [];
   List<dynamic> filteredClients = [];
@@ -54,6 +55,7 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll); // ✅ Add this
 
     fetchDashboardData();
@@ -61,7 +63,41 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
     fetchReviews();
   }
 
-  Future<void> fetchUserDetails() async {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      fetchUserDetails(); // refresh wallet balance
+    }
+  }
+
+  // Future<void> fetchUserDetails() async {
+  //   try {
+  //     final response = await http.get(
+  //       Uri.parse("${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}"),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       if (data['walletAmount'] != null && data['bankDetails'] != null) {
+  //         _walletBalance = (data['walletAmount'] ?? 0).toDouble();
+  //         _bankDetails = data['bankDetails'];
+  //       }
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error: $e")),
+  //     );
+  //   }
+  // }
+
+  void fetchUserDetails() async {
     try {
       final response = await http.get(
         Uri.parse("${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}"),
@@ -69,12 +105,14 @@ class _CounsellorDashboardState extends State<CounsellorDashboard> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['walletAmount'] != null && data['bankDetails'] != null) {
+        if (!mounted) return;
+        setState(() {
           _walletBalance = (data['walletAmount'] ?? 0).toDouble();
           _bankDetails = data['bankDetails'];
-        }
+        });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
