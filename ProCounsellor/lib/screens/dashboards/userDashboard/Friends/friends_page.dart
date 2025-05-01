@@ -7,6 +7,7 @@ import '../../../../services/api_utils.dart';
 import 'user_details_page.dart';
 import 'UserToUserChattingPage.dart';
 import 'dart:async';
+import 'package:shimmer/shimmer.dart';
 
 class FriendsPage extends StatefulWidget {
   final String username;
@@ -73,7 +74,13 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
+  bool isMyFriendsLoading = false;
+
   Future<void> fetchMyFriends() async {
+    setState(() {
+      isMyFriendsLoading = true;
+    });
+
     final url =
         Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}/friends');
     try {
@@ -82,12 +89,15 @@ class _FriendsPageState extends State<FriendsPage> {
         final data = json.decode(response.body);
         setState(() {
           myFriends = data;
+          isMyFriendsLoading = false;
         });
       } else {
         print("⚠️ No friends found or failed to fetch.");
+        setState(() => isMyFriendsLoading = false);
       }
     } catch (e) {
       print("❌ Error fetching friends: $e");
+      setState(() => isMyFriendsLoading = false);
     }
   }
 
@@ -118,16 +128,33 @@ class _FriendsPageState extends State<FriendsPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: Text('Friends', style: GoogleFonts.outfit()),
+          elevation: 0, // removes shadow
+          title: Text('FRIENDS', style: GoogleFonts.outfit()),
           centerTitle: true,
-          bottom: TabBar(
-            labelColor: Colors.deepOrange,
-            unselectedLabelColor: Colors.black54,
-            tabs: [
-              Tab(text: 'My Friends'),
-              Tab(text: 'Explore Friends'),
-            ],
-          ),
+          bottom: PreferredSize(
+              preferredSize: Size.fromHeight(48),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white, // move color here
+                  border: Border(
+                    bottom: BorderSide.none,
+                  ),
+                ),
+                child: TabBar(
+                  labelColor: Colors.deepOrange,
+                  unselectedLabelColor: Colors.black54,
+                  indicatorColor: Colors.transparent,
+                  labelStyle: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                  tabs: [
+                    Tab(text: 'MY FRIENDS'),
+                    Tab(text: 'EXPLORE FRIENDS'),
+                  ],
+                ),
+              )),
         ),
         body: TabBarView(
           children: [
@@ -178,7 +205,6 @@ class _FriendsPageState extends State<FriendsPage> {
                 icon: Icon(Icons.refresh, color: Colors.deepOrange),
                 onPressed: () async {
                   await fetchMyFriends();
-                  setState(() {});
                 },
               ),
             ],
@@ -186,34 +212,39 @@ class _FriendsPageState extends State<FriendsPage> {
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () async {
-              await fetchMyFriends();
-              setState(() {});
-            },
-            child: filteredFriends.isEmpty
-                ? ListView(
-                    children: [
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Text('You have no friends yet.',
-                              style: GoogleFonts.outfit(fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.separated(
-                    itemCount: filteredFriends.length,
-                    separatorBuilder: (context, index) =>
+            onRefresh: fetchMyFriends,
+            child: isMyFriendsLoading
+                ? ListView.separated(
+                    itemCount: 6,
+                    separatorBuilder: (_, __) =>
                         Divider(indent: 16, endIndent: 16),
-                    itemBuilder: (context, index) {
-                      final user = filteredFriends[index];
-                      final fullName =
-                          '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'
-                              .trim();
-                      return _buildUserTile(user, fullName, showChat: true);
-                    },
-                  ),
+                    itemBuilder: (_, __) => _buildShimmerFriendTile(),
+                  )
+                : filteredFriends.isEmpty
+                    ? ListView(
+                        children: [
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text('You have no friends yet.',
+                                  style: GoogleFonts.outfit(fontSize: 16)),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        itemCount: filteredFriends.length,
+                        separatorBuilder: (context, index) =>
+                            Divider(indent: 16, endIndent: 16),
+                        itemBuilder: (context, index) {
+                          final user = filteredFriends[index];
+                          final fullName =
+                              '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'
+                                  .trim();
+                          return _buildUserTile(user, fullName,
+                              showChat: true); // ✅ Preserve showChat
+                        },
+                      ),
           ),
         ),
       ],
@@ -312,7 +343,7 @@ class _FriendsPageState extends State<FriendsPage> {
       subtitle: Text(user['email'] ?? '', style: GoogleFonts.outfit()),
       trailing: showChat
           ? IconButton(
-              icon: Icon(Icons.message, color: Colors.deepOrange),
+              icon: Icon(Icons.message, color: Colors.blueGrey),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -329,6 +360,35 @@ class _FriendsPageState extends State<FriendsPage> {
               },
             )
           : null,
+    );
+  }
+
+  Widget _buildShimmerFriendTile() {
+    return ListTile(
+      leading: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: CircleAvatar(radius: 22, backgroundColor: Colors.white),
+      ),
+      title: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Container(
+          height: 12,
+          width: 100,
+          color: Colors.white,
+        ),
+      ),
+      subtitle: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Container(
+          height: 10,
+          width: 80,
+          color: Colors.white,
+          margin: EdgeInsets.only(top: 6),
+        ),
+      ),
     );
   }
 }
