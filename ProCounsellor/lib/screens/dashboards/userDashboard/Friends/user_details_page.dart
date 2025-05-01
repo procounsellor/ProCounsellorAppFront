@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:ProCounsellor/screens/dashboards/userDashboard/Friends/UserFriendsPage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../../services/api_utils.dart';
@@ -9,6 +10,7 @@ import '../../../newCallingScreen/video_call_screen.dart';
 import 'UserToUserChattingPage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../userDashboard/details_page.dart';
+import '../../userDashboard/my_reviews.dart';
 
 class UserDetailsPage extends StatefulWidget {
   final String userId;
@@ -33,6 +35,9 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   bool friendAdded = false;
   List<dynamic> subscribedCounsellors = [];
   bool loadingSubscribed = true;
+  String reviewCount = "";
+  String friendCount = "";
+  String fullName = '';
 
   @override
   void initState() {
@@ -87,6 +92,13 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
         final data = json.decode(response.body);
         setState(() {
           userDetails = data;
+          reviewCount =
+              (userDetails?['userReviewIds'] as List?)?.length.toString() ??
+                  '0';
+          friendCount = userDetails?['friendIds'] != null
+              ? (userDetails!['friendIds'] as List).length.toString()
+              : '0';
+          fullName = userDetails?['firstName'] + " " + userDetails?['lastName'];
         });
       }
     } catch (_) {}
@@ -218,8 +230,33 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      _buildStatItem("Reviews", "24"),
-                                      _buildStatItem("Friends", "56"),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => MyReviewPage(
+                                                  username: widget.userId),
+                                            ),
+                                          );
+                                        },
+                                        child: _buildStatItem(
+                                            "Reviews", reviewCount),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => UserFriendsPage(
+                                                  userId: widget.userId,
+                                                  name: fullName),
+                                            ),
+                                          );
+                                        },
+                                        child: _buildStatItem("Friends",
+                                            friendCount), // replace "56" with actual value if needed
+                                      ),
                                       _buildStatItem("Posts", "18"),
                                     ],
                                   ),
