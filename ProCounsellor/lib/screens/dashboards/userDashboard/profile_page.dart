@@ -1046,8 +1046,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           // );
                         },
                       ),
-                      Divider(height: 1),
-                      _buildLogoutTile(),
+                      // Divider(height: 1),
+                      // _buildLogoutTile(),
 
                       Center(
                         child: ElevatedButton(
@@ -1070,6 +1070,61 @@ class _ProfilePageState extends State<ProfilePage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                        ),
+                      ),
+                      SizedBox(height: 30),
+
+                      // Logout Button
+                      Center(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: Icon(Icons.logout, color: Colors.white),
+                          label: Text(
+                            "Logout",
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Confirm Logout",
+                                    style: GoogleFonts.outfit()),
+                                content: Text(
+                                    "Are you sure you want to log out?",
+                                    style: GoogleFonts.outfit()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: Text("Cancel",
+                                        style: GoogleFonts.outfit()),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: Text("Logout",
+                                        style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              await restartApp(); // Your logout logic
+                            }
+                          },
                         ),
                       ),
                     ],

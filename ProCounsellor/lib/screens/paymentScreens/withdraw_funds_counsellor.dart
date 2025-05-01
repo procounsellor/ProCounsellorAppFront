@@ -10,10 +10,12 @@ class WithdrawFundsCounsellorPage extends StatefulWidget {
   WithdrawFundsCounsellorPage({required this.userName});
 
   @override
-  _WithdrawFundsCounsellorPageState createState() => _WithdrawFundsCounsellorPageState();
+  _WithdrawFundsCounsellorPageState createState() =>
+      _WithdrawFundsCounsellorPageState();
 }
 
-class _WithdrawFundsCounsellorPageState extends State<WithdrawFundsCounsellorPage> {
+class _WithdrawFundsCounsellorPageState
+    extends State<WithdrawFundsCounsellorPage> {
   final TextEditingController _amountController = TextEditingController();
   bool _isLoading = true;
   Map<String, dynamic>? _bankDetails;
@@ -130,7 +132,8 @@ class _WithdrawFundsCounsellorPageState extends State<WithdrawFundsCounsellorPag
                     children: [
                       Text("No bank details available."),
                       SizedBox(height: 16),
-                      Text("Wallet Balance: ₹${_walletBalance?.toStringAsFixed(2) ?? '0.00'}"),
+                      Text(
+                          "Wallet Balance: ₹${_walletBalance?.toStringAsFixed(2) ?? '0.00'}"),
                     ],
                   ),
                 )
@@ -141,21 +144,27 @@ class _WithdrawFundsCounsellorPageState extends State<WithdrawFundsCounsellorPag
                     children: [
                       Text(
                         "Withdraw to:",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8),
-                      Text("Bank Account: ${_bankDetails!['bankAccountNumber']}"),
+                      Text(
+                          "Bank Account: ${_bankDetails!['bankAccountNumber']}"),
                       Text("IFSC Code: ${_bankDetails!['ifscCode']}"),
                       Text("Account Holder: ${_bankDetails!['fullName']}"),
                       SizedBox(height: 16),
                       Text(
                         "Wallet Balance: ₹${_walletBalance?.toStringAsFixed(2) ?? '0.00'}",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green),
                       ),
                       SizedBox(height: 24),
                       TextField(
                         controller: _amountController,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType:
+                            TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           labelText: "Enter Amount",
                           border: OutlineInputBorder(),
