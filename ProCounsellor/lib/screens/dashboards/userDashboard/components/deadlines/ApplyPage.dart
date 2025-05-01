@@ -42,6 +42,7 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
         title: Text("Application Checklist", style: GoogleFonts.outfit()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -95,7 +96,20 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
       ),
       builder: (context, player) {
         return Scaffold(
-          appBar: AppBar(),
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: Text(
+              "How to Apply",
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            iconTheme: IconThemeData(color: Colors.black),
+          ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
@@ -123,50 +137,29 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
                             style: GoogleFonts.outfit(fontSize: 16),
                           ),
                           const SizedBox(height: 24),
-                          OutlinedButton.icon(
-                            onPressed: _showChecklist,
-                            icon: Icon(Icons.checklist_rounded,
-                                color: Colors.green),
-                            label: Text(
-                              "View Checklist",
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.green,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.greenAccent),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
+                          _buildActionTile(
+                            text: 'VIEW CHECKLIST',
+                            icon: Icons.chevron_right,
+                            onTap: _showChecklist,
                           ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () {
+                          Divider(),
+                          _buildActionTile(
+                            text: 'PROCEED TO APPLICATION',
+                            icon: Icons.chevron_right,
+                            onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      "Start your application for ${widget.examTitle}"),
-                                ),
+                                    content: Text(
+                                        "Start your application for ${widget.examTitle}")),
                               );
                             },
-                            icon: const Icon(Icons.open_in_new),
-                            label: const Text("Proceed to Application"),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: Colors.deepOrange,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
                           ),
-                          const SizedBox(height: 16),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.pop(context);
+                          Divider(),
+                          _buildActionTile(
+                            text: 'CONNECT TO COUNSELLOR',
+                            icon: Icons.chevron_right,
+                            onTap: () {
+                              // Navigator.pop(context);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -177,22 +170,6 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
                                 ),
                               );
                             },
-                            icon: Icon(Icons.support_agent,
-                                color: Colors.deepOrange),
-                            label: Text(
-                              "Connect to Counsellor",
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.deepOrange,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.deepOrange),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -204,6 +181,28 @@ class _ApplyGuidePageState extends State<ApplyGuidePage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildActionTile({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+      title: Text(
+        text,
+        style: GoogleFonts.outfit(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[800],
+          letterSpacing: 1.0,
+        ),
+      ),
+      trailing: Icon(icon, color: Colors.grey),
     );
   }
 }

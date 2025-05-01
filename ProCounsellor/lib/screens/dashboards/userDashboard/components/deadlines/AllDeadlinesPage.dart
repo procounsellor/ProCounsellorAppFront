@@ -25,8 +25,19 @@ class _AllDeadlinesPageState extends State<AllDeadlinesPage> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("All Deadlines"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          "DEADLINES",
+          style: GoogleFonts.outfit(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -82,6 +93,7 @@ class _AllDeadlinesPageState extends State<AllDeadlinesPage> {
                             color: Colors.orangeAccent),
                         onPressed: () {
                           showModalBottomSheet(
+                            backgroundColor: Colors.white,
                             context: context,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
