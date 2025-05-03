@@ -41,6 +41,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isVideoDisabled = false;
   bool _callAnswered = false;
   bool _isEnding = false;
+  StreamSubscription<DatabaseEvent>? _callEndSubscription;
   Timer? _ringingTimer;
   Timer? _callTimer;
   int _callDurationInSeconds = 0;
@@ -65,25 +66,31 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     _initAgora();
     if (widget.isCaller) _playRingtone();
 
-    //listenForCallEnd(widget.channelId);
+    listenForCallEnd(widget.channelId);
   }
 
+  // When receiver will cut the call in incoming call page
   void listenForCallEnd(String channelId) {
-    if (_isEnding) return;
+  if (_isEnding) return;
 
-    FirebaseDatabase.instance.ref().child("calls").child(channelId).onValue.listen((event) {
-      if (event.snapshot.value != null) {
-        Map<dynamic, dynamic> callData =
-            event.snapshot.value as Map<dynamic, dynamic>;
-        if (callData["status"] == "completed" || callData["status"] == "declined") {
-            _stopCallTimer();
-            _stopRingtone();
-            agoraEngine.leaveChannel();
-            navigateToBasePage();
-        }
+  final callRef = FirebaseDatabase.instance.ref().child("calls").child(channelId);
+
+  _callEndSubscription = callRef.onValue.listen((event) {
+    final data = event.snapshot.value;
+    if (data != null && data is Map<dynamic, dynamic>) {
+      final status = data["status"];
+      if (status == "declined" || status == "completed") {
+        _isEnding = true;
+        _callEndSubscription?.cancel();
+
+        _stopCallTimer();
+        _stopRingtone();
+        agoraEngine.leaveChannel();
+        navigateToBasePage();
       }
-    });
-  }
+    }
+  });
+}
 
   Future<void> _fetchCallerAndReceiverDetails() async {
     String baseUrl = "${ApiUtils.baseUrl}/api";
@@ -318,6 +325,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     _ringingTimer?.cancel();
     _stopCallTimer();
     _stopRingtone();
+    _callEndSubscription?.cancel();
     super.dispose();
   }
 

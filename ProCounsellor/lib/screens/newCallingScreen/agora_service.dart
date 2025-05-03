@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 import 'package:ProCounsellor/services/api_utils.dart';
 
@@ -20,7 +21,8 @@ class AgoraService {
     await http.post(Uri.parse("$baseUrl/$callId/end"));
   }
   
-  static Future<void> declinedCall(String callId) async {
+  static Future<void> declinedCall(String callId, String receiverId) async {
+    FirebaseDatabase.instance.ref("agora_call_signaling").child(receiverId).remove();
     await http.post(Uri.parse("$baseUrl/$callId/declined"));
   }
 

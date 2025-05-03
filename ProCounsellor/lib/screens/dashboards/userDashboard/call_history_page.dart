@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../../services/api_utils.dart';
+import 'Friends/user_details_page.dart';
 import 'details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../optimizations/api_cache.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CallHistoryPage extends StatefulWidget {
@@ -83,17 +83,8 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Future<void> fetchCallHistory() async {
     try {
-      String cacheKey = "call_history_${widget.userId}";
       String apiUrl = "${ApiUtils.baseUrl}/api/user/${widget.userId}";
 
-      // ✅ Step 1: Check Cache First
-      var cachedData = await ApiCache.get(cacheKey);
-      if (cachedData != null) {
-        print("✅ Loaded call history from cache");
-        _updateCallHistory(cachedData);
-      }
-
-      // ✅ Step 2: Fetch Data from API (Only If Needed)
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -101,11 +92,8 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
             .map((call) => Map<String, dynamic>.from(call))
             .toList();
 
-        // ✅ Step 3: Sort calls (newest first)
+        // Sort calls (newest first)
         calls.sort((a, b) => b["startTime"].compareTo(a["startTime"]));
-
-        // ✅ Step 4: Store Fetched Data in Cache
-        await ApiCache.set(cacheKey, calls, persist: true);
 
         // ✅ Step 5: Update UI with Fresh Data
         _updateCallHistory(calls);
@@ -145,22 +133,6 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
           ? call["receiverId"]
           : call["callerId"];
 
-      // ✅ Step 1: Skip if details are already available in memory
-      if (profilePhotos.containsKey(contactId) &&
-          contactNames.containsKey(contactId)) continue;
-
-      // ✅ Step 2: Check Cache First
-      String cacheKey = "contact_$contactId";
-      var cachedData = await ApiCache.get(cacheKey);
-      if (cachedData != null) {
-        setState(() {
-          profilePhotos[contactId] = cachedData["photoUrl"] ?? "";
-          contactNames[contactId] =
-              "${cachedData["firstName"]} ${cachedData["lastName"]}";
-        });
-        continue; // ✅ Skip API call if data is found in cache
-      }
-
       try {
         String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$contactId";
         final response = await http.get(Uri.parse(apiUrl));
@@ -168,15 +140,25 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         if (response.statusCode == 200 && response.body.isNotEmpty) {
           final data = json.decode(response.body);
 
-          // ✅ Step 3: Store in Cache
-          await ApiCache.set(cacheKey, data, persist: true);
-
-          // ✅ Step 4: Update UI with fetched data
           setState(() {
             profilePhotos[contactId] = data["photoUrl"] ?? "";
             contactNames[contactId] =
                 "${data["firstName"]} ${data["lastName"]}";
           });
+        }
+        else{
+          String apiUrl = "${ApiUtils.baseUrl}/api/user/$contactId";
+          final response = await http.get(Uri.parse(apiUrl));
+
+          if (response.statusCode == 200 && response.body.isNotEmpty) {
+            final data = json.decode(response.body);
+
+            setState(() {
+              profilePhotos[contactId] = data["photo"] ?? "";
+              contactNames[contactId] =
+                  "${data["firstName"]} ${data["lastName"]}";
+            });
+          }
         }
       } catch (e) {
         print("Error fetching details for $contactId: $e");
@@ -279,7 +261,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       leading: GestureDetector(
-        onTap: () => _navigateToClientDetails(context, contactId),
+        onTap: () => _navigateToUserOrCounsellorDetails(context, contactId),
         child: CircleAvatar(
           radius: 25,
           backgroundColor: Colors.grey[800],
@@ -337,28 +319,48 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     );
   }
 
-  void _navigateToClientDetails(BuildContext context, String clientId) async {
+  void _navigateToUserOrCounsellorDetails(BuildContext context, String userId) async {
     try {
-      String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$clientId";
+      String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$userId";
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final clientData = json.decode(response.body);
+        final counsellorData = json.decode(response.body);
 
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetailsPage(
-              counsellorId: clientId,
+              counsellorId: userId,
               userId: widget.userId,
-              itemName: clientId,
+              itemName: userId,
               onSignOut: widget.onSignOut,
             ),
           ),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to load client details")));
+      }
+      else{
+        String apiUrl = "${ApiUtils.baseUrl}/api/user/$userId";
+        final response = await http.get(Uri.parse(apiUrl));
+
+        if (response.statusCode == 200 && response.body.isNotEmpty) {
+          final userData = json.decode(response.body);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserDetailsPage(
+                userId: userId,
+                myUsername: widget.userId,
+                onSignOut: widget.onSignOut,
+              ),
+            ),
+          );
+        }
+        else {
+          ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to load details")));
+        }
       }
     } catch (e) {
       print("Error fetching client details: $e");
@@ -378,7 +380,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         return GestureDetector(
           onTap: () {
             Navigator.pop(context); // Close modal before navigation
-            _navigateToClientDetails(context, contactId);
+            _navigateToUserOrCounsellorDetails(context, contactId);
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
