@@ -9,7 +9,6 @@ class CounsellorInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Safely convert all fields to String
     final String organisation =
         profileData["organisationName"]?.toString() ?? "Not provided";
     final String experience =
@@ -41,10 +40,9 @@ class CounsellorInfoPage extends StatelessWidget {
         title: Text(
           "MY INFO",
           style: GoogleFonts.outfit(
-            // 👈 or any font like Roboto, Lato, Poppins
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.black, // since background is white
+            color: Colors.black,
           ),
         ),
         backgroundColor: Colors.white,
@@ -99,12 +97,9 @@ class CounsellorInfoPage extends StatelessWidget {
                   backgroundColor: Colors.blueGrey,
                   foregroundColor: Colors.white,
                   textStyle: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white),
+                      fontSize: 16, fontWeight: FontWeight.w600),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
@@ -132,10 +127,7 @@ class CounsellorInfoPage extends StatelessWidget {
           SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
+            style: GoogleFonts.outfit(fontSize: 16, color: Colors.black87),
           ),
         ],
       ),
@@ -156,15 +148,23 @@ class _RequestEditModalState extends State<RequestEditModal> {
   late TextEditingController organisationController;
   late TextEditingController experienceController;
   late TextEditingController stateController;
-  late TextEditingController expertiseController;
   late TextEditingController rateController;
   late TextEditingController languagesController;
+
+  final List<String> expertiseOptions = [
+    'HSC',
+    'ENGINEERING',
+    'MBA',
+    'MEDICAL',
+    'OTHERS',
+  ];
+
+  List<String> selectedExpertise = [];
 
   @override
   void initState() {
     super.initState();
 
-    // Safe extraction
     final dynamic rawLanguages = widget.profileData['languagesKnow'];
     String languagesText = '';
     if (rawLanguages is List) {
@@ -179,11 +179,22 @@ class _RequestEditModalState extends State<RequestEditModal> {
         text: widget.profileData['experience']?.toString() ?? '');
     stateController = TextEditingController(
         text: widget.profileData['stateOfCounsellor']?.toString() ?? '');
-    expertiseController = TextEditingController(
-        text: widget.profileData['expertise']?.toString() ?? '');
     rateController = TextEditingController(
         text: widget.profileData['ratePerYear']?.toString() ?? '');
     languagesController = TextEditingController(text: languagesText);
+
+    final dynamic rawExpertise = widget.profileData['expertise'];
+    if (rawExpertise is String) {
+      selectedExpertise = rawExpertise.split(',').map((e) => e.trim()).toList();
+    }
+  }
+
+  void _sendRequest() async {
+    final updatedExpertise = selectedExpertise.join(', ');
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Edit request submitted!')),
+    );
   }
 
   @override
@@ -191,18 +202,9 @@ class _RequestEditModalState extends State<RequestEditModal> {
     organisationController.dispose();
     experienceController.dispose();
     stateController.dispose();
-    expertiseController.dispose();
     rateController.dispose();
     languagesController.dispose();
     super.dispose();
-  }
-
-  void _sendRequest() async {
-    // TODO: Connect to your API
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit request submitted!')),
-    );
   }
 
   @override
@@ -217,7 +219,16 @@ class _RequestEditModalState extends State<RequestEditModal> {
           buildTextField("Organisation", organisationController),
           buildTextField("Experience", experienceController),
           buildTextField("State", stateController),
-          buildTextField("Expertise", expertiseController),
+          buildCheckboxList("Expertise", expertiseOptions, selectedExpertise,
+              (value) {
+            setState(() {
+              if (selectedExpertise.contains(value)) {
+                selectedExpertise.remove(value);
+              } else {
+                selectedExpertise.add(value);
+              }
+            });
+          }),
           buildTextField("Rate Per Year", rateController),
           buildTextField("Languages Known", languagesController),
           SizedBox(height: 24),
@@ -233,8 +244,7 @@ class _RequestEditModalState extends State<RequestEditModal> {
                 textStyle: GoogleFonts.outfit(
                     fontSize: 16, fontWeight: FontWeight.w600),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ),
@@ -254,6 +264,32 @@ class _RequestEditModalState extends State<RequestEditModal> {
           labelStyle: GoogleFonts.outfit(letterSpacing: 0.5),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
+      ),
+    );
+  }
+
+  Widget buildCheckboxList(String label, List<String> options,
+      List<String> selectedValues, Function(String) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black)),
+          ...options.map((option) {
+            return CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(option, style: GoogleFonts.outfit(fontSize: 14)),
+              value: selectedValues.contains(option),
+              onChanged: (_) => onChanged(option),
+              controlAffinity: ListTileControlAffinity.leading,
+            );
+          }).toList(),
+        ],
       ),
     );
   }

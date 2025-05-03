@@ -80,6 +80,7 @@ class CourseDetailsPage extends StatelessWidget {
         'assets/images/homepage/trending_courses/${courseName.toLowerCase().replaceAll(" ", "_")}.png';
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(courseName, style: GoogleFonts.outfit(color: Colors.black)),
         backgroundColor: Colors.white,

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ProCounsellor/screens/paymentScreens/transaction_details_page.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
   final String username;
@@ -101,7 +102,38 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
               final txn = transactions[index];
               final isCredit = txn['type'] == 'credit';
 
+              // return ListTile(
+              //   leading: Icon(
+              //     isCredit ? Icons.arrow_downward : Icons.arrow_upward,
+              //     color: isCredit ? Colors.green : Colors.red,
+              //   ),
+              //   title: Text(
+              //     "${isCredit ? '+' : '-'} ₹${txn['amount'].toString()}",
+              //     style: GoogleFonts.outfit(
+              //       color: isCredit ? Colors.green : Colors.red,
+              //       fontWeight: FontWeight.bold,
+              //       fontSize: 16,
+              //     ),
+              //   ),
+              //   subtitle: Text(
+              //     txn['description'] ?? 'No Description',
+              //     style:
+              //         GoogleFonts.outfit(fontSize: 14, color: Colors.black87),
+              //   ),
+              //   trailing: Text(
+              //     _formatTimestamp(txn['timestamp']),
+              //     style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
+              //   ),
+              // );
               return ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TransactionDetailsPage(transaction: txn),
+                    ),
+                  );
+                },
                 leading: Icon(
                   isCredit ? Icons.arrow_downward : Icons.arrow_upward,
                   color: isCredit ? Colors.green : Colors.red,

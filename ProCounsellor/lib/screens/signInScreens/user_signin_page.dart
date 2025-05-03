@@ -10,6 +10,7 @@ import 'package:ProCounsellor/screens/signInScreens/verification_page.dart';
 import 'package:ProCounsellor/screens/signInScreens/counsellor_signin.dart';
 import 'package:ProCounsellor/screens/signInScreens/counsellor_signup.dart';
 import 'package:ProCounsellor/services/api_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UserSignInPage extends StatefulWidget {
   final Future<void> Function() onSignOut;
@@ -67,7 +68,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
                 children: [
                   TextSpan(
                     text: 'Login',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
@@ -75,14 +76,14 @@ class _UserSignInPageState extends State<UserSignInPage> {
                   ),
                   TextSpan(
                     text: '  or  ',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 16,
                       color: Colors.grey[800],
                     ),
                   ),
                   TextSpan(
                     text: 'Signup',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
@@ -134,12 +135,12 @@ class _UserSignInPageState extends State<UserSignInPage> {
             SizedBox(height: 24),
             RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
                 children: [
                   TextSpan(text: 'By continuing, I agree to the '),
                   TextSpan(
                     text: 'Terms and Conditions',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
@@ -154,7 +155,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
                   TextSpan(text: ' & '),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
@@ -202,12 +203,12 @@ class _UserSignInPageState extends State<UserSignInPage> {
             SizedBox(height: 24),
             RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
                 children: [
                   TextSpan(text: 'Facing issues logging in ? '),
                   TextSpan(
                     text: 'Get Help',
-                    style: TextStyle(
+                    style: GoogleFonts.outfit(
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
@@ -230,33 +231,36 @@ class _UserSignInPageState extends State<UserSignInPage> {
             // ),
             GestureDetector(
               onTap: () {
-                showModalBottomSheet(
-                  backgroundColor: Colors.white,
+                showDialog(
                   context: context,
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  isScrollControlled: true,
                   builder: (BuildContext context) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        height: MediaQuery.of(context).size.height * 0.15,
+                    return Dialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      insetPadding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
+                            Text(
+                              "Continue as Counselor",
+                              style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  color: Colors.grey),
+                            ),
+                            SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
+                                    Navigator.pop(context);
                                     Navigator.push(
                                       context,
-                                      // MaterialPageRoute(
-                                      //   builder: (_) => CounsellorSignUpStep1(
-                                      //       signUpData: CounsellorSignUpData()),
-                                      // ),
                                       MaterialPageRoute(
                                         builder: (_) =>
                                             CounsellorSignUpStepper(),
@@ -264,61 +268,55 @@ class _UserSignInPageState extends State<UserSignInPage> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFAAF84),
+                                    backgroundColor:
+                                        Colors.greenAccent.shade700,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                   child: Text(
-                                    'Sign up',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 14),
+                                    "SIGN UP",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
+                                    Navigator.pop(context);
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => CounsellorSignInScreen(
-                                            onSignOut: widget.onSignOut),
+                                          onSignOut: widget.onSignOut,
+                                        ),
                                       ),
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFAAF84),
+                                    backgroundColor:
+                                        Colors.greenAccent.shade700,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                   child: Text(
-                                    'Sign in',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 14),
+                                    "SIGN IN",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
-                                // ElevatedButton(
-                                //   onPressed: () {
-                                //     Navigator.push(
-                                //       context,
-                                //       MaterialPageRoute(
-                                //         builder: (_) => AdminSignInScreen(
-                                //             onSignOut: widget.onSignOut),
-                                //       ),
-                                //     );
-                                //   },
-                                //   style: ElevatedButton.styleFrom(
-                                //     backgroundColor: Color(0xFFFAAF84),
-                                //     shape: RoundedRectangleBorder(
-                                //       borderRadius: BorderRadius.circular(8),
-                                //     ),
-                                //   ),
-                                //   child: Text(
-                                //     'Admin Sign in',
-                                //     style: TextStyle(
-                                //         color: Colors.white, fontSize: 14),
-                                //   ),
-                                // ),
                               ],
                             ),
                           ],
@@ -329,13 +327,124 @@ class _UserSignInPageState extends State<UserSignInPage> {
                 );
               },
               child: Text(
-                'SignIn as counsellor',
-                style: TextStyle(
+                'Sign In as Counselor',
+                style: GoogleFonts.outfit(
                   color: Colors.orange,
                   fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
-            ),
+            )
+
+            // GestureDetector(
+            //   onTap: () {
+            //     showModalBottomSheet(
+            //       backgroundColor: Colors.white,
+            //       context: context,
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius:
+            //             BorderRadius.vertical(top: Radius.circular(16)),
+            //       ),
+            //       isScrollControlled: true,
+            //       builder: (BuildContext context) {
+            //         return Padding(
+            //           padding: const EdgeInsets.all(16.0),
+            //           child: Container(
+            //             height: MediaQuery.of(context).size.height * 0.15,
+            //             child: Column(
+            //               crossAxisAlignment: CrossAxisAlignment.center,
+            //               children: [
+            //                 Row(
+            //                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //                   children: [
+            //                     ElevatedButton(
+            //                       onPressed: () {
+            //                         Navigator.push(
+            //                           context,
+            //                           // MaterialPageRoute(
+            //                           //   builder: (_) => CounsellorSignUpStep1(
+            //                           //       signUpData: CounsellorSignUpData()),
+            //                           // ),
+            //                           MaterialPageRoute(
+            //                             builder: (_) =>
+            //                                 CounsellorSignUpStepper(),
+            //                           ),
+            //                         );
+            //                       },
+            //                       style: ElevatedButton.styleFrom(
+            //                         backgroundColor: Color(0xFFFAAF84),
+            //                         shape: RoundedRectangleBorder(
+            //                           borderRadius: BorderRadius.circular(8),
+            //                         ),
+            //                       ),
+            //                       child: Text(
+            //                         'Sign up',
+            //                         style: TextStyle(
+            //                             color: Colors.white, fontSize: 14),
+            //                       ),
+            //                     ),
+            //                     ElevatedButton(
+            //                       onPressed: () {
+            //                         Navigator.push(
+            //                           context,
+            //                           MaterialPageRoute(
+            //                             builder: (_) => CounsellorSignInScreen(
+            //                                 onSignOut: widget.onSignOut),
+            //                           ),
+            //                         );
+            //                       },
+            //                       style: ElevatedButton.styleFrom(
+            //                         backgroundColor: Color(0xFFFAAF84),
+            //                         shape: RoundedRectangleBorder(
+            //                           borderRadius: BorderRadius.circular(8),
+            //                         ),
+            //                       ),
+            //                       child: Text(
+            //                         'Sign in',
+            //                         style: TextStyle(
+            //                             color: Colors.white, fontSize: 14),
+            //                       ),
+            //                     ),
+            //                     // ElevatedButton(
+            //                     //   onPressed: () {
+            //                     //     Navigator.push(
+            //                     //       context,
+            //                     //       MaterialPageRoute(
+            //                     //         builder: (_) => AdminSignInScreen(
+            //                     //             onSignOut: widget.onSignOut),
+            //                     //       ),
+            //                     //     );
+            //                     //   },
+            //                     //   style: ElevatedButton.styleFrom(
+            //                     //     backgroundColor: Color(0xFFFAAF84),
+            //                     //     shape: RoundedRectangleBorder(
+            //                     //       borderRadius: BorderRadius.circular(8),
+            //                     //     ),
+            //                     //   ),
+            //                     //   child: Text(
+            //                     //     'Admin Sign in',
+            //                     //     style: TextStyle(
+            //                     //         color: Colors.white, fontSize: 14),
+            //                     //   ),
+            //                     // ),
+            //                   ],
+            //                 ),
+            //               ],
+            //             ),
+            //           ),
+            //         );
+            //       },
+            //     );
+            //   },
+            //   child: Text(
+            //     'SignIn as counsellor',
+            //     style: TextStyle(
+            //       color: Colors.orange,
+            //       fontSize: 15,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

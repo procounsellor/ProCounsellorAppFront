@@ -403,8 +403,34 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
-                                                content: Text(
-                                                    'Friend added successfully')),
+                                              content: Row(
+                                                children: [
+                                                  Icon(Icons.check_circle,
+                                                      color: Colors.white),
+                                                  SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: Text(
+                                                      "Friend Added!",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              backgroundColor:
+                                                  Colors.green.shade600,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 10),
+                                              elevation: 8,
+                                              duration: Duration(seconds: 3),
+                                            ),
                                           );
                                         } else if (response.body
                                             .contains('Already friends')) {
@@ -443,8 +469,32 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
-                                                content:
-                                                    Text('Friend removed')),
+                                              content: Row(
+                                                children: [
+                                                  SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: Text(
+                                                      "Friend Removed !",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              backgroundColor:
+                                                  Colors.red.shade600,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 16, vertical: 10),
+                                              elevation: 8,
+                                              duration: Duration(seconds: 3),
+                                            ),
                                           );
                                         } else {
                                           ScaffoldMessenger.of(context)
