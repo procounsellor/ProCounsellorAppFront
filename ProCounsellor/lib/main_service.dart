@@ -1,5 +1,6 @@
 import 'package:ProCounsellor/services/api_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
@@ -55,6 +56,9 @@ class MainService {
 
     print("📲 Showing call UI: $callerName → $callType → $channelId");
 
+    // ✅ Listen for call cancellation before pickup
+    _listenForCallerCancel(channelId);
+
     // ✅ Auto-dismiss the call if unanswered in 60 seconds
     Future.delayed(const Duration(seconds: 60), () async {
       final activeCalls = await FlutterCallkitIncoming.activeCalls();
@@ -64,6 +68,17 @@ class MainService {
       }
     });
   }
+
+  void _listenForCallerCancel(String channelId) {
+  final ref = FirebaseDatabase.instance.ref().child("calls").child(channelId);
+  ref.onValue.listen((event) {
+    final data = event.snapshot.value;
+    if (data != null && data is Map && data['status'] == 'Missed Call') {
+      print("📴 Caller cancelled before pickup.");
+      FlutterCallkitIncoming.endAllCalls();
+    }
+  });
+}
 
   Future<bool> senderIsUser(String senderId) async {
   final firestore = FirebaseFirestore.instance;

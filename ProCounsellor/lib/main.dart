@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ProCounsellor/main_service.dart';
 import 'package:ProCounsellor/screens/dashboards/userDashboard/chatting_page.dart';
+import 'package:ProCounsellor/screens/newCallingScreen/agora_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -24,6 +25,7 @@ import 'screens/dashboards/counsellorDashboard/counsellor_chatting_page.dart';
 import 'screens/dashboards/userDashboard/Friends/UserToUserChattingPage.dart';
 import 'screens/newCallingScreen/audio_call_screen.dart';
 import 'screens/newCallingScreen/video_call_screen.dart';
+import 'services/api_utils.dart';
 
 // Initialize secure storage
 final storage = FlutterSecureStorage(
@@ -176,6 +178,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   }
 
   Future<void> updatePlatformInFirestore(String userId, String role) async {
+    print("checking platform");
     final String platform = Platform.isIOS ? 'ios' : 'android';
 
     final collection = role == 'counsellor' ? 'counsellors' : 'users';
@@ -240,8 +243,15 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           await FlutterCallkitIncoming.endAllCalls();
         });
       } else if (eventType == Event.actionCallDecline ||
-          eventType == Event.actionCallEnded) {
-        await FlutterCallkitIncoming.endAllCalls();
+            eventType == Event.actionCallEnded) {
+            final callerId = data?['extra']?['callerName'];
+            final receiverId = data?['extra']?['receiverName'];
+            final channelId = data?['extra']?['channelId'];
+
+            if (callerId != null && receiverId != null && channelId != null) {
+              AgoraService.declinedCall(channelId, receiverId);
+            }
+          await FlutterCallkitIncoming.endAllCalls();
       }
     });
   }
@@ -282,10 +292,14 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           await saveVoIPUserMeta(userId!, role!);
         }
       } else if (role == "counsellor") {
+        print("counsellor iod check");
         FirestoreService.saveFCMTokenCounsellor(userId!);
         if (Platform.isIOS) {
           print("ios");
           await saveVoIPUserMeta(userId!, role!);
+        }
+        else{
+          print("not ios");
         }
       }
 

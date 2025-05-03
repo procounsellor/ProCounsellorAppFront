@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../services/api_utils.dart';
 import 'client_details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../optimizations/api_cache.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String counsellorId;
@@ -82,18 +81,9 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
   Future<void> fetchCallHistory() async {
     try {
-      String cacheKey = "call_history_${widget.counsellorId}";
       String apiUrl =
           "${ApiUtils.baseUrl}/api/counsellor/${widget.counsellorId}";
 
-      // ✅ Step 1: Check Cache First
-      var cachedData = await ApiCache.get(cacheKey);
-      if (cachedData != null) {
-        print("✅ Loaded call history from cache");
-        _updateCallHistory(cachedData);
-      }
-
-      // ✅ Step 2: Fetch Data from API (Only If Needed)
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -103,9 +93,6 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
         // ✅ Step 3: Sort calls (newest first)
         calls.sort((a, b) => b["startTime"].compareTo(a["startTime"]));
-
-        // ✅ Step 4: Store Fetched Data in Cache
-        await ApiCache.set(cacheKey, calls, persist: true);
 
         // ✅ Step 5: Update UI with Fresh Data
         _updateCallHistory(calls);
@@ -145,31 +132,12 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
           ? call["receiverId"]
           : call["callerId"];
 
-      // ✅ Step 1: Skip if details are already available in memory
-      if (profilePhotos.containsKey(contactId) &&
-          contactNames.containsKey(contactId)) continue;
-
-      // ✅ Step 2: Check Cache First
-      String cacheKey = "contact_$contactId";
-      var cachedData = await ApiCache.get(cacheKey);
-      if (cachedData != null) {
-        setState(() {
-          profilePhotos[contactId] = cachedData["photo"] ?? "";
-          contactNames[contactId] =
-              "${cachedData["firstName"]} ${cachedData["lastName"]}";
-        });
-        continue; // ✅ Skip API call if data is found in cache
-      }
-
       try {
         String apiUrl = "${ApiUtils.baseUrl}/api/user/$contactId";
         final response = await http.get(Uri.parse(apiUrl));
 
         if (response.statusCode == 200 && response.body.isNotEmpty) {
           final data = json.decode(response.body);
-
-          // ✅ Step 3: Store in Cache
-          await ApiCache.set(cacheKey, data, persist: true);
 
           // ✅ Step 4: Update UI with fetched data
           setState(() {
