@@ -79,7 +79,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     final data = event.snapshot.value;
     if (data != null && data is Map<dynamic, dynamic>) {
       final status = data["status"];
-      if (status == "declined" || status == "completed") {
+      if (status == "declined") {
         _isEnding = true;
         _callEndSubscription?.cancel();
 
