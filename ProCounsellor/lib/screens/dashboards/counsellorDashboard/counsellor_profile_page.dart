@@ -595,27 +595,64 @@ class _ProfilePageState extends State<CounsellorProfilePage> {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: Text("Confirm Logout"),
-                                content:
-                                    Text("Are you sure you want to logout?"),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16)),
+                                titlePadding: EdgeInsets.only(top: 24),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                actionsPadding:
+                                    EdgeInsets.only(right: 16, bottom: 12),
+                                title: Column(
+                                  children: [
+                                    Icon(Icons.logout,
+                                        color: Colors.redAccent, size: 36),
+                                    SizedBox(height: 12),
+                                    Text(
+                                      "Confirm Logout",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: Text(
+                                  "Are you sure you want to logout?",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                actionsAlignment: MainAxisAlignment.end,
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(false),
-                                    child: Text("Cancel"),
+                                    child: Text(
+                                      "Cancel",
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
                                   ),
-                                  TextButton(
+                                  ElevatedButton(
                                     onPressed: () =>
                                         Navigator.of(ctx).pop(true),
-                                    child: Text("Logout",
-                                        style: TextStyle(color: Colors.red)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      "Logout",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   ),
                                 ],
                               ),
                             );
 
                             if (confirm == true) {
-                              await widget.onSignOut();
+                              await widget.onSignOut(); // Your logout logic
                             }
                           },
                           icon: Icon(Icons.logout, color: Colors.white),

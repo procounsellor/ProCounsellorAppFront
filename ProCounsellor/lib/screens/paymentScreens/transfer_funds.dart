@@ -37,9 +37,31 @@ class _TransferFundsPageState extends State<TransferFundsPage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ Funds transferred successfully")),
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "Funds transferred successfully!",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green.shade600,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            elevation: 8,
+            duration: Duration(seconds: 3),
+          ),
         );
-       Navigator.pop(context, true); // ✅ Notify caller with success
+
+        Navigator.pop(context, true); // ✅ Notify caller with success
       } else {
         final errorMsg = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -68,9 +90,11 @@ class _TransferFundsPageState extends State<TransferFundsPage> {
           children: [
             Text("User ID: ${widget.userId}", style: TextStyle(fontSize: 16)),
             SizedBox(height: 8),
-            Text("Counsellor ID: ${widget.counsellorId}", style: TextStyle(fontSize: 16)),
+            Text("Counsellor ID: ${widget.counsellorId}",
+                style: TextStyle(fontSize: 16)),
             SizedBox(height: 8),
-            Text("Amount: ₹${widget.amount.toStringAsFixed(2)}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("Amount: ₹${widget.amount.toStringAsFixed(2)}",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 24),
             _isLoading
                 ? Center(child: CircularProgressIndicator())

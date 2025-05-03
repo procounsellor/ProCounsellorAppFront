@@ -23,6 +23,7 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _apiService = AuthService();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -30,6 +31,10 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
   }
 
   Future<void> _handleVerification() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final response = await _apiService.counsellorSignIn(
           _usernameController.text, _passwordController.text);
@@ -76,6 +81,10 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
     } catch (e) {
       print('Error: $e');
       showErrorDialog('An error occurred. Please try again.');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -131,30 +140,30 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: Icon(Icons.g_mobiledata),
-                              label: Text("Google"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: Icon(Icons.facebook),
-                              label: Text("Facebook"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     ElevatedButton.icon(
+                        //       onPressed: () {},
+                        //       icon: Icon(Icons.g_mobiledata),
+                        //       label: Text("Google"),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Colors.redAccent,
+                        //         foregroundColor: Colors.white,
+                        //       ),
+                        //     ),
+                        //     SizedBox(width: 10),
+                        //     ElevatedButton.icon(
+                        //       onPressed: () {},
+                        //       icon: Icon(Icons.facebook),
+                        //       label: Text("Facebook"),
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Colors.blueAccent,
+                        //         foregroundColor: Colors.white,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
                         SizedBox(height: 20),
                         TextField(
                           controller: _usernameController,
@@ -187,9 +196,10 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                           child: TextButton(
                             onPressed: () {
                               Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-                            );
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ForgotPasswordPage()),
+                              );
                             },
                             child: Text("Forgot Password?"),
                           ),
@@ -204,17 +214,27 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
-                            onPressed: _handleVerification,
-                            child: Text(
-                              "Sign In",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            onPressed: _isLoading ? null : _handleVerification,
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    "SIGN IN",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
+
                         SizedBox(height: 10),
                         Text("Not registered? ",
                             style: TextStyle(color: Colors.black54)),
@@ -222,7 +242,9 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => CounsellorSignUpStepper()),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      CounsellorSignUpStepper()),
                             );
                           },
                           child: Text("Create Account",

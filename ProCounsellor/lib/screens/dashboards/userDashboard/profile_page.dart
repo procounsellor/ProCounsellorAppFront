@@ -423,6 +423,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // Degree Selection Dropdown
                       DropdownButtonFormField<String>(
+                        dropdownColor: Colors.white,
                         value: interestedCourse,
                         items: courses.map((course) {
                           return DropdownMenuItem(
@@ -1077,55 +1078,126 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Logout Button
                       Center(
                         child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          icon: Icon(Icons.logout, color: Colors.white),
-                          label: Text(
-                            "Logout",
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text("Confirm Logout",
-                                    style: GoogleFonts.outfit()),
-                                content: Text(
-                                    "Are you sure you want to log out?",
-                                    style: GoogleFonts.outfit()),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text("Cancel",
-                                        style: GoogleFonts.outfit()),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: Text("Logout",
-                                        style: GoogleFonts.outfit(
-                                            fontWeight: FontWeight.bold)),
-                                  ),
-                                ],
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            );
+                            ),
+                            icon: Icon(Icons.logout, color: Colors.white),
+                            label: Text(
+                              "Logout",
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            // onPressed: () async {
+                            //   final confirm = await showDialog<bool>(
+                            //     context: context,
+                            //     builder: (context) => AlertDialog(
+                            //       title: Text("Confirm Logout",
+                            //           style: GoogleFonts.outfit()),
+                            //       content: Text(
+                            //           "Are you sure you want to log out?",
+                            //           style: GoogleFonts.outfit()),
+                            //       actions: [
+                            //         TextButton(
+                            //           onPressed: () =>
+                            //               Navigator.pop(context, false),
+                            //           child: Text("Cancel",
+                            //               style: GoogleFonts.outfit()),
+                            //         ),
+                            //         TextButton(
+                            //           onPressed: () =>
+                            //               Navigator.pop(context, true),
+                            //           child: Text("Logout",
+                            //               style: GoogleFonts.outfit(
+                            //                   fontWeight: FontWeight.bold)),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   );
 
-                            if (confirm == true) {
-                              await restartApp(); // Your logout logic
-                            }
-                          },
-                        ),
+                            //   if (confirm == true) {
+                            //     await restartApp(); // Your logout logic
+                            //   }
+                            // },
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  titlePadding: EdgeInsets.only(top: 24),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                  actionsPadding:
+                                      EdgeInsets.only(right: 16, bottom: 12),
+                                  title: Column(
+                                    children: [
+                                      Icon(Icons.logout,
+                                          color: Colors.redAccent, size: 36),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        "Confirm Logout",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Text(
+                                    "Are you sure you want to log out?",
+                                    style: GoogleFonts.outfit(fontSize: 16),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  actionsAlignment: MainAxisAlignment.end,
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 10),
+                                      ),
+                                      child: Text(
+                                        "Logout",
+                                        style: GoogleFonts.outfit(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true) {
+                                await restartApp(); // Your logout logic
+                              }
+                            }),
                       ),
                     ],
                   ),

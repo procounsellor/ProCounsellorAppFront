@@ -84,6 +84,7 @@ class _CoursesPageState extends State<CoursesPage> {
         .toList();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text("Top Courses", style: TextStyle(color: Colors.black)),
