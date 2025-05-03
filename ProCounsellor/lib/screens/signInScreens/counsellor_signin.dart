@@ -8,6 +8,8 @@ import 'package:ProCounsellor/screens/signInScreens/counsellor_signup.dart';
 import 'package:ProCounsellor/screens/signInScreens/forgot_password_page.dart';
 import '../../services/auth_service.dart';
 import '../newCallingScreen/save_fcm_token.dart';
+import '../../services/api_utils.dart';
+import 'package:http/http.dart' as http;
 
 final storage = FlutterSecureStorage();
 
@@ -46,6 +48,36 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
         String firebaseCustomToken = body['firebaseCustomToken'];
         String role = "counsellor";
 
+        // if (response.statusCode == 200) {
+        //   // Save role, JWT and userId in secure storage when signed in
+        //   await storage.write(key: "role", value: role);
+        //   await storage.write(key: "jwtToken", value: jwtToken);
+        //   await storage.write(key: "userId", value: userId);
+        //   await FirestoreService.saveFCMTokenCounsellor(userId);
+        //   print(FirestoreService.getFCMTokenCounsellor(userId));
+
+        //   // Authenticate with Firebase using the custom token
+        //   await FirebaseAuth.instance
+        //       .signInWithCustomToken(firebaseCustomToken);
+        //   User? user = FirebaseAuth.instance.currentUser;
+        //   if (user != null) {
+        //     print("Authenticated user: ${user.uid}");
+        //   } else {
+        //     print("Authentication failed.");
+        //   }
+
+        //   Navigator.pushAndRemoveUntil(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => CounsellorBasePage(
+        //         onSignOut: widget.onSignOut,
+        //         counsellorId: userId,
+        //       ),
+        //     ),
+        //     (route) => false,
+        //   );
+        // }
+
         if (response.statusCode == 200) {
           // Save role, JWT and userId in secure storage when signed in
           await storage.write(key: "role", value: role);
@@ -64,16 +96,52 @@ class _CounsellorSignInScreenState extends State<CounsellorSignInScreen> {
             print("Authentication failed.");
           }
 
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CounsellorBasePage(
-                onSignOut: widget.onSignOut,
-                counsellorId: userId,
-              ),
-            ),
-            (route) => false,
+          // 🔍 Fetch counsellor details to check if verified
+          final counsellorResponse = await http.get(
+            Uri.parse('${ApiUtils.baseUrl}/api/counsellor/$userId'),
+            headers: {
+              'Authorization': 'Bearer $jwtToken'
+            }, // optional if required
           );
+
+          if (counsellorResponse.statusCode == 200) {
+            final counsellorData = json.decode(counsellorResponse.body);
+            final isVerified = counsellorData['verified'] == true;
+
+            if (isVerified) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CounsellorBasePage(
+                    onSignOut: widget.onSignOut,
+                    counsellorId: userId,
+                  ),
+                ),
+                (route) => false,
+              );
+            } else {
+              // Show "under review" dialog or redirect to an UnderReviewPage
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text("Account Under Review"),
+                  content: Text(
+                      "Your counsellor profile is under review. Please wait for admin approval."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("OK"),
+                    ),
+                  ],
+                ),
+              );
+            }
+          } else {
+            // Show error if counsellor fetch failed
+            print(
+                "Failed to fetch counsellor details: ${counsellorResponse.statusCode}");
+            // Optionally show a snackbar or dialog
+          }
         }
       } else {
         showErrorDialog('Invalid Credentials. Please try again.');

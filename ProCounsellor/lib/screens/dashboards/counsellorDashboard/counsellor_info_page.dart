@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../services/api_utils.dart'; // Assuming you have your base URL there
 
 class CounsellorInfoPage extends StatelessWidget {
   final Map<String, dynamic> profileData;
@@ -190,11 +193,47 @@ class _RequestEditModalState extends State<RequestEditModal> {
   }
 
   void _sendRequest() async {
-    final updatedExpertise = selectedExpertise.join(', ');
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit request submitted!')),
-    );
+    final updatedData = {
+      "organisationName": organisationController.text.trim(),
+      "experience": experienceController.text.trim(),
+      "stateOfCounsellor": stateController.text.trim(),
+      "expertise": selectedExpertise,
+      "ratePerYear": double.tryParse(rateController.text.trim()) ?? 0,
+      "languagesKnow": languagesController.text
+          .split(',')
+          .map((lang) => lang.trim())
+          .where((lang) => lang.isNotEmpty)
+          .toList(),
+    };
+
+    final userName = widget.profileData['userName'] ?? '';
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiUtils.baseUrl}/api/counsellor/update-log/$userName'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(updatedData),
+      );
+
+      Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Edit request submitted successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit request')),
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
