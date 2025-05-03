@@ -81,7 +81,7 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
     final data = event.snapshot.value;
     if (data != null && data is Map<dynamic, dynamic>) {
       final status = data["status"];
-      if (status == "declined") {
+      if (status == "Declined") {
         _isEnding = true;
         _callEndSubscription?.cancel();
 
