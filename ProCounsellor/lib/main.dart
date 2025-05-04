@@ -200,6 +200,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     FlutterCallkitIncoming.onEvent.listen((event) async {
       final data = event?.body;
       final eventType = event?.event;
+      print("typeee: $eventType");
 
       final callType = data?['extra']?['callType'] ?? 'audio';
       final channelId = data?['extra']?['channelId'];
@@ -212,6 +213,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       print("👉 userId (receiverId): $userId");
 
       if (eventType == Event.actionCallAccept) {
+        print("acepted");
         if (channelId == null || callerName == null || receiverName == null) {
           print("❌ Missing call data. Cannot redirect.");
           return;
@@ -438,6 +440,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       print("📩 FCM in foreground: ${message.data}");
 
       if (message.data['type'] == 'incoming_call') {
+        print("show incoming call UI");
         _mainService.showNativeIncomingCall(
           callerName: message.data['callerName'],
           callType: message.data['callType'],

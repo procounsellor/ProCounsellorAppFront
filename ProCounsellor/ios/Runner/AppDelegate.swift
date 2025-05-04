@@ -63,7 +63,15 @@ import FirebaseFirestore
         return
     }
 
-    // 🟢 Incoming call - proceed as usual
+    // 🆔 Save UUID in Firestore
+    if let receiverId = (dictionary["extra"] as? [String: Any])?["receiverName"] as? String,
+       let callUUID = dictionary["id"] as? String {
+
+        print("📞 Received callUUID: \(callUUID) for receiverId: \(receiverId)")
+        saveCallUUIDToFirestore(receiverId: receiverId, uuid: callUUID)
+    }
+
+    // Show call UI
     var info = [String: Any?]()
     info["id"] = dictionary["id"] ?? UUID().uuidString
     info["nameCaller"] = dictionary["nameCaller"] ?? "Unknown"
@@ -88,5 +96,35 @@ import FirebaseFirestore
     )
 
     completion()
+}
+func saveCallUUIDToFirestore(receiverId: String, uuid: String) {
+    let usersRef = Firestore.firestore().collection("users").document(receiverId)
+    let counsellorsRef = Firestore.firestore().collection("counsellors").document(receiverId)
+
+    usersRef.getDocument { (doc, error) in
+        if let doc = doc, doc.exists {
+            usersRef.updateData(["currectCallUUID": uuid]) { error in
+                if let error = error {
+                    print("❌ Error updating user UUID: \(error)")
+                } else {
+                    print("✅ UUID updated for user")
+                }
+            }
+        } else {
+            counsellorsRef.getDocument { (doc, error) in
+                if let doc = doc, doc.exists {
+                    counsellorsRef.updateData(["currectCallUUID": uuid]) { error in
+                        if let error = error {
+                            print("❌ Error updating counsellor UUID: \(error)")
+                        } else {
+                            print("✅ UUID updated for counsellor")
+                        }
+                    }
+                } else {
+                    print("⚠️ User not found in either collection")
+                }
+            }
+        }
+    }
 }
 }

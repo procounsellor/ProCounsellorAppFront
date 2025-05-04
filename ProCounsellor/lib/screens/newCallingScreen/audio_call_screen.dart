@@ -14,6 +14,7 @@ import 'package:ProCounsellor/screens/dashboards/userDashboard/base_page.dart';
 import 'package:ProCounsellor/services/api_utils.dart';
 
 import 'agora_service.dart';
+import 'firebase_notification_service.dart';
 
 const String appId = "118a5a8d61b242fdab4fc18f7f6c5479";
 
@@ -261,6 +262,7 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
   Future<void> _endCall() async {
     if (_isEnding) return;
 
+    print("end call");
     _isEnding = true;
     await AgoraService.endCall(widget.channelId);
     _stopCallTimer();
@@ -268,35 +270,71 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
     FirebaseDatabase.instance.ref("agora_call_signaling").child(widget.receiverId).remove();
     agoraEngine.leaveChannel();
     navigateToBasePage();
-    final receiverUUID = await fetchReceiverUUID();
-    if (receiverUUID.isNotEmpty) {
-      await FlutterCallkitIncoming.endCall(receiverUUID);
-    }
-    await FlutterCallkitIncoming.endCall(receiverUUID);
+    // final receiverUUID = await fetchReceiverUUID();
+    // if (receiverUUID.isNotEmpty) {
+    //   await FlutterCallkitIncoming.endCall(receiverUUID);
+    // }
+
+      final voipToken = await getVoipTokenFromUserId(widget.receiverId);
+      if (voipToken != null) {
+        await FirebaseNotificationService.sendCancelCallNotification(
+          voipToken: voipToken,
+          senderName: widget.callerId,
+          channelId: widget.channelId,
+          receiverId: widget.receiverId,
+          callType: "audio"
+        );
+      }
+
+      await FlutterCallkitIncoming.endAllCalls();
   }
 
   Future<String> fetchReceiverUUID() async {
-  final firestore = FirebaseFirestore.instance;
+    final firestore = FirebaseFirestore.instance;
 
-  try {
-    // Try from users collection
-    final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
-    if (userDoc.exists && userDoc.data()?['currentCallUUID'] != null) {
-      return userDoc.data()?['currentCallUUID'];
+    try {
+      // Try from users collection
+      final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
+      if (userDoc.exists && userDoc.data()?['currentCallUUID'] != null) {
+        return userDoc.data()?['currentCallUUID'];
+      }
+
+      // Try from counsellors collection
+      final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
+      if (counsellorDoc.exists && counsellorDoc.data()?['currentCallUUID'] != null) {
+        return counsellorDoc.data()?['currentCallUUID'];
+      }
+
+      print("⚠️ No currentCallUUID found for receiver ${widget.receiverId}");
+      return ""; // Return empty string if not found
+    } catch (e) {
+      print("❌ Error fetching currentCallUUID: $e");
+      return "";
     }
+}
 
-    // Try from counsellors collection
-    final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
-    if (counsellorDoc.exists && counsellorDoc.data()?['currentCallUUID'] != null) {
-      return counsellorDoc.data()?['currentCallUUID'];
+Future<String> getVoipTokenFromUserId(String receiverId) async {
+    final firestore = FirebaseFirestore.instance;
+
+    try {
+      // Try from users collection
+      final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
+      if (userDoc.exists && userDoc.data()?['voipToken'] != null) {
+        return userDoc.data()?['voipToken'];
+      }
+
+      // Try from counsellors collection
+      final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
+      if (counsellorDoc.exists && counsellorDoc.data()?['voipToken'] != null) {
+        return counsellorDoc.data()?['voipToken'];
+      }
+
+      print("⚠️ No voipToken found for receiver ${widget.receiverId}");
+      return ""; // Return empty string if not found
+    } catch (e) {
+      print("❌ Error fetching voipToken: $e");
+      return "";
     }
-
-    print("⚠️ No currentCallUUID found for receiver ${widget.receiverId}");
-    return ""; // Return empty string if not found
-  } catch (e) {
-    print("❌ Error fetching currentCallUUID: $e");
-    return "";
-  }
 }
 
 
