@@ -19,6 +19,7 @@ import '../../paymentScreens/add_bank_details.dart';
 import '../../paymentScreens/transaction_history.dart';
 import '../userDashboard/my_reviews.dart';
 import 'package:ProCounsellor/screens/signInScreens/user_signin_page.dart';
+import 'TargetedCollegePage.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -1023,13 +1024,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       _buildSectionTile(
                         title: "TARGETED COLLEGES",
                         onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) =>
-                          //         TargetedCollegesPage(userId: widget.username),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TargetedCollegePage(userId: widget.username),
+                            ),
+                          );
                         },
                       ),
 
