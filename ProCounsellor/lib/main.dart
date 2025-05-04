@@ -242,8 +242,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         Future.delayed(const Duration(milliseconds: 500), () async {
           await FlutterCallkitIncoming.endAllCalls();
         });
-      } else if (eventType == Event.actionCallDecline ||
-            eventType == Event.actionCallEnded) {
+      } else if (eventType == Event.actionCallDecline) {
             final callerId = data?['extra']?['callerName'];
             final receiverId = data?['extra']?['receiverName'];
             final channelId = data?['extra']?['channelId'];
@@ -252,6 +251,10 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
               AgoraService.declinedCall(channelId, receiverId);
             }
           await FlutterCallkitIncoming.endAllCalls();
+      }
+      else if(eventType == Event.actionCallEnded){
+        print("inside cancel");
+        await FlutterCallkitIncoming.endAllCalls();
       }
     });
   }

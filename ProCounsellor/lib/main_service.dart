@@ -17,6 +17,7 @@ class MainService {
     required String receiverName
   }) async {
     final uuid = const Uuid().v4();
+    await _saveCallUuidToFirestore(receiverName, uuid);
 
     final params = CallKitParams(
       id: uuid,
@@ -79,6 +80,31 @@ class MainService {
     }
   });
 }
+
+  /// 🔁 Update currentCallUUID for user or counsellor
+  Future<void> _saveCallUuidToFirestore(String userId, String uuid) async {
+    final firestore = FirebaseFirestore.instance;
+
+    final userDoc = await firestore.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      await firestore.collection('users').doc(userId).update({
+        'currentCallUUID': uuid,
+      });
+      print("✅ currentCallUUID saved in users");
+      return;
+    }
+
+    final counsellorDoc = await firestore.collection('counsellors').doc(userId).get();
+    if (counsellorDoc.exists) {
+      await firestore.collection('counsellors').doc(userId).update({
+        'currentCallUUID': uuid,
+      });
+      print("✅ currentCallUUID saved in counsellors");
+      return;
+    }
+
+    print("⚠️ User not found in either users or counsellors collection.");
+  }
 
   Future<bool> senderIsUser(String senderId) async {
   final firestore = FirebaseFirestore.instance;

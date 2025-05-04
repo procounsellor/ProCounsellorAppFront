@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ProCounsellor/screens/dashboards/counsellorDashboard/counsellor_base_page.dart';
@@ -266,7 +268,37 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
     FirebaseDatabase.instance.ref("agora_call_signaling").child(widget.receiverId).remove();
     agoraEngine.leaveChannel();
     navigateToBasePage();
+    final receiverUUID = await fetchReceiverUUID();
+    if (receiverUUID.isNotEmpty) {
+      await FlutterCallkitIncoming.endCall(receiverUUID);
+    }
+    await FlutterCallkitIncoming.endCall(receiverUUID);
   }
+
+  Future<String> fetchReceiverUUID() async {
+  final firestore = FirebaseFirestore.instance;
+
+  try {
+    // Try from users collection
+    final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
+    if (userDoc.exists && userDoc.data()?['currentCallUUID'] != null) {
+      return userDoc.data()?['currentCallUUID'];
+    }
+
+    // Try from counsellors collection
+    final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
+    if (counsellorDoc.exists && counsellorDoc.data()?['currentCallUUID'] != null) {
+      return counsellorDoc.data()?['currentCallUUID'];
+    }
+
+    print("⚠️ No currentCallUUID found for receiver ${widget.receiverId}");
+    return ""; // Return empty string if not found
+  } catch (e) {
+    print("❌ Error fetching currentCallUUID: $e");
+    return "";
+  }
+}
+
 
   void navigateToBasePage(){
     if(widget.isCaller){
