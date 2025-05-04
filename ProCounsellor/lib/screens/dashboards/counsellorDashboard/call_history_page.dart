@@ -106,24 +106,28 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
       }
     } catch (e) {
       print("Error fetching call history: $e");
-      setState(() {
-        hasError = true;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
     }
   }
 
   void _updateCallHistory(List<dynamic> calls) {
-    setState(() {
-      callHistory = calls;
-      missedCallNotificationCount = calls
-          .where((call) =>
-              call["receiverId"] == widget.counsellorId &&
-              call["status"] == "Missed Call" &&
-              call["missedCallStatusSeen"] == false)
-          .length;
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        callHistory = calls;
+        missedCallNotificationCount = calls
+            .where((call) =>
+                call["receiverId"] == widget.counsellorId &&
+                call["status"] == "Missed Call" &&
+                call["missedCallStatusSeen"] == false)
+            .length;
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> fetchContactDetails() async {
@@ -140,11 +144,13 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
           final data = json.decode(response.body);
 
           // ✅ Step 4: Update UI with fetched data
-          setState(() {
-            profilePhotos[contactId] = data["photo"] ?? "";
-            contactNames[contactId] =
-                "${data["firstName"]} ${data["lastName"]}";
-          });
+          if (mounted) {
+            setState(() {
+              profilePhotos[contactId] = data["photo"] ?? "";
+              contactNames[contactId] =
+                  "${data["firstName"]} ${data["lastName"]}";
+            });
+          }
         }
       } catch (e) {
         print("Error fetching details for $contactId: $e");

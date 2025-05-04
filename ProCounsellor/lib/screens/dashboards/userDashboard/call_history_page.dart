@@ -107,24 +107,28 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
       }
     } catch (e) {
       print("Error fetching call history: $e");
-      setState(() {
-        hasError = true;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
     }
   }
 
   void _updateCallHistory(List<dynamic> calls) {
-    setState(() {
-      callHistory = calls;
-      missedCallNotificationCount = calls
-          .where((call) =>
-              call["receiverId"] == widget.userId &&
-              call["status"] == "Missed Call" &&
-              call["missedCallStatusSeen"] == false)
-          .length;
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        callHistory = calls;
+        missedCallNotificationCount = calls
+            .where((call) =>
+                call["receiverId"] == widget.userId &&
+                call["status"] == "Missed Call" &&
+                call["missedCallStatusSeen"] == false)
+            .length;
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> fetchContactDetails() async {
@@ -139,12 +143,13 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
         if (response.statusCode == 200 && response.body.isNotEmpty) {
           final data = json.decode(response.body);
-
-          setState(() {
-            profilePhotos[contactId] = data["photoUrl"] ?? "";
-            contactNames[contactId] =
-                "${data["firstName"]} ${data["lastName"]}";
-          });
+          if (mounted) {
+            setState(() {
+              profilePhotos[contactId] = data["photoUrl"] ?? "";
+              contactNames[contactId] =
+                  "${data["firstName"]} ${data["lastName"]}";
+            });
+          }
         }
         else{
           String apiUrl = "${ApiUtils.baseUrl}/api/user/$contactId";
@@ -152,12 +157,13 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
 
           if (response.statusCode == 200 && response.body.isNotEmpty) {
             final data = json.decode(response.body);
-
+            if (mounted) {
             setState(() {
               profilePhotos[contactId] = data["photo"] ?? "";
               contactNames[contactId] =
                   "${data["firstName"]} ${data["lastName"]}";
             });
+            }
           }
         }
       } catch (e) {

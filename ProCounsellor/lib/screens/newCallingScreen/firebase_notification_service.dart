@@ -39,4 +39,30 @@ class FirebaseNotificationService {
       print("❌ Failed to send notification: ${response.body}");
     }
   }
+
+  static Future<void> sendCancelCallNotification({
+    required String voipToken,
+    required String senderName,
+    required String channelId,
+    required String receiverId,
+    required String callType
+  }) async {
+    final response = await http.post(
+      Uri.parse("$backendUrl/send-cancel-call-notification"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "voipToken": voipToken,
+        "senderName": senderName,
+        "channelId": channelId,
+        "receiverId": receiverId,
+        "callType": callType
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("✅ Cancel Call notification sent successfully!");
+    } else {
+      print("❌ Failed to send cancel call notification: ${response.body}");
+    }
+  }
 }

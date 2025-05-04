@@ -17,6 +17,8 @@ class MainService {
     required String receiverName
   }) async {
     final uuid = const Uuid().v4();
+    print("📍 uuid: $uuid");
+    print("📍 receiverName: $receiverName");
     await _saveCallUuidToFirestore(receiverName, uuid);
 
     final params = CallKitParams(
@@ -83,12 +85,13 @@ class MainService {
 
   /// 🔁 Update currentCallUUID for user or counsellor
   Future<void> _saveCallUuidToFirestore(String userId, String uuid) async {
+    print("trying to add uuid");
     final firestore = FirebaseFirestore.instance;
 
     final userDoc = await firestore.collection('users').doc(userId).get();
     if (userDoc.exists) {
       await firestore.collection('users').doc(userId).update({
-        'currentCallUUID': uuid,
+        'currectCallUUID': uuid,
       });
       print("✅ currentCallUUID saved in users");
       return;
@@ -97,7 +100,7 @@ class MainService {
     final counsellorDoc = await firestore.collection('counsellors').doc(userId).get();
     if (counsellorDoc.exists) {
       await firestore.collection('counsellors').doc(userId).update({
-        'currentCallUUID': uuid,
+        'currectCallUUID': uuid,
       });
       print("✅ currentCallUUID saved in counsellors");
       return;
