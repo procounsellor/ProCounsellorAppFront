@@ -289,29 +289,29 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
       await FlutterCallkitIncoming.endAllCalls();
   }
 
-  Future<String> fetchReceiverUUID() async {
-    final firestore = FirebaseFirestore.instance;
+//   Future<String> fetchReceiverUUID() async {
+//     final firestore = FirebaseFirestore.instance;
 
-    try {
-      // Try from users collection
-      final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
-      if (userDoc.exists && userDoc.data()?['currentCallUUID'] != null) {
-        return userDoc.data()?['currentCallUUID'];
-      }
+//     try {
+//       // Try from users collection
+//       final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
+//       if (userDoc.exists && userDoc.data()?['currentCallUUID'] != null) {
+//         return userDoc.data()?['currentCallUUID'];
+//       }
 
-      // Try from counsellors collection
-      final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
-      if (counsellorDoc.exists && counsellorDoc.data()?['currentCallUUID'] != null) {
-        return counsellorDoc.data()?['currentCallUUID'];
-      }
+//       // Try from counsellors collection
+//       final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
+//       if (counsellorDoc.exists && counsellorDoc.data()?['currentCallUUID'] != null) {
+//         return counsellorDoc.data()?['currentCallUUID'];
+//       }
 
-      print("⚠️ No currentCallUUID found for receiver ${widget.receiverId}");
-      return ""; // Return empty string if not found
-    } catch (e) {
-      print("❌ Error fetching currentCallUUID: $e");
-      return "";
-    }
-}
+//       print("⚠️ No currentCallUUID found for receiver ${widget.receiverId}");
+//       return ""; // Return empty string if not found
+//     } catch (e) {
+//       print("❌ Error fetching currentCallUUID: $e");
+//       return "";
+//     }
+// }
 
 Future<String> getVoipTokenFromUserId(String receiverId) async {
     final firestore = FirebaseFirestore.instance;

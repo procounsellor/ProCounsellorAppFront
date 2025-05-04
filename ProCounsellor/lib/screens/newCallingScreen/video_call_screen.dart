@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import '../../services/api_utils.dart';
 import '../dashboards/counsellorDashboard/counsellor_base_page.dart';
 import '../dashboards/userDashboard/base_page.dart';
 import 'agora_service.dart';
 import 'package:http/http.dart' as http;
+
+import 'firebase_notification_service.dart';
 
 const String appId = "118a5a8d61b242fdab4fc18f7f6c5479";
 
@@ -260,7 +264,44 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     FirebaseDatabase.instance.ref("agora_call_signaling").child(widget.receiverId).remove();
     agoraEngine.leaveChannel();
     navigateToBasePage();
+
+    final voipToken = await getVoipTokenFromUserId(widget.receiverId);
+      if (voipToken != null) {
+        await FirebaseNotificationService.sendCancelCallNotification(
+          voipToken: voipToken,
+          senderName: widget.callerId,
+          channelId: widget.channelId,
+          receiverId: widget.receiverId,
+          callType: "video"
+        );
+      }
+
+      await FlutterCallkitIncoming.endAllCalls();
   }
+
+  Future<String> getVoipTokenFromUserId(String receiverId) async {
+    final firestore = FirebaseFirestore.instance;
+
+    try {
+      // Try from users collection
+      final userDoc = await firestore.collection('users').doc(widget.receiverId).get();
+      if (userDoc.exists && userDoc.data()?['voipToken'] != null) {
+        return userDoc.data()?['voipToken'];
+      }
+
+      // Try from counsellors collection
+      final counsellorDoc = await firestore.collection('counsellors').doc(widget.receiverId).get();
+      if (counsellorDoc.exists && counsellorDoc.data()?['voipToken'] != null) {
+        return counsellorDoc.data()?['voipToken'];
+      }
+
+      print("⚠️ No voipToken found for receiver ${widget.receiverId}");
+      return ""; // Return empty string if not found
+    } catch (e) {
+      print("❌ Error fetching voipToken: $e");
+      return "";
+    }
+}
 
   void navigateToBasePage(){
     if(widget.isCaller){
