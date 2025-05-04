@@ -7,6 +7,7 @@ import 'Friends/user_details_page.dart';
 import 'details_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CallHistoryPage extends StatefulWidget {
   final String userId;
@@ -31,11 +32,41 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
   bool isLoading = true;
   bool hasError = false;
   int missedCallNotificationCount = 0; // ✅ Initialize variable
+  static const String callHistoryCacheKey = 'cached_call_history';
 
   @override
   void initState() {
     super.initState();
     fetchCallHistory();
+    loadCachedCallHistory().then((cachedCalls) {
+      if (cachedCalls != null && cachedCalls.isNotEmpty) {
+        _updateCallHistory(cachedCalls);
+        fetchContactDetails();
+      }
+      fetchCallHistory(); // Fetch fresh data always
+    });
+  }
+
+  Future<void> cacheCallHistory(List<dynamic> calls) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedData = json.encode(calls);
+    await prefs.setString(callHistoryCacheKey, encodedData);
+  }
+
+  Future<List<dynamic>?> loadCachedCallHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString(callHistoryCacheKey);
+    if (cached != null) {
+      try {
+        final decoded = json.decode(cached);
+        if (decoded is List) {
+          return decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 
   void markMissedCallsAsSeen() async {
@@ -98,6 +129,8 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
         // ✅ Step 5: Update UI with Fresh Data
         _updateCallHistory(calls);
 
+        await cacheCallHistory(calls);
+
         // ✅ Step 6: Mark Missed Calls as Seen
         markMissedCallsAsSeen();
 
@@ -150,19 +183,18 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
                   "${data["firstName"]} ${data["lastName"]}";
             });
           }
-        }
-        else{
+        } else {
           String apiUrl = "${ApiUtils.baseUrl}/api/user/$contactId";
           final response = await http.get(Uri.parse(apiUrl));
 
           if (response.statusCode == 200 && response.body.isNotEmpty) {
             final data = json.decode(response.body);
             if (mounted) {
-            setState(() {
-              profilePhotos[contactId] = data["photo"] ?? "";
-              contactNames[contactId] =
-                  "${data["firstName"]} ${data["lastName"]}";
-            });
+              setState(() {
+                profilePhotos[contactId] = data["photo"] ?? "";
+                contactNames[contactId] =
+                    "${data["firstName"]} ${data["lastName"]}";
+              });
             }
           }
         }
@@ -325,7 +357,8 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
     );
   }
 
-  void _navigateToUserOrCounsellorDetails(BuildContext context, String userId) async {
+  void _navigateToUserOrCounsellorDetails(
+      BuildContext context, String userId) async {
     try {
       String apiUrl = "${ApiUtils.baseUrl}/api/counsellor/$userId";
       final response = await http.get(Uri.parse(apiUrl));
@@ -344,8 +377,7 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
             ),
           ),
         );
-      }
-      else{
+      } else {
         String apiUrl = "${ApiUtils.baseUrl}/api/user/$userId";
         final response = await http.get(Uri.parse(apiUrl));
 
@@ -362,10 +394,9 @@ class _CallHistoryPageState extends State<CallHistoryPage> {
               ),
             ),
           );
-        }
-        else {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load details")));
+              const SnackBar(content: Text("Failed to load details")));
         }
       }
     } catch (e) {
