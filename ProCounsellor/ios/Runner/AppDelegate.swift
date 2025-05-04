@@ -55,6 +55,15 @@ import FirebaseFirestore
   func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
     let dictionary = payload.dictionaryPayload
 
+    // 🔍 Check for call cancellation
+    if let pushType = dictionary["type"] as? String, pushType == "cancel_call" {
+        print("📴 VoIP Push: Cancel call received via PushKit")
+        SwiftFlutterCallkitIncomingPlugin.sharedInstance?.endAllCalls()
+        completion()
+        return
+    }
+
+    // 🟢 Incoming call - proceed as usual
     var info = [String: Any?]()
     info["id"] = dictionary["id"] ?? UUID().uuidString
     info["nameCaller"] = dictionary["nameCaller"] ?? "Unknown"
