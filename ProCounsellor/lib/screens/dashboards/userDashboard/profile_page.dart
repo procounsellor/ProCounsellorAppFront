@@ -20,6 +20,7 @@ import '../../paymentScreens/transaction_history.dart';
 import '../userDashboard/my_reviews.dart';
 import 'package:ProCounsellor/screens/signInScreens/user_signin_page.dart';
 import 'TargetedCollegePage.dart';
+import 'SettingsPage.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -1037,15 +1038,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       Divider(height: 1),
 
                       _buildSectionTile(
-                        title: "DEADLINES",
+                        title: "SETTINGS",
                         onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) =>
-                          //         AllDeadlinesPage(username: widget.username),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SettingsPage(),
+                            ),
+                          );
                         },
                       ),
                       // Divider(height: 1),

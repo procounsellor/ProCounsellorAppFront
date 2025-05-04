@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ProCounsellor/screens/dashboards/adminDashboard/admin_signin.dart';
 import 'package:ProCounsellor/screens/signInScreens/get_help.dart';
-import 'package:ProCounsellor/screens/signInScreens/privacy_page.dart';
-import 'package:ProCounsellor/screens/signInScreens/terms_page.dart';
+import '../dashboards/userDashboard/settings/TermsAndConditionsPage.dart';
+import '../dashboards/userDashboard/settings/PrivacyPolicyPage.dart';
+import '../dashboards/userDashboard/settings/ContactUsPage.dart';
 
 import 'package:ProCounsellor/screens/signInScreens/verification_page.dart';
 import 'package:ProCounsellor/screens/signInScreens/counsellor_signin.dart';
@@ -148,7 +149,8 @@ class _UserSignInPageState extends State<UserSignInPage> {
                       ..onTap = () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => TermsPage()),
+                          MaterialPageRoute(
+                              builder: (context) => TermsAndConditionsPage()),
                         );
                       },
                   ),
@@ -164,7 +166,7 @@ class _UserSignInPageState extends State<UserSignInPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => PrivacyPage()),
+                              builder: (context) => PrivacyPolicyPage()),
                         );
                       },
                   ),
@@ -216,7 +218,8 @@ class _UserSignInPageState extends State<UserSignInPage> {
                       ..onTap = () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => GetHelp()),
+                          MaterialPageRoute(
+                              builder: (context) => ContactUsPage()),
                         );
                       },
                   ),
