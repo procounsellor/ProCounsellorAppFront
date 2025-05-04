@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../headersText/no_data_placeholder.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../../../services/api_utils.dart';
 
 class CollegeDetailsPage extends StatefulWidget {
   final String collegeName;
@@ -25,6 +28,75 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
   void initState() {
     super.initState();
     loadCollegeData();
+    _checkIfBookmarked(); // 🔧 Add this
+  }
+
+  Future<void> _checkIfBookmarked() async {
+    final url = Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final userData = json.decode(response.body);
+        final List<dynamic> colleges = userData['interestedColleges'] ?? [];
+
+        final collegeId = widget.collegeName.toLowerCase().replaceAll(' ', '_');
+        final found = colleges.any((c) =>
+            (c['collegeId'] ?? '').toString().toLowerCase() == collegeId);
+
+        if (mounted) {
+          setState(() {
+            isBookmarked = found;
+          });
+        }
+      }
+    } catch (e) {
+      print("Failed to check bookmark: $e");
+    }
+  }
+
+  Future<void> toggleCollegeInterest({
+    required Map<String, dynamic> college,
+  }) async {
+    print("username " + widget.username);
+    final url = Uri.parse('${ApiUtils.baseUrl}/api/user/${widget.username}');
+
+    try {
+      // Step 1: Get current user data
+      final getResponse = await http.get(url);
+      if (getResponse.statusCode != 200 || getResponse.body.isEmpty) {
+        throw Exception('Failed to fetch user data or body is empty');
+      }
+      print("GET response body: ${getResponse.body}");
+
+      final userData = json.decode(getResponse.body);
+      List<dynamic> currentColleges = userData['interestedColleges'] ?? [];
+
+      // Step 2: Check if the college is already present
+      final collegeId = college['collegeId'];
+      bool alreadyBookmarked = currentColleges
+          .any((c) => c['collegeId'].toString() == collegeId.toString());
+
+      // Step 3: Toggle
+      if (alreadyBookmarked) {
+        currentColleges.removeWhere((c) => c['collegeId'] == collegeId);
+      } else {
+        currentColleges.add(college);
+      }
+
+      // Step 4: Send PATCH update
+      final patchResponse = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({"interestedColleges": currentColleges}),
+      );
+
+      if (patchResponse.statusCode != 200) {
+        throw Exception('Failed to update bookmark');
+      }
+    } catch (e) {
+      print("Error toggling college interest: $e");
+      rethrow;
+    }
   }
 
   Future<void> loadCollegeData() async {
@@ -361,17 +433,48 @@ class _CollegeDetailsPageState extends State<CollegeDetailsPage> {
             mini: true,
             tooltip: 'Bookmark',
             backgroundColor: Colors.greenAccent,
-            onPressed: () {
+            onPressed: () async {
+              final college = {
+                "collegeId":
+                    widget.collegeName.replaceAll(" ", "_").toLowerCase(),
+                "name": widget.collegeName,
+                "city": collegeData?['city'] ?? "",
+                "rank": collegeData?['rank'] ?? 0,
+                "state": collegeData?['state'] ?? "",
+                "category": collegeData?['category'] ?? "",
+                "description": collegeData?['overview'] ?? "",
+                "imageUrl":
+                    "assets/images/homepage/trending_colleges/${widget.collegeName.toLowerCase().replaceAll(' ', '_')}.png"
+              };
+
+              await toggleCollegeInterest(college: college);
+
               setState(() {
-                isBookmarked = !isBookmarked;
+                isBookmarked = !isBookmarked; // Local toggle for UI
               });
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    isBookmarked
-                        ? 'Bookmarked ${widget.collegeName}'
-                        : 'Removed bookmark',
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isBookmarked ? "Bookmarked" : "Removed Bookmark",
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: Colors.green.shade600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  elevation: 8,
+                  duration: Duration(seconds: 3),
                 ),
               );
             },
